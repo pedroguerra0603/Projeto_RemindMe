@@ -46,10 +46,10 @@ As instruções de instalação e execução estão em [`docs/execucao.md`](docs
 
 ## Equipe
 
-| Integrante | Papel principal |
+| Integrante |
 |---|---|
-| *(a decidir)* | |
-| *(a decidir)* | |
-| *(a decidir)* | |
+| *(João Pedro Silva Guerra)* | |
+| *(Bernardo Sanches)* | |
+| *(Renan Ribeiro Gandolpho)* | |
 
 Professor: Nilton Mack · `niltonmack@mackenzie.br`
