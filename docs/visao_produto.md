@@ -1,44 +1,260 @@
-# Visão do Produto: RemindMe
+# Visão de Produto - RemindMe (Fluxo)
 
-## 1. O Problema: A Ausência de Back-Office em Pequenas Empresas
-No contexto das micro e pequenas empresas, a gestão financeira e administrativa frequentemente sofre com a falta de um back-office estruturado. Na prática, o proprietário acumula funções operacionais, táticas e estratégicas — como vendas, cobranças e gestão geral. Paralelamente, a contabilidade costuma ser terceirizada para escritórios que entregam apenas o mínimo obrigatório exigido pela legislação, sem acompanhar a rotina e o fluxo de caixa em tempo real.
+## 1. Visão do Produto
 
-O resultado dessa desconexão é um ciclo vicioso de falhas operacionais:
-* Orçamentos aprovados que nunca são convertidos em faturas.
-* Títulos vencidos que não recebem o devido acompanhamento de cobrança.
-* Prazos fiscais e contratuais perdidos por ausência de um calendário centralizado.
-* Resultados financeiros obscuros, gerados por lançamentos classificados de forma arbitrária ou incorreta.
+O **RemindMe** (nome do projeto), é uma plataforma de gestão do ciclo de recebíveis e obrigações que substitui processos manuais e desorganizados de pequenas empresas por rotinas automáticas, auditáveis e orientadas por regra.
 
-A raiz do problema não está na ausência de um sistema contábil complexo, mas sim na falta de uma **rotina amparada por regras de negócio sistêmicas**. Falta um mecanismo que garanta que cada obrigação e recebível avance no prazo correto, mantendo o registro de rastreabilidade (quem fez, o que fez e quando fez).
+**Propósito:**  
+Garantir que cada cobrança e cada obrigação avancem no prazo certo, com registro completo de quem fez o quê, por quê e quando, transformando a operação financeira de micro e pequenas empresas de algo caótico em algo previsível e mensurável.
 
-## 2. A Solução: Gestão Ativa do Ciclo de Recebíveis e Obrigações
-O **RemindMe** (anteriormente concebido como Fluxo) foi arquitetado para ocupar a lacuna entre a operação diária e a contabilidade final. Ele atua como o motor de regras que acompanha o fluxo financeiro de ponta a ponta. 
+---
 
-O sistema transforma processos informais em mudanças de estado explícitas, registradas e controladas por permissões. O ciclo de vida do dinheiro é tratado com rigor: o orçamento é gerado, enviado, aprovado dentro de alçadas pré-definidas, convertido em título a receber, cobrado por réguas automáticas de relacionamento, renegociado (se necessário) e, por fim, baixado.
+## 2. O Problema
 
-### 2.1. Frentes de Apoio do Sistema
-Em torno do núcleo de recebíveis, o RemindMe opera com dois pilares de apoio fundamentais:
-* **Calendário de Obrigações:** Um concentrador de compromissos fiscais e contratuais recorrentes. O sistema age proativamente avisando sobre prazos, exigindo a anexação de evidências de cumprimento e escalonando alertas para a diretoria quando os limites de tempo são rompidos.
-* **Apuração de Resultado em Tempo Real:** Uma DRE (Demonstração do Resultado do Exercício) dinâmica, montada a partir dos próprios lançamentos gerados pelo ciclo de cobrança. O relatório financeiro deixa de ser um documento póstumo de meses anteriores e passa a ser o reflexo exato da operação diária.
+### Contexto
+Empresas de pequeno porte raramente possuem um back-office estruturado. O dono acumula as funções de vendas, cobrança e administração, terceirizando apenas a contabilidade para um escritório que entrega o mínimo obrigatório.
 
-## 3. Perfis, Tensões e Resolução de Conflitos
-O ecossistema do RemindMe atende a quatro perfis de usuários primários. Como seus interesses frequentemente entram em conflito (ex: a empresa quer receber rápido, o cliente quer diluir prazos, o contador exige precisão classificatória), o sistema atua como o árbitro dessas tensões por meio de regras estritas, não de negociações informais.
+### Sintomas
+- Orçamentos aprovados que nunca viram fatura
+- Títulos vencidos que ninguém cobrou
+- Prazos perdidos porque não existe calendário de compromissos
+- Resultado financeiro desconhecido porque os lançamentos estão classificados de forma inconsistente
+- Falta de rastreabilidade: ninguém sabe quem fez o quê, quando e por quê
+- Contador que chega meses depois com um relatório desconectado da operação
 
-* **O Dono:** Focado na saúde do negócio. Intervém apenas no tratamento de exceções, aprovações fora de alçada e responde aos alertas escalonados de quebras de prazo.
-* **O Operador Financeiro:** Focado na execução. Toca a rotina diária de validações e cobranças, operando estritamente dentro dos limites e alçadas que lhe foram delegados.
-* **O Cliente:** Focado em flexibilidade. Consome a visualização de seus títulos pendentes, recebe os lembretes automáticos e tem um canal para propor termos de renegociação.
-* **O Contador:** Focado em conformidade. Consome os resultados financeiros consolidados e a classificação dos lançamentos em modo de leitura (Read-Only) para exportação ou conciliação.
+### Raiz
+O problema não é falta de sistema contábil, mas falta de **rotina com regra** — processos com sequência clara, prioridades automáticas, alertas escalonados e uma auditoria nativa.
 
-## 4. O Papel e os Limites da Inteligência Artificial
-A integração de modelos de linguagem (LLMs) no RemindMe segue um princípio arquitetural imutável: **O modelo extrai e classifica; o sistema decide.** 
-Nenhum dado financeiro é inventado pela IA e nenhuma saída bruta do modelo é enviada como texto livre para o cliente final. A inteligência atua em dois domínios delimitados:
+---
 
-1. **Classificação Inteligente de Lançamentos:** O modelo analisa a descrição textual de um lançamento e sugere o enquadramento no plano de contas da empresa, anexando um "grau de confiança". O sistema aprova automaticamente apenas scores altos. Sugestões de baixa confiança são enviadas para uma fila de revisão humana. A correção humana alimenta métricas de qualidade.
-2. **Processamento de Intenções de Renegociação:** O modelo atua sobre as respostas enviadas por clientes, extraindo dados estruturados de intenção (título alvo, valor proposto e data da promessa). Com o dado estruturado em mãos, o sistema processa a aprovação ou recusa utilizando regras e templates pré-aprovados.
+## 3. A Solução
 
-## 5. Delimitação de Escopo (O que o sistema NÃO faz)
-Para garantir a entrega de um MVP (Minimum Viable Product) funcional e robusto, o projeto estabelece limites claros de atuação, evitando domínios paralelos que diluiriam o valor central:
-* **Não emite Nota Fiscal Eletrônica (NFe):** O sistema registra o dever de emissão e guarda a evidência, mas exclui a integração direta com a SEFAZ para evitar dependência de certificados digitais e homologações morosas.
-* **Não gerencia Folha de Pagamento ou RH:** Rotinas trabalhistas constituem um domínio à parte e não fazem parte do MVP.
-* **Não atua como Conselheiro Financeiro:** O sistema não emite recomendações de investimentos ou cortes de gastos.
-* **Integrações Externas Simuladas:** A comunicação por canais de mensageria (ex: WhatsApp) é arquitetada através de portas substituíveis com implementações simuladas. Isso permite que toda a suíte de testes do projeto rode sem dependência de APIs terceiras, deixando a arquitetura pronta para plugar o canal real no futuro. A interoperabilidade com planilhas se dá via importação/exportação padronizada de arquivos CSV.
+### Núcleo: Ciclo de Recebíveis
+O sistema acompanha o dinheiro que a empresa tem a receber do começo ao fim, passando por estados explícitos e controlados:
+
+1. **Orçamento** criado e enviado ao cliente
+2. **Aprovação** dentro das alçadas de desconto definidas
+3. **Conversão** em título (documento de cobrança)
+4. **Sequência de lembretes** automáticos ao cliente
+5. **Renegociação** quando necessária, com rastro completo
+6. **Baixa** quando recebido ou cancelado
+
+Cada mudança de estado é **registrada, reversível apenas por autorizado, e explícita** — não há ambiguidade sobre o que aconteceu.
+
+### Frente 1: Calendário de Obrigações
+Concentra compromissos fiscais e contratuais recorrentes da empresa:
+- Avisa com antecedência sobre vencimentos
+- Cobra a evidência de cumprimento
+- Escala o alerta para o dono quando o prazo estoura
+- Mantém histórico de cumprimento
+
+### Frente 2: Resultado em Tempo Real
+A apuração é montada a partir dos próprios lançamentos que o ciclo de cobrança gera:
+- Deixa de ser um relatório que chega meses depois
+- Vira um reflexo direto e contínuo da operação
+- Sempre consistente com os registros de cobrança
+
+---
+
+## 4. Perfis de Usuário e Interesses
+
+| Perfil | Interesse Principal | Responsabilidade |
+|--------|-------------------|------------------|
+| **Dono** | Alertas críticos e exceções | Responder pelos desvios; autorizar operações fora da rotina |
+| **Operador Financeiro** | Rotina diária; produtividade | Executar o fluxo dentro dos limites dados; cumprir sequência |
+| **Cliente** | Transparência; prazo negociado | Acompanhar seus títulos; propor renegociação |
+| **Contador** | Dados estruturados e auditáveis | Validar classificação; consolidar para fisco e gestão |
+
+### Tensões Arbitradas por Regra
+- Empresa quer receber rápido ↔ Cliente quer prazo  
+- Operador quer rapidez ↔ Dono quer controle  
+- Sistema quer padronização ↔ Negócio quer flexibilidade  
+
+O Fluxo resolve essas tensões por **regra automática**, não por conversa informal.
+
+---
+
+## 5. Funcionalidades Principais
+
+### 5.1 Gestão de Recebíveis
+- [ ] Criar, aprovar e controlar orçamentos
+- [ ] Converter orçamentos em títulos
+- [ ] Sequência automática de lembretes
+- [ ] Registro de tentativas de cobrança
+- [ ] Negociação e renegociação de prazos
+- [ ] Baixa de títulos (recebido, cancelado, prejuízo)
+- [ ] Relatório de faturamento vs. recebimento
+
+### 5.2 Calendário de Obrigações
+- [ ] Registro de compromissos fiscais e contratuais
+- [ ] Alertas com antecedência configurável
+- [ ] Gestão de evidências de cumprimento
+- [ ] Escalonamento de alertas não cumpridos
+- [ ] Histórico de cumprimento
+
+### 5.3 Apuração de Resultado
+- [ ] Dashboard com resultado em tempo real
+- [ ] Demonstração de resultado integrada aos lançamentos
+- [ ] Rastreabilidade de cada linha de receita
+- [ ] Exportação para contador/gestor
+
+### 5.4 Auditoria e Controle
+- [ ] Log completo de mudanças de estado
+- [ ] Reversibilidade controlada por permissão
+- [ ] Histórico de quem fez o quê e quando
+- [ ] Rastreamento de divergências
+
+---
+
+## 6. O Papel da Inteligência Artificial
+
+O sistema usa um modelo de linguagem em **dois pontos bem delimitados**, seguindo o princípio:  
+**O modelo extrai e classifica; o sistema decide.**
+
+### Ponto 1: Classificação de Lançamentos
+- O modelo lê a descrição de um lançamento financeiro
+- Sugere a conta contábil apropriada com grau de confiança
+- Se confiança alta → aceita automaticamente
+- Se confiança baixa → envia para fila de revisão humana (não entra na apuração até confirmação)
+- Toda correção fica registrada para medir qualidade ao longo do tempo
+
+### Ponto 2: Extração de Intenção de Cliente
+- O modelo lê mensagem recebida do cliente
+- Extrai: intenção, título mencionado, valor, data prometida
+- Transforma em dados estruturados
+- Sistema processa por regra e responde por template (nunca texto livre da IA)
+
+### Garantias
+- ✅ Nenhum número financeiro é produzido por IA
+- ✅ Nenhuma saída de IA chega ao cliente como texto livre
+- ✅ Auditoria sobre qualidade das sugestões do modelo
+
+---
+
+## 7. Diferencial Competitivo
+
+| Aspecto | Diferencial |
+|--------|-----------|
+| **Automatização** | Rotina segue regra, não depende de lembrete manual do dono |
+| **Rastreabilidade** | Cada mudança é registrada, auditável, reversível |
+| **Decisão descentralizada** | Operador executa dentro de alçada; exceção escala pro dono |
+| **Integração nativa** | Resultado financeiro é subproduto direto da operação, não relatório paralelo |
+| **Inteligência auxiliar** | IA recomenda; sistema decide; pessoa confirma — não há "caixa preta" |
+| **Canal plug-and-play** | Notificação por WhatsApp/SMS/Email é um módulo substituível |
+
+---
+
+## 8. Escopo do MVP
+
+### Incluso
+✅ Ciclo completo de recebíveis (orçamento → cobrança → baixa)  
+✅ Calendário de obrigações com alertas  
+✅ Apuração de resultado em tempo real  
+✅ Auditoria completa  
+✅ Classificação com IA (sem emissão de NF)  
+✅ Canais de notificação simulados (pronto para plugar real)  
+✅ Importação/exportação CSV  
+
+### Fora do Escopo (v2+)
+❌ Emissão de Nota Fiscal (integração SEFAZ)  
+❌ Folha de Pagamento e RH  
+❌ Recomendação de Investimento  
+❌ Integração direta com WhatsApp Business (arquitetura preparada, implementação futura)  
+
+**Justificativa:** Manter o escopo focado, viável em um semestre, sem perder valor para o usuário final.
+
+---
+
+## 9. Métricas de Sucesso
+
+| Métrica | Meta | Medição |
+|---------|------|---------|
+| **Prazo de cobrança** | Reduzir em 30% | Dias médios entre fatura e recebimento |
+| **Taxa de títulos cobrados** | Aumentar para 95%+ | % títulos com baixa vs. total |
+| **Consistência contábil** | 100% | Divergências corrigidas / total de lançamentos |
+| **Tempo de apuração** | Diário (não mensal) | Resultado disponível T+1 |
+| **Confiança nas alçadas** | Aceitar 100% dos vencimentos | Operator não precisa escalar para aprovações rotineiras |
+
+---
+
+## 10. Roadmap de Fases
+
+### Fase 1 (MVP - Semestre 2026-2)
+- Ciclo de recebíveis completo
+- Calendário de obrigações
+- Apuração de resultado
+- Classificação com IA (básica)
+- Testes automatizados
+
+### Fase 2 (v1.1)
+- Integração com canal de notificação real (WhatsApp/SMS)
+- Relatórios gerenciais avançados
+- Mobile para operador
+
+### Fase 3 (v2.0)
+- Emissão de NF integrada com SEFAZ
+- Previsão de fluxo de caixa
+- Recomendação de priorização de cobrança
+
+---
+
+## 11. Público-Alvo
+
+**Persona Principal:**  
+Pequeno empresário (faturamento R$ 500k - R$ 5M/ano) que hoje usa planilhas desorganizadas ou nenhuma ferramenta estruturada, quer crescer sem contratar CFO, e precisar saber em tempo real quanto vai receber.
+
+**Personas Secundárias:**
+- Operador/Gerente de Cobrança em empresa pequena
+- Contador que quer cliente usando sistema que gera dados estruturados
+- Cliente final que quer saber o status de seu pedido/título
+
+---
+
+## 12. Premissas e Riscos
+
+### Premissas
+1. Empresa tem clientes recorrentes e ciclo de recebimento previsível
+2. Dono está disposto a mudar processo manual para automatizado
+3. Classificação contábil da empresa é passível de ser regras (não totalmente idiossincrática)
+
+### Riscos
+| Risco | Impacto | Mitigação |
+|-------|--------|----------|
+| Resistência do dono em usar sistema novo | Alto | Ganho em visibilidade + alertas; não restringe ação |
+| IA classifica errado repetidamente | Médio | Revisão humana obrigatória + feedback ao modelo |
+| Integração com SEFAZ atrasa | Médio | MVP não emite NF; fila de revisão suficiente |
+| Dados confusos no histórico | Alto | Limpeza inicial + validação na importação CSV |
+
+---
+
+## 13. Considerações de Design
+
+- **Simplicidade Visual:** Interface focada em fluxo, não em formulários complexos
+- **Mobile First:** Operador precisa de acesso rápido em campo
+- **Auditoria Invisível:** Log completo, mas não sobrecarrega UI
+- **Regra Clara:** Não há exceção que não passe por regra e autorização
+- **Feedback Imediato:** Operador sabe se ação foi aceita ou foi pra fila
+
+---
+
+## Documento Preparado Por
+
+**Projeto:** RemindMe (Fluxo)  
+**Disciplina:** Modelagem de Software · 2026-2 · Turma 04I  
+**Data:** Semestre 2026-2
+
+**Equipe:**
+- João Pedro Silva Guerra
+- Bernardo Sanches
+- Renan Ribeiro Gandolpho
+
+**Professor:** Nilton Mack (niltonmack@mackenzie.br)
+
+---
+
+## Referências Internas
+
+- Especificação completa: [`.specify/spec.md`]
+- Arquitetura: [`docs/adr/`]
+- Instruções de execução: [`docs/execucao.md`]
+- Documentação geral: [`docs/`]
