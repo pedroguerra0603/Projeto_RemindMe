@@ -2,7 +2,7 @@
 
 ## 1. Visão do Produto
 
-O **RemindMe** (nome do projeto), denominado **Fluxo** (nome do sistema), é uma plataforma de gestão do ciclo de recebíveis e obrigações que substitui processos manuais e desorganizados de pequenas empresas por rotinas automáticas, auditáveis e orientadas por regra.
+O **RemindMe** (nome do projeto), é uma plataforma de gestão do ciclo de recebíveis e obrigações que substitui processos manuais e desorganizados de pequenas empresas por rotinas automáticas, auditáveis e orientadas por regra.
 
 **Propósito:**  
 Garantir que cada cobrança e cada obrigação avancem no prazo certo, com registro completo de quem fez o quê, por quê e quando, transformando a operação financeira de micro e pequenas empresas de algo caótico em algo previsível e mensurável.
