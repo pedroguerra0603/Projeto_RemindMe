@@ -23,7 +23,7 @@ Lista ordenada das unidades implementáveis do sistema. O mapa não é implement
 | 003 | Cadastro de clientes | RF-01 | — | RNF-14 | UC-03 | `Cliente` | — | 001, 002 | A escrever |
 | 004 | Orçamento: itens, valores e alçada de desconto | RF-06, RF-07, RF-10, RF-13 a RF-18 | RB-15, RB-24 | RNF-03 | UC-04, UC-05 | `Orcamento`, `ItemOrcamento`, `AlcadaDesconto`, `AprovacaoDesconto` | DA-01 | 003 | A escrever |
 | 005 | Envio, decisão do cliente e conversão em título | RF-08, RF-09, RF-11, RF-12, RF-19 | RB-05, RB-18 | RNF-09 | UC-04 | `Orcamento`, `Titulo` | DA-01, DA-07; ADR-002 | 004, 006; OPEN-15 | A escrever |
-| [006](006-titulo-pagamento-baixa-e-estorno.md) | Título: cadastro manual, pagamento, baixa e estorno | RF-20 a RF-27, RF-30, RF-31, RF-68 | RB-02, RB-21, RB-22, RB-23 | RNF-09, RNF-19 | UC-06 | `Titulo`, `Pagamento` | DA-01, DA-03, DA-09; ADR-001 | 001; para o uso completo, 002 e 003; OPEN-11 | **Proposta** |
+| [006](006-titulo-pagamento-baixa-e-estorno.md) | Título: cadastro manual, pagamento, baixa e estorno | RF-20 a RF-27, RF-30, RF-31, RF-68 | RB-02, RB-21, RB-22, RB-23 | RNF-09, RNF-19 | UC-06 | `Titulo`, `Pagamento` | DA-01, DA-03, DA-09; ADR-001 | 001; para o uso completo, 002 e 003 | **Verificada** |
 | 007 | Régua de cobrança: configuração | RF-32, RF-36 | RB-10 | RNF-18, RNF-20 | UC-13 | `ReguaCobranca`, `EtapaCobranca` | DA-10 | 002 | A escrever |
 | 008 | Régua de cobrança: execução e histórico | RF-33, RF-34, RF-35, RF-37, RF-38, RF-39, RF-70, RF-71 | RB-10, RB-11, RB-18 | RNF-12, RNF-13 | UC-08 | `TentativaCobranca` | DA-05, DA-07, DA-08; ADR-002 | 006, 007; OPEN-13 | A escrever |
 | 009 | Renegociação com extração de intenção | RF-28, RF-29, RF-69, RF-72 a RF-76 | RB-11, RB-17, RB-20, RB-26, RB-27, RB-28 | RNF-22, RNF-24, RNF-25 | UC-07 | `Renegociacao` | DA-06; ADR-003 | 006, 008; OPEN-04, OPEN-06, OPEN-08, OPEN-14 | A escrever |
@@ -56,7 +56,7 @@ A spec **006** foi escrita primeiro porque:
 - é verificável só com o domínio, sem interface e sem banco;
 - não depende de nenhuma decisão em aberto além de OPEN-11, que tem resposta simples.
 
-Ela ainda precisa ser revisada e aprovada pela equipe antes de qualquer código.
+Ela foi aprovada em 2026-10-03 por João Pedro Guerra, Renan Gandolpho e Bernardo Sanches, e verificada na mesma data.
 
 ## Perguntas de revisão
 

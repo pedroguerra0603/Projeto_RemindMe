@@ -1,16 +1,23 @@
 # Como executar — RemindMe
 
-O projeto está na fase de requisitos, modelagem e arquitetura. Ainda não há código executável.
+O projeto ainda não tem interface. O que existe é o domínio e a camada de aplicação da [Spec 006](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md), verificados por testes.
 
-As instruções de instalação e execução serão escritas aqui quando a primeira spec for implementada. Elas dependem das escolhas de tecnologia, que estão em aberto em [`.specify/open.md`](../.specify/open.md) (OPEN-01 e OPEN-02).
+## Pré-requisitos
 
-## O que este documento terá
+- Python 3.11 ou mais recente.
+- Nenhuma dependência externa: o código e os testes usam apenas a biblioteca padrão.
 
-1. Pré-requisitos e versões.
-2. Instalação de dependências.
-3. Configuração de variáveis de ambiente, com um arquivo de exemplo sem valores reais.
-4. Comando para executar a aplicação.
-5. Comando para executar os testes.
+## Executar os testes
+
+Na raiz do repositório:
+
+```
+python3 -m unittest discover -s tests -t .
+```
+
+## A definir
+
+As instruções de configuração e de execução da aplicação serão escritas aqui quando houver interface. Dependem do framework web (OPEN-01), do banco de dados (OPEN-02) e da hospedagem (OPEN-12), em [`.specify/open.md`](../.specify/open.md).
 
 ## Restrição já definida
 

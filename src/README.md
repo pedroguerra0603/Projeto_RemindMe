@@ -1,7 +1,13 @@
 # src
 
-Código do RemindMe.
+Código do RemindMe, em Python 3.11, somente com a biblioteca padrão (OPEN-01).
 
-Vazio por enquanto. A implementação começa depois que a primeira spec for aprovada pela equipe e as tecnologias forem escolhidas (OPEN-01 e OPEN-02 em [`.specify/open.md`](../.specify/open.md)).
+A organização segue as camadas de [`docs/arquitetura.md`](../docs/arquitetura.md):
 
-A organização seguirá as camadas descritas em [`docs/arquitetura.md`](../docs/arquitetura.md): apresentação, aplicação, domínio e infraestrutura.
+| Pacote | Camada | Regra |
+|---|---|---|
+| `remindme/dominio` | Domínio | Não importa nada das outras camadas (ADR-001) |
+| `remindme/aplicacao` | Aplicação | Um serviço por caso de uso; permissão, transação e auditoria; interfaces em `portas.py` |
+| `remindme/infraestrutura` | Infraestrutura | Implementações das interfaces; por enquanto, em memória |
+
+Specs implementadas: [006](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md).
