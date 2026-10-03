@@ -8,8 +8,8 @@
 | **Nome** | Título: cadastro manual, pagamento, baixa e estorno |
 | **Objetivo** | Manter o saldo e o estado de um título a receber corretos diante de pagamentos, estornos, vencimento e cancelamento. |
 | **Valor entregue** | O Operador Financeiro registra o que foi pago e sabe, a qualquer momento, quanto falta receber de cada título e em que estado ele está. |
-| **Situação** | **Proposta — aguardando aprovação da equipe. Não implementar antes da aprovação.** |
-| **Aprovada por** | *(nomes e data)* |
+| **Situação** | **Verificada** — todos os critérios de aceitação passaram (seção 8). |
+| **Aprovada por** | João Pedro Guerra, Renan Gandolpho e Bernardo Sanches, em 2026-10-03 |
 
 ## 2. Rastreabilidade
 
@@ -136,17 +136,70 @@ Os testes automatizados levam no nome o identificador da regra ou do critério, 
 
 ## 7. Questões em aberto
 
-| ID | Questão | Bloqueia a implementação? |
+| ID | Questão | Situação |
 |---|---|---|
-| OPEN-01 | Linguagem e framework | Sim |
-| OPEN-02 | Banco de dados | Não para o domínio; sim para a persistência |
-| OPEN-11 | Juros e multa em título vencido | Não, se a equipe confirmar que fica fora do MVP |
-| OPEN-15 | Um título ou um título por parcela | Não: esta spec trata cada título isoladamente |
-| OPEN-16 | Qual perfil pode cancelar um título: só o Dono, ou também o Operador Financeiro? | Sim, para CA-18 |
-| OPEN-17 | A data do pagamento pode ser anterior à data do registro? E pode ser futura? | Não; sugestão: aceitar data passada, recusar data futura |
-
-OPEN-16 e OPEN-17 surgiram ao escrever esta spec e estão também em [`open.md`](../open.md).
+| OPEN-01 | Linguagem e framework | Decidida em 2026-10-03: escolha livre, com o domínio isolado do framework. Adotado Python 3.11, só com a biblioteca padrão. O framework web fica para a primeira spec com interface. |
+| OPEN-02 | Banco de dados | Aberta. Não bloqueia: a persistência desta spec é em memória. |
+| OPEN-11 | Juros e multa em título vencido | Decidida em 2026-10-03: fora do MVP. |
+| OPEN-15 | Um título ou um título por parcela | Aberta. Não bloqueia: esta spec trata cada título isoladamente. |
+| OPEN-16 | Qual perfil pode cancelar um título | Decidida em 2026-10-03: somente o Dono. |
+| OPEN-17 | A data do pagamento pode ser anterior à data do registro? E pode ser futura? | Aberta. A implementação não restringe a data. |
+| OPEN-18 | O Dono pode estornar um pagamento de título Cancelado? | Aberta, surgiu na implementação. Comportamento provisório: recusa. |
+| OPEN-19 | O filtro "período" do RF-22 é sobre o vencimento ou sobre outra data? | Aberta, surgiu na implementação. Comportamento provisório: intervalo de vencimento. |
 
 ## 8. Verificação
 
-A preencher depois da implementação, com o resultado de cada critério de aceitação: passou, não passou ou não verificado.
+Verificada em 2026-10-03, com `python3 -m unittest discover -s tests -t .`: 48 testes, todos passando. Testes em [`tests/aplicacao/test_spec_006_aceite.py`](../../tests/aplicacao/test_spec_006_aceite.py) (critérios) e [`tests/dominio/test_titulo.py`](../../tests/dominio/test_titulo.py) (regras). Plano em [`plans/006-plano.md`](../plans/006-plano.md).
+
+### Critérios de aceitação
+
+| Critério | Teste | Resultado |
+|---|---|---|
+| CA-01 | `test_CA_01` | Passou |
+| CA-02 | `test_CA_02 (2 testes)` | Passou |
+| CA-03 | `test_CA_03` | Passou |
+| CA-04 | `test_CA_04` | Passou |
+| CA-05 | `test_CA_05` | Passou |
+| CA-06 | `test_CA_06` | Passou |
+| CA-07 | `test_CA_07` | Passou |
+| CA-08 | `test_CA_08` | Passou |
+| CA-09 | `test_CA_09` | Passou |
+| CA-10 | `test_CA_10` | Passou |
+| CA-11 | `test_CA_11` | Passou |
+| CA-12 | `test_CA_12` | Passou |
+| CA-13 | `test_CA_13` | Passou |
+| CA-14 | `test_CA_14` | Passou |
+| CA-15 | `test_CA_15` | Passou |
+| CA-16 | `test_CA_16` | Passou |
+| CA-17 | `test_CA_17` | Passou |
+| CA-18 | `test_CA_18 (3 testes, inclui OPEN-16 e E4)` | Passou |
+| CA-19 | `test_CA_19` | Passou |
+| CA-20 | `test_CA_20` | Passou |
+| CA-21 | `test_CA_21 (2 testes)` | Passou |
+| CA-22 | `test_CA_22 (2 testes, inclui RB-01)` | Passou |
+| CA-23 | `test_CA_23` | Passou |
+| CA-24 | `test_CA_24 (50 sequências aleatórias com semente fixa)` | Passou |
+
+### Invariantes
+
+| Invariante | Como foi verificada | Resultado |
+|---|---|---|
+| INV-1, INV-2, INV-3 | CA-24, a cada passo de cada sequência; `test_RB_22_*` | Passou |
+| INV-4 | `test_RB_21_*`; o estado é um único valor de `EstadoTitulo` | Passou |
+| INV-5 | `test_RB_21_valor_do_titulo_nao_muda_com_pagamentos`; nenhuma operação altera o valor | Passou |
+| INV-6 | Revisão de código: não há operação que remova pagamento | Passou |
+| INV-7 | CA-22 e CA-23 | Passou |
+| INV-8 | RB-21, RB-22 e RB-23 ficam só em `src/remindme/dominio/titulo.py`; o domínio não importa aplicação nem infraestrutura | Passou |
+
+### Divergências e limitações
+
+| Item | Situação |
+|---|---|
+| A Spec 001 (auditoria) ainda não existe | A auditoria é gravada por uma interface, com implementação em memória. A Spec 001 vai substituí-la sem mudar o domínio. |
+| Persistência | Em memória, com transação por cópia e restauração. O banco depende de OPEN-02. |
+| Estado Em Renegociação | Fica fora de `EstadoTitulo` até a Spec 009, como está no escopo. |
+| Quem cadastra título e registra pagamento | Sem restrição de perfil nesta spec. A autorização geral, inclusive RB-03 (Contador só consulta), é da Spec 002. |
+| Data do pagamento | Sem restrição, até a decisão de OPEN-17. |
+| Estorno em título Cancelado | Recusado provisoriamente (OPEN-18). |
+| Filtro por período | Intervalo de vencimento, provisoriamente (OPEN-19). |
+| Nome dos testes | Python não aceita hífen em identificador: `RB-23_...` vira `test_RB_23_...`. |

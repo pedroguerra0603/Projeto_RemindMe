@@ -4,7 +4,7 @@ Decisões que a baseline ainda não define. O agente não preenche essas lacunas
 
 | ID | Questão | Por que está em aberto | Sugestão | Afeta | Situação |
 |---|---|---|---|---|---|
-| OPEN-01 | Qual linguagem e qual framework web? | A baseline descreve o domínio, e não a tecnologia. | Escolher pela familiaridade da equipe, desde que o domínio fique sem dependência do framework (ADR-001). | Todas as specs; `docs/execucao.md` | Aberta |
+| OPEN-01 | Qual linguagem e qual framework web? | A baseline descreve o domínio, e não a tecnologia. | Escolher pela familiaridade da equipe, desde que o domínio fique sem dependência do framework (ADR-001). | Todas as specs; `docs/execucao.md` | **Decidida em 2026-10-03:** escolha livre, com o domínio isolado do framework. Adotado Python 3.11 na Spec 006; framework web a escolher na primeira spec com interface. |
 | OPEN-02 | Qual banco de dados? | O modelo conceitual não é modelo físico. | Banco relacional com transações e restrição de unicidade. | Spec 001; `docs/arquitetura.md` | Aberta |
 | OPEN-03 | Sessão no servidor ou token? | Os RNF exigem autenticação, mas não escolhem o mecanismo. | — | Spec 002 | Aberta |
 | OPEN-04 | Qual provedor de IA? | ADR-003 exige que seja trocável, mas não escolhe. | Começar apenas com a IA simulada. | Specs 009 e 011 | Aberta |
@@ -14,13 +14,15 @@ Decisões que a baseline ainda não define. O agente não preenche essas lacunas
 | OPEN-08 | Como o Cliente se autentica? | A persona Cliente não quer criar conta complicada, e RNF-01 exige autenticação. | Link de acesso com código enviado pelo canal de notificação. | Specs 002 e 009 | Aberta |
 | OPEN-09 | Quais as metas de disponibilidade, backup e tempo limite da IA? | RNF-07, RNF-08 e RNF-24 estão com valores propostos **(P)**. | 99% ao mês; backup diário com 7 dias de retenção; 10 segundos. | `docs/requisitos.md` | Aberta |
 | OPEN-10 | Administrador é um perfil próprio ou um papel do Dono? | Os casos de uso tratam o Administrador como ator; as personas têm quatro perfis. | Perfil próprio, que o Dono pode acumular. | Spec 002; `docs/personas.md` | Aberta |
-| OPEN-11 | Há juros ou multa em título vencido? | Nenhum requisito trata disso. O saldo hoje é valor menos pagamentos. | Fora do MVP. | Spec 006 | Aberta |
+| OPEN-11 | Há juros ou multa em título vencido? | Nenhum requisito trata disso. O saldo hoje é valor menos pagamentos. | Fora do MVP. | Spec 006 | **Decidida em 2026-10-03:** fora do MVP. |
 | OPEN-12 | Onde o sistema será hospedado para a apresentação? | Não definido. | — | `docs/execucao.md` | Aberta |
 | OPEN-13 | Qual o mecanismo do agendador? | DT-07 define o papel, e não o mecanismo. | Tarefa periódica no próprio processo da aplicação. | Specs 008 e 010 | Aberta |
 | OPEN-14 | O que acontece com a renegociação quando a nova data vence sem pagamento? | RB-20 e RB-28 não cobrem promessa descumprida. | O título volta a Vencido pela regra normal (RF-24) e a régua recomeça. | Spec 009 | Aberta |
 | OPEN-15 | O orçamento aprovado gera um título ou um título por parcela? | RF-19 copia a "condição de pagamento", sem dizer se há parcelas. | Um título por orçamento no MVP. | Specs 005 e 006 | Aberta |
-| OPEN-16 | Qual perfil pode cancelar um título? | RF-31 exige motivo, mas não diz quem pode cancelar. | Somente o Dono, como no estorno. | Spec 006 | Aberta |
+| OPEN-16 | Qual perfil pode cancelar um título? | RF-31 exige motivo, mas não diz quem pode cancelar. | Somente o Dono, como no estorno. | Spec 006 | **Decidida em 2026-10-03:** somente o Dono. |
 | OPEN-17 | A data de um pagamento pode ser passada ou futura em relação ao registro? | RF-25 não restringe a data. | Aceitar data passada; recusar data futura. | Spec 006 | Aberta |
+| OPEN-18 | O Dono pode estornar um pagamento de título Cancelado? | O estado Cancelado é final (RB-21), mas RF-30 não trata do estorno nesse caso. Surgiu na implementação da Spec 006. | Recusar; para corrigir, o Dono estorna antes de cancelar. Implementado assim, provisoriamente. | Spec 006 | Aberta |
+| OPEN-19 | O filtro "período" do RF-22 é sobre o vencimento ou sobre outra data? | RF-22 lista "vencimento" e "período" como filtros separados, e o título não tem outra data no modelo. Surgiu na implementação da Spec 006. | Intervalo de vencimento. Implementado assim, provisoriamente. | Spec 006; `docs/requisitos.md` | Aberta |
 
 ## Divergências resolvidas na revisão de outubro de 2026
 
