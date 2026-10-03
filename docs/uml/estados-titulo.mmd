@@ -1,0 +1,16 @@
+stateDiagram-v2
+    direction LR
+    [*] --> Aberto : criado
+    Aberto --> Vencido : vencimento passa
+    Aberto --> Baixado : saldo zero
+    Vencido --> Baixado : saldo zero
+    Vencido --> EmRenegociacao : promessa válida
+    EmRenegociacao --> Aberto : aprovada
+    EmRenegociacao --> Vencido : recusada
+    EmRenegociacao --> Baixado : saldo zero
+    Baixado --> Aberto : estorno, a vencer
+    Baixado --> Vencido : estorno, já vencido
+    Aberto --> Cancelado : cancelamento
+    Vencido --> Cancelado : cancelamento
+    Cancelado --> [*]
+    EmRenegociacao : Em Renegociação
