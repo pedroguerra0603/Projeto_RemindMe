@@ -1,0 +1,24 @@
+# Segredos e configuração local
+.env
+.env.*
+!.env.example
+mcp.env
+*.pem
+*.key
+
+# Sistema e editores
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# Dependências e artefatos de build
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+dist/
+build/
+target/
+coverage/

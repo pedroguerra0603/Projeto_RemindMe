@@ -1,0 +1,132 @@
+classDiagram
+    direction LR
+
+    class Perfil {
+        nome
+    }
+    class AlcadaDesconto {
+        percentualMaximo
+    }
+    class Usuario {
+        nome
+        email
+        ativo
+    }
+    class Cliente {
+        nome
+        documento
+        contato
+    }
+    class Orcamento {
+        dataCriacao
+        condicaoPagamento
+        percentualDesconto
+        estado
+        valorBruto()
+        valorLiquido()
+        enviar()
+        registrarDecisao()
+        cancelar()
+    }
+    class ItemOrcamento {
+        descricao
+        quantidade
+        valorUnitario
+    }
+    class AprovacaoDesconto {
+        decisao
+        data
+    }
+    class Titulo {
+        valor
+        vencimento
+        origem
+        estado
+        saldo()
+        registrarPagamento()
+        marcarVencido()
+        cancelar()
+    }
+    class Pagamento {
+        valor
+        data
+        estornado
+        estornar()
+    }
+    class Renegociacao {
+        vencimentoAnterior
+        novoVencimento
+        valorPrometido
+        situacao
+        data
+    }
+    class ReguaCobranca {
+        nome
+    }
+    class EtapaCobranca {
+        prazoEmDias
+        mensagem
+        acao
+    }
+    class TentativaCobranca {
+        data
+        resultado
+    }
+    class Obrigacao {
+        tipo
+        periodicidade
+        prazo
+        exigeEvidencia
+        estado
+        registrarCumprimento()
+        gerarProximaOcorrencia()
+    }
+    class Evidencia {
+        descricao
+        dataAnexo
+    }
+    class LancamentoFinanceiro {
+        descricao
+        valor
+        tipo
+        data
+        estado
+    }
+    class CategoriaFinanceira {
+        nome
+        tipo
+    }
+    class SugestaoClassificacao {
+        confianca
+        aceita
+    }
+    class RegistroAuditoria {
+        dataHora
+        operacao
+        registroAfetado
+        valorAnterior
+        valorNovo
+        motivo
+    }
+
+    Perfil "1" -- "0..*" Usuario : atribuído a
+    Perfil "1" -- "0..1" AlcadaDesconto : limitado por
+    Usuario "1" -- "0..*" Orcamento : elabora
+    Cliente "1" -- "0..*" Orcamento : recebe
+    Orcamento "1" *-- "0..*" ItemOrcamento : contém
+    Orcamento "1" -- "0..1" AprovacaoDesconto : depende de
+    Usuario "1" -- "0..*" AprovacaoDesconto : decide
+    Orcamento "0..1" -- "0..1" Titulo : origina
+    Cliente "1" -- "0..*" Titulo : deve
+    Titulo "1" *-- "0..*" Pagamento : recebe
+    Titulo "1" -- "0..*" Renegociacao : sofre
+    ReguaCobranca "1" *-- "1..*" EtapaCobranca : composta de
+    Titulo "1" -- "0..*" TentativaCobranca : tem
+    EtapaCobranca "1" -- "0..*" TentativaCobranca : executada em
+    Usuario "1" -- "0..*" Obrigacao : responde por
+    Obrigacao "1" *-- "0..*" Evidencia : comprovada por
+    Pagamento "0..1" -- "1..*" LancamentoFinanceiro : gera
+    CategoriaFinanceira "0..1" -- "0..*" LancamentoFinanceiro : classifica
+    LancamentoFinanceiro "1" -- "0..*" SugestaoClassificacao : recebe
+    CategoriaFinanceira "1" -- "0..*" SugestaoClassificacao : sugerida em
+    Usuario "0..1" -- "0..*" RegistroAuditoria : responsável por
