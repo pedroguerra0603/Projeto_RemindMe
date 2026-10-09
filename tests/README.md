@@ -12,3 +12,4 @@ A estratégia está em [`docs/testes.md`](../docs/testes.md). Cada teste leva o 
 |---|---|
 | `dominio/` | Unidade de domínio: regras e transições, sem banco e sem interface |
 | `aplicacao/` | Critérios de aceite de cada spec, com repositórios em memória |
+| `desempenho/` | Limite de tempo de RNF-11 e o script de métricas de `docs/qualidade/eficiencia.md` |
