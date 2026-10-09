@@ -6,7 +6,7 @@ Issue #66. Liga cada critério de aceite, fluxo, exceção, invariante e requisi
 - **Execução:** `python3 -m unittest discover -s tests -t .`, em 2026-10-09, Python 3.13.16. Resultado de cada linha: **Passou**, salvo indicação.
 - **Convenção de nomes:** `CA-06` vira `test_CA_06_...`; `RB-23` vira `test_RB_23_...`.
 
-Pastas abreviadas: `aceite` = `tests/aplicacao/test_spec_006_aceite.py`; `confiab.` = `tests/aplicacao/test_confiabilidade.py`; `usab.` = `tests/aplicacao/test_usabilidade.py`; `regras` = `tests/dominio/test_titulo.py`; `unidades` = `tests/dominio/test_unidades.py`; `invariantes` = `tests/dominio/test_invariantes.py`; `integração` = `tests/integracao/test_integracao.py`; `camadas` = `tests/arquitetura/test_camadas.py`.
+Pastas abreviadas: `aceite` = `tests/aplicacao/test_spec_006_aceite.py`; `confiab.` = `tests/aplicacao/test_confiabilidade.py`; `usab.` = `tests/aplicacao/test_usabilidade.py`; `regras` = `tests/dominio/test_titulo.py`; `unidades` = `tests/dominio/test_unidades.py`; `invariantes` = `tests/dominio/test_invariantes.py`; `exceções` = `tests/aplicacao/test_excecoes.py`; `integração` = `tests/integracao/test_integracao.py`; `camadas` = `tests/arquitetura/test_camadas.py`.
 
 ## 1. Critérios de aceitação da Spec 006
 
@@ -50,13 +50,13 @@ Pastas abreviadas: `aceite` = `tests/aplicacao/test_spec_006_aceite.py`; `confia
 | A4 — Estorno | CA-13, CA-14, `test_A4_*` (unidades, 3 testes) | Passou |
 | A5 — Cancelamento | CA-18 | Passou |
 | A6 — Consulta | CA-20, CA-21, `test_A6_consulta_apresenta_o_que_o_operador_precisa_para_decidir` (usab.) | Passou |
-| E1 — Valor inválido | CA-06, CA-07 | Passou |
+| E1 — Valor inválido | CA-06, CA-07; `test_E1_*` (exceções), inclusive `NaN`, infinito, `float` e texto | Passou após a correção de #70 |
 | E2 — Estado que não aceita pagamento | CA-08, CA-09 | Passou |
 | E3 — Estorno por quem não é Dono | CA-15 | Passou |
-| E4 — Motivo ausente | CA-16, CA-18, `test_RF_31_motivo_em_branco_equivale_a_ausente` | Passou |
-| E5 — Pagamento já estornado | CA-17 | Passou |
+| E4 — Motivo ausente | CA-16, CA-18, `test_RF_31_motivo_em_branco_equivale_a_ausente`; `test_E4_*` (exceções) | Passou após a correção de #70 |
+| E5 — Pagamento já estornado | CA-17; `test_E5_pagamento_de_outro_titulo_nao_e_estornado` (exceções) | Passou |
 | E6 — Cancelamento de título Baixado | CA-19 | Passou |
-| E7 — Dados inválidos no cadastro | CA-02 | Passou |
+| E7 — Dados inválidos no cadastro | CA-02; `test_E7_*` (exceções) | Passou após a correção de #70 |
 | E8 — Falha durante a operação | CA-23, `test_RNF_09_*` (confiab.) | Passou |
 | "Toda recusa informa o motivo e não altera nenhum dado" | `test_RNF_14_cada_recusa_informa_o_campo_ou_a_condicao` (usab.); `test_recusa_nao_grava_auditoria` (integração) | Passou |
 

@@ -42,6 +42,9 @@ Executada em 2026-10-09.
 | `e01d6ee` | #66 Matriz de critérios | 111 | Passou |
 | `0fca159` | #67 Regras de negócio e invariantes | 121 | Passou |
 | `019fa45` | #68 Exceções | 132 | Passou, com 3 falhas esperadas (D-01 a D-05) |
+| `0b89c69` | #69 Regressão | 132 | Passou, com 3 falhas esperadas |
+| `c3bd6ca` | #70 Correção de defeitos (primeira alteração em `src/`) | 132 | Passou; falhas esperadas resolvidas |
+| `59ba40d` | #71 Revisão de código | 132 | Passou |
 
 Nenhum teste foi removido nem renomeado. Até `019fa45` nenhuma alteração tocou em `src/`: o código de produção é o mesmo da linha de base.
 
@@ -51,4 +54,4 @@ A seção é refeita sempre que `src/` muda. A primeira alteração de código d
 
 ## 4. Conclusão
 
-Nenhuma regressão até `019fa45`. A suíte cresceu de 48 para 132 testes, e as três falhas esperadas correspondem a defeitos registrados e com correção planejada.
+Nenhuma regressão. A suíte cresceu de 48 para 132 testes. As três falhas esperadas de `019fa45` e `0b89c69` correspondiam aos defeitos D-01 a D-05 e deixaram de existir com a correção de `c3bd6ca`. Depois da correção, os 48 testes da linha de base continuam passando ([defeitos](defeitos.md#regressão-depois-da-correção)).

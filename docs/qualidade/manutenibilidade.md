@@ -13,13 +13,13 @@ Contagem por análise da árvore sintática (`ast`), sem linhas em branco e sem 
 
 | Módulo | Camada | Linhas | Funções | Maior complexidade | Importa |
 |---|---|---|---|---|---|
-| `dominio/titulo.py` | Domínio | 123 | 9 | 5 (`registrar_pagamento`, `estornar_pagamento`) | `dominio` |
+| `dominio/titulo.py` | Domínio | 129 | 10 | 5 (`registrar_pagamento`, `estornar_pagamento`) | `dominio` |
 | `dominio/regras.py` | Domínio | 11 | 2 | 2 | `dominio` |
 | `dominio/usuario.py`, `auditoria.py`, `erros.py` | Domínio | 31 | 1 | 1 | — |
 | `aplicacao/servico_titulos.py` | Aplicação | 162 | 12 | 8 (`_atende`, uma expressão booleana de 4 filtros) | `aplicacao`, `dominio` |
 | `aplicacao/portas.py` | Aplicação | 21 | 8 | 1 | `dominio` |
 | `infraestrutura/memoria.py` | Infraestrutura | 49 | 13 | 2 | `dominio` |
-| **Total** | | **397** | **45** | | |
+| **Total** | | **403** | **46** | | |
 
 | Indicador | Valor | Referência usual |
 |---|---|---|
@@ -27,7 +27,7 @@ Contagem por análise da árvore sintática (`ast`), sem linhas em branco e sem 
 | Maior função | 22 linhas (`cadastrar_manual`, com a docstring) | — |
 | Importações não usadas | 0 | 0 |
 | Dependências fora da biblioteca padrão | 0 | OPEN-01 |
-| Testes automatizados | Contagem final no [relatório de qualidade](relatorio-de-qualidade.md) | — |
+| Testes automatizados | 132 testes, 1.388 linhas de teste para 403 linhas de produção | — |
 
 ## 2. Avaliação por subcaracterística
 
