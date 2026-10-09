@@ -23,6 +23,7 @@ Decisões que a baseline ainda não define. O agente não preenche essas lacunas
 | OPEN-17 | A data de um pagamento pode ser passada ou futura em relação ao registro? | RF-25 não restringe a data. | Aceitar data passada; recusar data futura. | Spec 006 | Aberta |
 | OPEN-18 | O Dono pode estornar um pagamento de título Cancelado? | O estado Cancelado é final (RB-21), mas RF-30 não trata do estorno nesse caso. Surgiu na implementação da Spec 006. | Recusar; para corrigir, o Dono estorna antes de cancelar. Implementado assim, provisoriamente. | Spec 006 | Aberta |
 | OPEN-19 | O filtro "período" do RF-22 é sobre o vencimento ou sobre outra data? | RF-22 lista "vencimento" e "período" como filtros separados, e o título não tem outra data no modelo. Surgiu na implementação da Spec 006. | Intervalo de vencimento. Implementado assim, provisoriamente. | Spec 006; `docs/requisitos.md` | Aberta |
+| OPEN-20 | Valores monetários podem ter mais de duas casas decimais? Se não, a entrada é recusada ou arredondada, e por qual regra? | A baseline não define precisão nem arredondamento. O plano da Spec 006 diz "Decimal, com duas casas", mas o código aceita R$ 0,001 e o saldo passa a ter três casas. Surgiu nos testes de exceção (#68). | Recusar valor com mais de duas casas, com motivo; sem arredondamento automático. | Spec 006; Specs 004 e 012 (desconto e apuração) | Aberta |
 
 ## Divergências resolvidas na revisão de outubro de 2026
 

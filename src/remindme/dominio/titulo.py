@@ -55,6 +55,7 @@ class Titulo:
         """RF-20, RF-21: o título nasce Aberto, com origem manual e saldo igual ao valor."""
         if vencimento is None:
             raise OperacaoRecusada("O vencimento é obrigatório.")
+        _exigir_decimal(valor, "O valor do título deve ser um número decimal finito.")
         if valor <= ZERO:
             raise OperacaoRecusada("O valor do título deve ser maior que zero.")
         return cls(
@@ -79,6 +80,7 @@ class Titulo:
             raise OperacaoRecusada(
                 f"Título {self.estado.value} não aceita pagamento (RB-21)."
             )
+        _exigir_decimal(valor, "O valor do pagamento deve ser um número decimal finito (RB-23).")
         if valor <= ZERO:
             raise OperacaoRecusada("O valor do pagamento deve ser maior que zero (RB-23).")
         if valor > self.saldo:
@@ -142,6 +144,12 @@ class Titulo:
         raise OperacaoRecusada("Pagamento não encontrado neste título.")
 
 
+def _exigir_decimal(valor: Decimal, mensagem: str) -> None:
+    """E1, E7: NaN, infinito, float ou texto não são valor monetário (defeitos D-01 a D-04)."""
+    if not isinstance(valor, Decimal) or not valor.is_finite():
+        raise OperacaoRecusada(mensagem)
+
+
 def _exigir_motivo(motivo: Optional[str], operacao: str) -> None:
-    if motivo is None or not motivo.strip():
+    if not isinstance(motivo, str) or not motivo.strip():
         raise OperacaoRecusada(f"O motivo do {operacao} é obrigatório (RF-31).")
