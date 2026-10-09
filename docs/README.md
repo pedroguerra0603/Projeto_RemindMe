@@ -2,6 +2,8 @@
 
 A documentação está organizada em dois conjuntos, sem redundância: requisitos e modelagem, e arquitetura. Leia na ordem abaixo.
 
+Para uma leitura única e resumida, veja a [documentação final consolidada](documentacao-final.md).
+
 ## 1. Problema e contexto
 
 | Documento | Conteúdo |
