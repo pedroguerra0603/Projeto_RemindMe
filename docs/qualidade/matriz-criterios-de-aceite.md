@@ -6,7 +6,7 @@ Issue #66. Liga cada critério de aceite, fluxo, exceção, invariante e requisi
 - **Execução:** `python3 -m unittest discover -s tests -t .`, em 2026-10-09, Python 3.13.16. Resultado de cada linha: **Passou**, salvo indicação.
 - **Convenção de nomes:** `CA-06` vira `test_CA_06_...`; `RB-23` vira `test_RB_23_...`.
 
-Pastas abreviadas: `aceite` = `tests/aplicacao/test_spec_006_aceite.py`; `confiab.` = `tests/aplicacao/test_confiabilidade.py`; `usab.` = `tests/aplicacao/test_usabilidade.py`; `regras` = `tests/dominio/test_titulo.py`; `unidades` = `tests/dominio/test_unidades.py`; `integração` = `tests/integracao/test_integracao.py`; `camadas` = `tests/arquitetura/test_camadas.py`.
+Pastas abreviadas: `aceite` = `tests/aplicacao/test_spec_006_aceite.py`; `confiab.` = `tests/aplicacao/test_confiabilidade.py`; `usab.` = `tests/aplicacao/test_usabilidade.py`; `regras` = `tests/dominio/test_titulo.py`; `unidades` = `tests/dominio/test_unidades.py`; `invariantes` = `tests/dominio/test_invariantes.py`; `integração` = `tests/integracao/test_integracao.py`; `camadas` = `tests/arquitetura/test_camadas.py`.
 
 ## 1. Critérios de aceitação da Spec 006
 
@@ -26,16 +26,16 @@ Pastas abreviadas: `aceite` = `tests/aplicacao/test_spec_006_aceite.py`; `confia
 | CA-12 | RF-26, RB-21 | `test_CA_12_pagamento_integral_de_titulo_vencido_baixa` | `test_UC_06_ciclo_completo_grava_estado_e_trilha_de_auditoria` (integração) | Passou |
 | CA-13 | RF-30, RB-02 | `test_CA_13_estorno_com_vencimento_futuro_volta_a_aberto` | `test_A4_estorno_com_vencimento_igual_a_data_de_referencia_volta_a_aberto` (unidades) | Passou |
 | CA-14 | RF-30, RB-21 | `test_CA_14_estorno_com_vencimento_passado_vai_a_vencido` | `test_UC_06_ciclo_completo_...` (integração) | Passou |
-| CA-15 | RB-02, E3 | `test_CA_15_operador_financeiro_nao_estorna` | `test_RB_02_somente_o_dono_estorna` (regras), todos os perfis | Passou |
+| CA-15 | RB-02, E3 | `test_CA_15_operador_financeiro_nao_estorna` | `test_RB_02_somente_o_dono_estorna` (regras); `test_RB_02_nenhum_outro_perfil_estorna` (invariantes), pelo serviço | Passou |
 | CA-16 | RF-31, E4 | `test_CA_16_recusa_estorno_sem_motivo` | — | Passou |
 | CA-17 | E5, INV-1 | `test_CA_17_recusa_segundo_estorno_do_mesmo_pagamento` | `test_E5_estorno_de_pagamento_inexistente_e_recusado` (unidades) | Passou |
-| CA-18 | RF-31, RB-21, OPEN-16 | `test_CA_18_dono_cancela_titulo_aberto_com_motivo`; `test_CA_18_OPEN_16_operador_financeiro_nao_cancela`; `test_CA_18_E4_recusa_cancelamento_sem_motivo` | `test_OPEN_16_somente_o_dono_cancela` (regras) | Passou |
+| CA-18 | RF-31, RB-21, OPEN-16 | `test_CA_18_dono_cancela_titulo_aberto_com_motivo`; `test_CA_18_OPEN_16_operador_financeiro_nao_cancela`; `test_CA_18_E4_recusa_cancelamento_sem_motivo` | `test_OPEN_16_somente_o_dono_cancela` (regras); `test_OPEN_16_nenhum_outro_perfil_cancela` (invariantes) | Passou |
 | CA-19 | RB-21, E6 | `test_CA_19_recusa_cancelamento_de_titulo_baixado` | `test_E6_recusa_de_cancelamento_de_baixado_orienta_o_estorno` (unidades) | Passou |
 | CA-20 | RF-23 | `test_CA_20_titulo_proximo_do_vencimento_e_sinalizado_e_continua_aberto` | `test_RF_23_limites_da_antecedencia`, `test_RF_23_so_titulo_aberto_e_sinalizado` (regras) | Passou |
 | CA-21 | RF-22 | `test_CA_21_filtra_por_cliente_e_estado`; `test_CA_21_filtra_por_periodo_de_vencimento` | — | Passou |
 | CA-22 | RB-01, INV-7 | `test_CA_22_pagamento_gera_registro_de_auditoria`; `test_CA_22_RB_01_mudancas_de_estado_sao_auditadas` | `test_UC_06_ciclo_completo_...` (integração), trilha completa | Passou |
 | CA-23 | RNF-09, INV-7 | `test_CA_23_falha_na_auditoria_desfaz_o_pagamento` | `test_RNF_09_*` (confiab.), 5 operações × 2 tipos de falha | Passou |
-| CA-24 | INV-1, INV-2 | `test_CA_24_saldo_e_valor_menos_pagamentos_nao_estornados` | — | Passou |
+| CA-24 | INV-1, INV-2 | `test_CA_24_saldo_e_valor_menos_pagamentos_nao_estornados` | `test_INV_1_a_INV_6_valem_depois_de_cada_operacao` (invariantes) | Passou |
 
 **Cobertura:** 24 de 24 critérios com teste; 24 passaram.
 
@@ -64,12 +64,12 @@ Pastas abreviadas: `aceite` = `tests/aplicacao/test_spec_006_aceite.py`; `confia
 
 | Invariante | Testes | Resultado |
 |---|---|---|
-| INV-1 — saldo = valor − pagamentos não estornados | CA-24; `test_INV_1_*` (unidades) | Passou |
-| INV-2 — 0 ≤ saldo ≤ valor | CA-24 | Passou |
-| INV-3 — Baixado ⇔ saldo zero | CA-24; CA-05 | Passou |
-| INV-4 — um estado, só por transição válida | `test_RB_21_*` (regras) | Passou |
-| INV-5 — valor não muda | `test_RB_21_valor_do_titulo_nao_muda_com_pagamentos` | Passou |
-| INV-6 — pagamento não é apagado | Revisão de código | Passou |
+| INV-1 — saldo = valor − pagamentos não estornados | CA-24; `test_INV_1_*` (unidades); `test_INV_1_a_INV_6_*` (invariantes, 200 sequências) | Passou |
+| INV-2 — 0 ≤ saldo ≤ valor | CA-24; `test_INV_1_a_INV_6_*` (invariantes) | Passou |
+| INV-3 — Baixado ⇔ saldo zero | CA-24; CA-05; `test_RB_22_um_centavo_de_saldo_impede_a_baixa` (invariantes) | Passou |
+| INV-4 — um estado, só por transição válida | `test_RB_21_*` (regras); `test_RB_21_cada_operacao_em_cada_estado` (invariantes, 4 estados × 5 operações); `test_INV_4_*` (invariantes) | Passou |
+| INV-5 — valor não muda | `test_RB_21_valor_do_titulo_nao_muda_com_pagamentos`; `test_INV_1_a_INV_6_*` (invariantes) | Passou |
+| INV-6 — pagamento não é apagado | Revisão de código; `test_INV_1_a_INV_6_*` (invariantes) | Passou |
 | INV-7 — auditoria na mesma transação | CA-22, CA-23; `test_INV_7_*` (confiab.) | Passou |
 | INV-8 — regras no domínio | `test_RNF_19_regras_do_titulo_ficam_somente_no_dominio`, `test_ADR_001_*` (camadas) | Passou |
 
@@ -85,11 +85,11 @@ Pastas abreviadas: `aceite` = `tests/aplicacao/test_spec_006_aceite.py`; `confia
 | RF-30 | CA-13, CA-14 | Passou |
 | RF-31 | CA-16, CA-18 | Passou |
 | RF-68 | CA-06, CA-07 | Passou |
-| RB-01 | CA-22 | Passou |
+| RB-01 | CA-22; `test_RB_01_toda_mudanca_de_estado_tem_registro_de_auditoria` | Passou |
 | RB-02 | CA-15 | Passou |
 | RB-21 | CA-08, CA-09, CA-18, CA-19 | Passou |
 | RB-22 | CA-03, CA-05 | Passou |
-| RB-23 | CA-06, CA-07 | Passou |
+| RB-23 | CA-06, CA-07; `test_RB_23_limite_*`, `test_RB_23_saldo_restaurado_*` | Passou |
 | RNF-09 | CA-23 | Passou |
 | RNF-19 | `test_RNF_19_*`, `test_ADR_001_*` | Passou |
 
