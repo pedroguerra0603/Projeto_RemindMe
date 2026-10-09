@@ -30,6 +30,7 @@ Para uma leitura única e resumida, veja a [documentação final consolidada](do
 | [ADRs](adr/README.md) | Decisões caras de reverter |
 | [Segurança](seguranca.md) | Segurança do produto e do uso de agentes |
 | [Testes](testes.md) | Estratégia de testes e definição de pronto |
+| [Qualidade](qualidade/README.md) | Avaliação pela ISO/IEC 25010, testes e revisão de código |
 
 ## 4. Trabalho da equipe
 
