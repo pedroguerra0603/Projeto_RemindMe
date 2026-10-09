@@ -29,7 +29,7 @@ TRANSICOES_VALIDAS = {(A, V), (A, B), (V, B), (B, A), (B, V), (A, C), (V, C)}
 
 
 def titulo_em(estado):
-    """Título de R$ 1.000,00 vencido ontem, levado ao estado pedido. Aberto, Vencido e Cancelado
+    """Título de R$ 1.000,00 vencido ontem, levado ao estado solicitado. Aberto, Vencido e Cancelado
     ficam com um pagamento parcial de R$ 100,00; Baixado, com um de R$ 1.000,00."""
     t = Titulo.cadastrar_manual("t1", "c1", Decimal("1000.00"), ONTEM)
     if estado is B:
