@@ -10,6 +10,7 @@ Avaliação da qualidade do produto pelas características da ISO/IEC 25010, mai
 | [Manutenibilidade](manutenibilidade.md) | Métricas e avaliação do código | #61 |
 | [Portabilidade](portabilidade.md) | Testes de ambiente | #63 |
 | [Matriz de critérios de aceite](matriz-criterios-de-aceite.md) | Spec → teste → resultado | #66 |
+| [Exceções](excecoes.md) | Casos de teste de erro e exceção | #68 |
 | [Regressão](regressao.md) | Execuções da suíte antes e depois de cada alteração | #69 |
 | [Defeitos](defeitos.md) | Registro de defeitos e evidências | #70 |
 | [Revisão de código](revisao-de-codigo.md) | Checklist de revisão | #71 |
