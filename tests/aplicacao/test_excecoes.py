@@ -85,20 +85,17 @@ class ValoresInvalidos(unittest.TestCase):
         self.assertTrue(recusa.exception.motivo)
         self.assertEqual(t, antes)
 
-    @unittest.expectedFailure  # D-01, D-02, D-04 em docs/qualidade/excecoes.md
     def test_E7_cadastro_com_valor_invalido_e_recusado(self):
         for nome, valor in VALORES_INVALIDOS.items():
             with self.subTest(valor=nome), self.assertRaises(OperacaoRecusada):
                 Titulo.cadastrar_manual("t1", "c1", valor, FUTURO)
 
-    @unittest.expectedFailure  # D-01, D-03, D-04
     def test_E1_pagamento_com_valor_invalido_e_recusado_sem_alterar_o_titulo(self):
         for nome, valor in VALORES_INVALIDOS.items():
             with self.subTest(valor=nome):
                 t = titulo()
                 self.assertRecusaSemAlterar(t, lambda: t.registrar_pagamento("p1", valor, HOJE))
 
-    @unittest.expectedFailure  # D-05
     def test_E4_motivo_que_nao_e_texto_e_recusado(self):
         for motivo in (123, ["motivo"]):
             with self.subTest(motivo=motivo):

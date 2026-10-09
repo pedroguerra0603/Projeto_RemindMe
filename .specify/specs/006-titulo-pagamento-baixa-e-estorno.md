@@ -146,6 +146,7 @@ Os testes automatizados levam no nome o identificador da regra ou do critério, 
 | OPEN-17 | A data do pagamento pode ser anterior à data do registro? E pode ser futura? | Aberta. A implementação não restringe a data. |
 | OPEN-18 | O Dono pode estornar um pagamento de título Cancelado? | Aberta, surgiu na implementação. Comportamento provisório: recusa. |
 | OPEN-19 | O filtro "período" do RF-22 é sobre o vencimento ou sobre outra data? | Aberta, surgiu na implementação. Comportamento provisório: intervalo de vencimento. |
+| OPEN-20 | Valores monetários podem ter mais de duas casas decimais? | Aberta, surgiu nos testes de exceção (#68). Comportamento atual: aceita. |
 
 ## 8. Verificação
 
@@ -203,3 +204,9 @@ Verificada em 2026-10-03, com `python3 -m unittest discover -s tests -t .`: 48 t
 | Estorno em título Cancelado | Recusado provisoriamente (OPEN-18). |
 | Filtro por período | Intervalo de vencimento, provisoriamente (OPEN-19). |
 | Nome dos testes | Python não aceita hífen em identificador: `RB-23_...` vira `test_RB_23_...`. |
+| Validação de entrada (2026-10-09, #70) | Valor `NaN`, infinito, `float`, texto ou `None` e motivo que não é texto geravam erro interno, e um pagamento em `float` ficava anexado ao título antes do erro. Agora são recusados com motivo, no domínio (E1, E4, E7). Defeitos D-01 a D-05 em [`docs/qualidade/defeitos.md`](../../docs/qualidade/defeitos.md). |
+| Precisão monetária | Valor com mais de duas casas decimais é aceito, até a decisão de OPEN-20. |
+
+### Reverificação de 2026-10-09
+
+Rodada de qualidade das issues #48 a #72: 132 testes, todos passando, em Python 3.11, 3.12 e 3.13. Os 24 critérios de aceitação continuam passando, e os 48 testes da verificação original passam contra o código corrigido. Matriz completa em [`docs/qualidade/matriz-criterios-de-aceite.md`](../../docs/qualidade/matriz-criterios-de-aceite.md).
