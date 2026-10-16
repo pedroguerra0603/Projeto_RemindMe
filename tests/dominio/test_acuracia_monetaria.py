@@ -161,7 +161,7 @@ class ValoresComMuitosDigitos(unittest.TestCase):
     def test_D_06_valor_acima_de_28_digitos_perde_o_centavo_sem_aviso(self):
         """Defeito D-06, aberto: com mais de 28 dígitos significativos, a subtração do saldo arredonda. O
         título nasce com saldo diferente do valor (INV-1) e pagamentos de centavos não alteram o saldo.
-        O correto é recusar o valor ou calcular sem perda; o limite aceito depende de OPEN-21. Quando houver
+        O correto é recusar o valor ou calcular sem perda; o limite aceito depende de OPEN-24. Quando houver
         decisão e correção, este teste passa e a suíte avisa (sucesso inesperado): retirar a marcação."""
         t = titulo("1" + "0" * 30 + ".01")
         self.assertEqual(t.saldo, t.valor)

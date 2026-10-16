@@ -42,7 +42,7 @@ Titulo(valor=Decimal("1" + "0"*30 + ".01")).saldo  ->  1.00000000000000000000000
 | Item | Avaliação |
 |---|---|
 | Severidade | Baixa: exige valor acima de 10²⁷, impossível para uma micro ou pequena empresa. Mas é a mesma classe de falha do Ariane 5: o número deixa de caber e o sistema não avisa |
-| Por que não foi corrigido | Corrigir exige escolher um limite de valor (recusar acima de N dígitos) ou uma precisão. A baseline não define; a regra 2 do CLAUDE.md manda registrar e perguntar. Registrado como **OPEN-21**, com sugestão de recusar valor acima de 15 dígitos inteiros, com motivo |
+| Por que não foi corrigido | Corrigir exige escolher um limite de valor (recusar acima de N dígitos) ou uma precisão. A baseline não define; a regra 2 do CLAUDE.md manda registrar e perguntar. Registrado como **OPEN-24**, com sugestão de recusar valor acima de 15 dígitos inteiros, com motivo |
 | Como o defeito fica visível | O teste `test_D_06_...` está marcado `expectedFailure`. Quando a correção entrar, a suíte avisa com "unexpected success" e a marcação é retirada |
 
 ## 4. Regra de arredondamento
@@ -55,4 +55,4 @@ Não há arredondamento no sistema: toda operação monetária é soma ou subtra
 |---|---|
 | Desconto na alçada, um centavo acima e abaixo, sobre valor com centavos (R$ 33,33 × 10%) | Spec 004 (RB-15) |
 | Soma de recebimentos e despesas ao centavo; estorno refletido no resultado sem resíduo | Spec 012 (RF-51, RF-55, UC-11) |
-| Decisão do limite de valor e da precisão | OPEN-21 e OPEN-20 |
+| Decisão do limite de valor e da precisão | OPEN-24 e OPEN-20 |

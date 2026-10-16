@@ -1,5 +1,5 @@
 # Executa a suíte de testes a cada PR e a cada push na main (issue #82, RNF-19, RNF-23).
-# Escolha provisória do GitHub Actions: decisão da equipe em OPEN-25.
+# Escolha provisória do GitHub Actions: decisão da equipe em OPEN-28.
 name: testes
 
 on:

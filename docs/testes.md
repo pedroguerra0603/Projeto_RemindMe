@@ -57,7 +57,7 @@ Percentuais sobre os 193 testes dos quatro níveis (199 menos os 6 transversais)
 1. **Base no limite inferior, aplicação no superior.** A forma é de pirâmide, mas sem folga: a unidade está em 50,3% (limite inferior) e a aplicação em 30,1% (um décimo acima do limite). Os testes de qualidade (confiabilidade, exceções, idempotência, segurança de acesso) foram escritos na camada de aplicação porque exercitam o serviço com falha injetada e perfil; é o lugar certo para eles. O risco é a proporção se inverter conforme as próximas specs entrarem. Proposta: pôr cada regra nova no domínio e testá-la ali primeiro, deixando na aplicação só o que depende de perfil, transação e auditoria.
 2. **Integração só com repositório em memória e um pouco abaixo do alvo.** Os 9 testes de integração rodam contra a implementação em memória. Atomicidade, unicidade e concorrência reais só são verificáveis com o banco (OPEN-02); o contrato do repositório de títulos foi escrito para ser reaplicado. Quando houver banco, este nível cresce e passa da faixa mínima.
 3. **Topo da pirâmide inexistente.** Não há teste de API nem de interface. É esperado: não há interface (OPEN-01). O plano está na seção "Testes de API e de ponta a ponta".
-4. **Sem medição de cobertura.** A pirâmide mede quantidade de testes, e não o que eles exercitam. A decisão sobre medir cobertura é OPEN-24.
+4. **Sem medição de cobertura.** A pirâmide mede quantidade de testes, e não o que eles exercitam. A decisão sobre medir cobertura é OPEN-27.
 5. **Não há cone de sorvete.** Nenhum teste passa pela interface, e os testes de aceite usam o serviço com repositórios em memória, rápidos (a suíte inteira roda em cerca de 3,5 s).
 
 Esta seção é proposta de alteração da baseline (regra 4 do CLAUDE.md) e aguarda aprovação da equipe no PR.
@@ -91,7 +91,7 @@ Fora do ponta a ponta de propósito: régua de cobrança (UC-08), por depender d
 
 ### Ferramentas candidatas
 
-Comparação para subsidiar a decisão; **a escolha é da equipe** (OPEN-26). As informações são de conhecimento geral e devem ser conferidas na documentação oficial no momento da decisão.
+Comparação para subsidiar a decisão; **a escolha é da equipe** (OPEN-29). As informações são de conhecimento geral e devem ser conferidas na documentação oficial no momento da decisão.
 
 | Uso | Candidata | Pontos a favor | Pontos contra |
 |---|---|---|---|
@@ -105,9 +105,9 @@ Comparação para subsidiar a decisão; **a escolha é da equipe** (OPEN-26). As
 ### Condições para sair do planejamento
 
 1. OPEN-01 decidida e uma spec aprovada com interface (a primeira provavelmente é a Spec 001 ou a 002).
-2. OPEN-26 decidida: ferramentas de API e de navegador.
+2. OPEN-29 decidida: ferramentas de API e de navegador.
 3. Ambiente de execução definido (OPEN-12), com o canal de notificação e a IA simulados (RNF-23).
-4. Os testes de ponta a ponta entram na integração contínua (OPEN-25) em etapa separada da suíte rápida, para não atrasar o retorno dos testes de unidade.
+4. Os testes de ponta a ponta entram na integração contínua (OPEN-28) em etapa separada da suíte rápida, para não atrasar o retorno dos testes de unidade.
 
 ## Simuladores do canal de notificação e do serviço de IA
 
@@ -165,11 +165,11 @@ A verificação de cada spec é registrada na seção 8 da própria spec, com um
 
 A [matriz de critérios](qualidade/matriz-criterios-de-aceite.md) liga cada critério ao teste.
 
-A suíte roda a cada PR e a cada push na `main` (`.github/workflows/testes.yml`), sem credencial externa. A ferramenta de integração contínua é provisória, até a decisão de OPEN-25. Como ler o resultado: [`execucao.md`](execucao.md).
+A suíte roda a cada PR e a cada push na `main` (`.github/workflows/testes.yml`), sem credencial externa. A ferramenta de integração contínua é provisória, até a decisão de OPEN-28. Como ler o resultado: [`execucao.md`](execucao.md).
 
 ## Ferramentas de teste
 
-O executor é o `unittest` da biblioteca padrão e a cobertura não é medida. Se a equipe adotar pytest ou coverage.py, esta seção, o `CLAUDE.md` e `execucao.md` mudam no mesmo PR da decisão (OPEN-24).
+O executor é o `unittest` da biblioteca padrão e a cobertura não é medida. Se a equipe adotar pytest ou coverage.py, esta seção, o `CLAUDE.md` e `execucao.md` mudam no mesmo PR da decisão (OPEN-27).
 
 ## Rastreabilidade
 

@@ -73,7 +73,7 @@ Por que não é o nível 3: o processo é definido (o `CLAUDE.md` é um processo
 
 **O que faltaria para o nível seguinte** (completar o 2 e chegar ao 3):
 
-1. Fechar o nível 2: reunião semanal confirmada em `combinados.md` e uso real do Kanban; comparar o previsto com o realizado; guardar as métricas a cada rodada para ter série histórica; **verificar o cumprimento do fluxo** (por exemplo, a integração contínua exigindo a suíte aprovada, [`execucao.md`](../execucao.md), OPEN-25, #82).
+1. Fechar o nível 2: reunião semanal confirmada em `combinados.md` e uso real do Kanban; comparar o previsto com o realizado; guardar as métricas a cada rodada para ter série histórica; **verificar o cumprimento do fluxo** (por exemplo, a integração contínua exigindo a suíte aprovada, [`execucao.md`](../execucao.md), OPEN-28, #82).
 2. Gestão de riscos com probabilidade e impacto, em vez de só `OPEN-nn`.
 3. Validação com usuário real (o ciclo de verificação existe; o de validação, não).
 4. Processo padrão com adaptação documentada (o que muda quando se trabalha com agente de codificação e quando não).

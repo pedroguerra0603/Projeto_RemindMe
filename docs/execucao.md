@@ -17,7 +17,7 @@ python3 -m unittest discover -s tests -t .
 
 ## Integração contínua
 
-A suíte roda sozinha a cada PR e a cada push na `main`, pelo fluxo [`.github/workflows/testes.yml`](../.github/workflows/testes.yml). A ferramenta (GitHub Actions) é provisória, até a decisão da equipe em OPEN-25. O fluxo não usa segredo nem instala dependência (RNF-23).
+A suíte roda sozinha a cada PR e a cada push na `main`, pelo fluxo [`.github/workflows/testes.yml`](../.github/workflows/testes.yml). A ferramenta (GitHub Actions) é provisória, até a decisão da equipe em OPEN-28. O fluxo não usa segredo nem instala dependência (RNF-23).
 
 | Item | Valor |
 |---|---|

@@ -26,11 +26,11 @@ As repetições são **em sequência, no mesmo processo**. A concorrência real,
 
 A falha injetada em cada operação (cadastrar, pagar, estornar, cancelar, verificar vencimentos), na gravação e na auditoria, já é verificada em [confiabilidade](confiabilidade.md) (F-01 e F-02). Os testes novos acrescentam o caso do pagamento repetido depois da falha.
 
-## 2. Achado: pagamento parcial repetido é registrado duas vezes (OPEN-22)
+## 2. Achado: pagamento parcial repetido é registrado duas vezes (OPEN-25)
 
 O que impede a duplicação hoje é o próprio saldo: um pagamento integral repetido é recusado (RB-21), e um que estoura o saldo é recusado (RB-23). Mas dois pedidos **iguais e parciais** (por exemplo, dois de R$ 30,00 por duplo clique) são indistinguíveis de dois pagamentos reais, e os dois são registrados. É a lacuna do tipo Americanas: a regra de saldo protege o título contra pagar a mais, mas não contra pagar duas vezes o mesmo valor parcial.
 
-Não é defeito da Spec 006: nenhum requisito pede identificação de pedido repetido, e a solução (chave de idempotência gerada pela interface) depende da interface (OPEN-01). Registrado como **OPEN-22**. O teste `test_OPEN_22_provisorio_...` caracteriza o comportamento atual e muda quando houver decisão.
+Não é defeito da Spec 006: nenhum requisito pede identificação de pedido repetido, e a solução (chave de idempotência gerada pela interface) depende da interface (OPEN-01). Registrado como **OPEN-25**. O teste `test_OPEN_22_provisorio_...` caracteriza o comportamento atual e muda quando houver decisão.
 
 ## 3. Pendências e dependências
 
@@ -38,6 +38,6 @@ Não é defeito da Spec 006: nenhum requisito pede identificação de pedido rep
 |---|---|---|
 | Execução repetida da régua não repete etapa (DA-08) | Spec 008 | Teste `test_DA_08_...` registrado como pulado, sem código antecipado (regra 1 do CLAUDE.md) |
 | Duas transações simultâneas no mesmo título não estouram o saldo | OPEN-02 (banco) | `test_RNF_09_duas_transacoes_simultaneas_...` registrado como pulado |
-| Chave de idempotência para pagamento parcial | OPEN-22 | Ver seção 2 |
+| Chave de idempotência para pagamento parcial | OPEN-25 | Ver seção 2 |
 
 **Por que a concorrência real não é testada agora.** A unidade de trabalho em memória guarda uma cópia e a restaura em caso de falha; ela não tem trava e **não é segura para threads**. Um teste com threads aqui mediria o dublê, e não o comportamento do sistema. A garantia real virá da transação e das restrições do banco (por exemplo, atualização condicional do saldo ou trava de linha), e a escolha é do banco (OPEN-02). A dependência fica registrada em vez de a solução ser escolhida agora.

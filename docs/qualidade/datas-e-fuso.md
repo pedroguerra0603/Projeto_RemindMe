@@ -4,7 +4,7 @@ Issue #77. Lição do caso dos ingressos online (Rock in Rio 2019), em que a div
 
 - **Data:** 2026-10-16.
 - **Objeto:** Spec 006.
-- **Requisitos e regras:** RF-24, RF-25, RF-62, RB-21; OPEN-17, OPEN-19, OPEN-23.
+- **Requisitos e regras:** RF-24, RF-25, RF-62, RB-21; OPEN-17, OPEN-19, OPEN-26.
 - **Testes:** [`tests/dominio/test_datas.py`](../../tests/dominio/test_datas.py) (14) e [`tests/aplicacao/test_datas_na_aplicacao.py`](../../tests/aplicacao/test_datas_na_aplicacao.py) (4). Todos passam.
 
 ## 1. A data de referência é injetada
@@ -40,12 +40,12 @@ A baseline não diz se a data do pagamento pode ser passada ou futura (OPEN-17, 
 
 ## 4. Fuso horário de referência
 
-A baseline não define o fuso do sistema. Hoje isso não causa erro, porque **o relógio da máquina nunca é lido**: a data chega de fora, como `date` sem fuso. O risco aparece quando a interface e o agendador (Specs 001, 008 e 010) precisarem calcular "hoje" e o horário de envio da régua (RNF-12). Registrado como **OPEN-23**, com sugestão de America/Sao_Paulo para a data de referência e UTC para os horários guardados. O `Relogio.agora()` devolve hoje `datetime` sem fuso; o adaptador real precisará escolher entre sem fuso e com fuso.
+A baseline não define o fuso do sistema. Hoje isso não causa erro, porque **o relógio da máquina nunca é lido**: a data chega de fora, como `date` sem fuso. O risco aparece quando a interface e o agendador (Specs 001, 008 e 010) precisarem calcular "hoje" e o horário de envio da régua (RNF-12). Registrado como **OPEN-26**, com sugestão de America/Sao_Paulo para a data de referência e UTC para os horários guardados. O `Relogio.agora()` devolve hoje `datetime` sem fuso; o adaptador real precisará escolher entre sem fuso e com fuso.
 
 ## 5. Pendente
 
 | Caso | Depende de |
 |---|---|
 | Atraso de obrigação e escalonamento (RB-16) | Spec 010 |
-| Horário de envio da régua perto da meia-noite e na troca de horário | Specs 008 e 010; OPEN-23 |
+| Horário de envio da régua perto da meia-noite e na troca de horário | Specs 008 e 010; OPEN-26 |
 | Filtro por período com outra data que não o vencimento | OPEN-19 |
