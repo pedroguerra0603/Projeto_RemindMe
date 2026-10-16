@@ -52,3 +52,18 @@ Não foram repetidas na tabela acima.
 | Corrigido neste PR | DV-09, DV-12 |
 
 Nenhuma divergência exigiu mudança de código. Em nenhum caso o código contraria a spec sem que a própria spec ou a baseline deixe a questão em aberto. O caso mais próximo é DV-01, em que a redação de A4 e a tabela de estados discordam entre si.
+
+## 4. Atualizações de documentação (#59)
+
+A issue #59 pede que, quando uma decisão humana mudar o comportamento esperado, a spec e os artefatos afetados sejam atualizados. Os documentos abaixo ainda descreviam a situação anterior às decisões de 2026-10-03: OPEN-01 decidida e Spec 006 aprovada pelos três integrantes. Só a descrição da situação mudou. Nenhum requisito, regra ou decisão foi alterado.
+
+| Documento | Antes | Depois | Decisão que motivou |
+|---|---|---|---|
+| `README.md` | Fase 4 "sem código"; "Ainda não há código executável"; fase 3 com todas as tecnologias em aberto; GitHub de Renan em branco | Spec 006 implementada e verificada; comando dos testes; linguagem decidida; @Renan-Rigan | OPEN-01; aprovação da Spec 006 |
+| `docs/testes.md` | "O projeto ainda não tem código"; verificação em `.specify/specs/NNN-verificacao.md` | `unittest` adotado; verificação na seção 8 da spec, como mandam o `CLAUDE.md` e o modelo de spec | OPEN-01; `CLAUDE.md`, passo 6 |
+| `docs/arquitetura.md` | "As escolhas de tecnologia ainda não foram feitas"; OPEN-01 como não decidida | Linguagem decidida; framework web, banco, sessão, IA, hospedagem e agendador continuam em aberto | OPEN-01 |
+| `docs/combinados.md` | GitHub de Renan "a informar" | @Renan-Rigan | Conta usada nas issues #41 a #72 |
+| `.specify/specs/mapa-de-specs.md` | Linha 006 sem RB-01 | Com RB-01 | Spec 006 aprovada (DV-09) |
+| Spec 006, seções 7 e 8 | — | OPEN-21 a OPEN-23 e a referência a este registro | #57 |
+
+Ficaram como estão, porque dependem de decisão da equipe: a situação "Proposto" dos ADRs e do mapa (DV-13), o diagrama de sequência do UC-06 (DV-06), o modelo de domínio (DV-07) e os documentos afetados por OPEN-10, OPEN-20 e OPEN-21 a OPEN-23. Quando a equipe decidir cada questão, o mesmo PR deve atualizar a spec e os documentos listados na coluna "Afeta" de [`.specify/open.md`](../../.specify/open.md).

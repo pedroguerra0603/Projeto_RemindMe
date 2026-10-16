@@ -2,7 +2,7 @@
 
 A arquitetura responde ao que já está descrito em [requisitos](requisitos.md), [modelo de domínio](modelo-dominio.md) e [casos de uso](casos-de-uso/README.md). Este documento seleciona o que mais pesa (drivers), registra as decisões técnicas e descreve a estrutura resultante.
 
-> **Situação.** As decisões abaixo estão propostas e aguardam aprovação da equipe. As escolhas de tecnologia ainda não foram feitas e estão em [`.specify/open.md`](../.specify/open.md).
+> **Situação.** As decisões abaixo estão propostas e aguardam aprovação da equipe. Das escolhas de tecnologia, só a linguagem foi decidida: Python 3.11, somente com a biblioteca padrão (OPEN-01, 2026-10-03). As demais estão em [`.specify/open.md`](../.specify/open.md).
 
 ## 1. Visão arquitetural
 
@@ -129,11 +129,11 @@ Os agrupamentos naturais do modelo de domínio viram módulos do sistema.
 
 ## 5. Escolhas tecnológicas
 
-Ainda não decididas. Cada item tem uma questão em aberto, com as restrições que os drivers impõem.
+Cada item tem uma questão em aberto, com as restrições que os drivers impõem. Só a linguagem foi decidida.
 
 | Escolha | Restrição vinda dos drivers | Questão |
 |---|---|---|
-| Linguagem e framework web | Deve permitir domínio sem dependência do framework (DA-01) | OPEN-01 |
+| Linguagem e framework web | Deve permitir domínio sem dependência do framework (DA-01) | OPEN-01: linguagem decidida em 2026-10-03 (Python 3.11, somente a biblioteca padrão); framework web a escolher na primeira spec com interface |
 | Banco de dados | Deve oferecer transações (DA-03) e restrição de unicidade (DA-08) | OPEN-02 |
 | Mecanismo de sessão | Deve permitir negar por padrão em toda rota (DA-04) | OPEN-03 |
 | Provedor de IA | Deve ser trocável sem alterar o domínio (DA-06, DA-07) | OPEN-04 |

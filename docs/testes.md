@@ -1,6 +1,6 @@
 # Estratégia de Testes e Qualidade — RemindMe
 
-> O projeto ainda não tem código. Este documento define como os testes serão organizados quando a implementação começar. As ferramentas dependem das escolhas de tecnologia (OPEN-01).
+> Os testes usam `unittest`, da biblioteca padrão do Python, pela decisão de OPEN-01 (2026-10-03). A Spec 006 é a primeira implementada: a suíte está em [`tests/`](../tests/README.md), e a avaliação de qualidade, em [`qualidade/`](qualidade/README.md). As ferramentas para testar interface e banco dependem do framework web (OPEN-01) e do banco de dados (OPEN-02).
 
 ## Princípios
 
@@ -43,9 +43,9 @@ Uma issue de implementação está pronta quando:
 4. spec e código foram alterados no mesmo PR, quando o comportamento mudou;
 5. o PR foi revisado por um colega e fecha a issue com `Closes #N`.
 
-## Verificação manual
+## Registro da verificação
 
-Enquanto não houver suíte automatizada, a verificação de cada spec é registrada em `.specify/specs/NNN-verificacao.md`, com um resultado por critério de aceite: passou, não passou ou não verificado.
+A verificação de cada spec é registrada na seção 8 da própria spec, com um resultado por critério de aceite: passou, não passou ou não verificado (passo 6 do fluxo do [`CLAUDE.md`](../CLAUDE.md)). Critério que não puder ser automatizado é verificado manualmente e registrado no mesmo lugar.
 
 ## Rastreabilidade
 

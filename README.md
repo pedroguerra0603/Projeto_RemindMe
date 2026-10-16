@@ -24,8 +24,8 @@ Detalhes em [visão do produto](docs/visao.md).
 |---|---|---|
 | 1. Problema e contexto | [Visão](docs/visao.md), [benchmark](docs/benchmark.md), [personas](docs/personas.md) | Escrito |
 | 2. Requisitos e modelagem | [Requisitos](docs/requisitos.md), [glossário](docs/glossario.md), [modelo de domínio](docs/modelo-dominio.md), [casos de uso](docs/casos-de-uso/README.md) | Escrito |
-| 3. Arquitetura e decisões | [Arquitetura](docs/arquitetura.md), [ADRs](docs/adr/README.md), [constituição](CLAUDE.md), [segurança](docs/seguranca.md) | Proposto; tecnologias em aberto |
-| 4. Implementação e validação | [Mapa de specs](.specify/specs/mapa-de-specs.md), [Spec 006](.specify/specs/006-titulo-pagamento-baixa-e-estorno.md) | Mapa e primeira spec propostos; sem código |
+| 3. Arquitetura e decisões | [Arquitetura](docs/arquitetura.md), [ADRs](docs/adr/README.md), [constituição](CLAUDE.md), [segurança](docs/seguranca.md) | Proposto; linguagem decidida (OPEN-01), demais tecnologias em aberto |
+| 4. Implementação e validação | [Mapa de specs](.specify/specs/mapa-de-specs.md), [Spec 006](.specify/specs/006-titulo-pagamento-baixa-e-estorno.md), [qualidade](docs/qualidade/README.md), [rastreabilidade](docs/rastreabilidade.md) | Mapa proposto; Spec 006 aprovada, implementada e verificada, em Python 3.11 |
 
 As decisões que ainda dependem da equipe estão em [questões em aberto](.specify/open.md).
 
@@ -35,7 +35,13 @@ Toda a documentação está em [`/docs`](docs/README.md). O índice indica a ord
 
 ## Como executar
 
-Ainda não há código executável. As instruções ficarão em [`docs/execucao.md`](docs/execucao.md).
+Ainda não há interface. O domínio e a camada de aplicação da Spec 006 são verificados por testes, que rodam com Python 3.11 ou mais recente, sem dependência externa:
+
+```
+python3 -m unittest discover -s tests -t .
+```
+
+Detalhes em [`docs/execucao.md`](docs/execucao.md).
 
 ## Estrutura do repositório
 
@@ -57,6 +63,6 @@ O fluxo é issue → branch → PR revisado → merge. As regras estão em [comb
 |---|---|
 | João Pedro Silva Guerra | [@pedroguerra0603](https://github.com/pedroguerra0603) |
 | Bernardo Sanches | [@besanchess](https://github.com/besanchess) |
-| Renan Ribeiro Gandolpho | |
+| Renan Ribeiro Gandolpho | [@Renan-Rigan](https://github.com/Renan-Rigan) |
 
 Professor: Nilton Canto
