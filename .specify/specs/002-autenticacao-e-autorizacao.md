@@ -21,7 +21,7 @@
 | UC | [UC-01](../../docs/casos-de-uso/UC-01-autenticar-usuario.md), [UC-02](../../docs/casos-de-uso/UC-02-administrar-usuarios-e-perfis.md) |
 | Entidades | `Usuario`, `Perfil` |
 | Drivers e ADRs | DA-02, DA-04; DT-04, DT-06; ADR-004 |
-| Depende de | Spec 001 (auditoria). Decisões OPEN-03, OPEN-10, OPEN-26, OPEN-27 e OPEN-28, tomadas em 2026-10-16. |
+| Depende de | Spec 001 (auditoria). Decisões OPEN-03, OPEN-10, OPEN-32, OPEN-33 e OPEN-34, tomadas em 2026-10-16. |
 
 Divergências que esta spec trata: DV-04 (cinco perfis) e DV-11 (Contador cadastra e paga), em [`docs/qualidade/divergencias.md`](../../docs/qualidade/divergencias.md).
 
@@ -32,8 +32,8 @@ Divergências que esta spec trata: DV-04 (cinco perfis) e DV-11 (Contador cadast
 - Cadastro de usuário pelo Administrador, com exatamente um perfil.
 - Alteração de perfil e inativação de usuário.
 - Login com e-mail e senha, com sessão guardada no servidor (OPEN-03).
-- Armazenamento de senha só como hash com salt, por `scrypt` (OPEN-27).
-- Matriz inicial de permissões por perfil, negada por padrão (OPEN-26).
+- Armazenamento de senha só como hash com salt, por `scrypt` (OPEN-33).
+- Matriz inicial de permissões por perfil, negada por padrão (OPEN-32).
 - Alteração das permissões de um perfil pelo Administrador, sem alterar as permissões fixadas por regra de negócio.
 - Verificação de sessão e de permissão em toda operação da camada de aplicação, inclusive nas operações da Spec 006.
 
@@ -43,9 +43,9 @@ Divergências que esta spec trata: DV-04 (cinco perfis) e DV-11 (Contador cadast
 |---|---|
 | Acesso do Cliente, por link com código | Spec 009 (OPEN-08, decidida) |
 | Tela de login, painel do perfil (RNF-17) e HTTPS (RNF-05) | Primeira spec com interface (OPEN-01, OPEN-12) |
-| Bloqueio após tentativas erradas e expiração de sessão | Fora desta spec (OPEN-28) |
+| Bloqueio após tentativas erradas e expiração de sessão | Fora desta spec (OPEN-34) |
 | Encerramento de sessão pelo próprio usuário (logout) | Não há requisito. Fica para a primeira spec com interface |
-| Recuperação e troca de senha | Não há requisito. Ver OPEN-29 |
+| Recuperação e troca de senha | Não há requisito. Ver OPEN-35 |
 | Permissões das operações das specs ainda não escritas | Cada spec aplica a sua linha da matriz da seção 4 |
 
 ## 4. Comportamento
@@ -67,7 +67,7 @@ Divergências que esta spec trata: DV-04 (cinco perfis) e DV-11 (Contador cadast
 
 ### Fluxos alternativos
 
-- **A1 — Cadastro de usuário.** O Administrador informa nome, e-mail, senha inicial (OPEN-29) e perfil. O sistema cria o usuário ativo, com exatamente um perfil.
+- **A1 — Cadastro de usuário.** O Administrador informa nome, e-mail, senha inicial (OPEN-35) e perfil. O sistema cria o usuário ativo, com exatamente um perfil.
 - **A2 — Alteração de perfil.** O Administrador troca o perfil de um usuário. A operação seguinte do usuário já usa o novo perfil.
 - **A3 — Inativação.** O Administrador inativa um usuário. As sessões dele deixam de valer, e o histórico é preservado.
 - **A4 — Alteração de permissões.** O Administrador concede ou retira uma permissão de um perfil. Vale na operação seguinte de qualquer usuário desse perfil, inclusive com a sessão já aberta (RF-03).
@@ -84,7 +84,7 @@ Divergências que esta spec trata: DV-04 (cinco perfis) e DV-11 (Contador cadast
 
 Toda recusa informa o motivo e não altera nenhum dado.
 
-### Matriz inicial de permissões (OPEN-26)
+### Matriz inicial de permissões (OPEN-32)
 
 Proposta montada a partir das personas e dos atores dos casos de uso. **P** = permitido; **—** = negado; **F** = fixado por regra de negócio, não alterável pelo Administrador. Operação que não aparece na matriz é negada.
 
@@ -124,7 +124,7 @@ Nesta spec, a matriz é aplicada às operações das Specs 002 e 006. As demais 
 
 | ID | Dado | Quando | Então | Cobre |
 |---|---|---|---|---|
-| CA-01 | um Administrador autenticado | ele cadastra um usuário com nome, e-mail, senha inicial e perfil Operador Financeiro | o usuário é criado ativo, com exatamente esse perfil, e a operação é auditada sem a senha | RF-02, INV-1, INV-3, OPEN-29 |
+| CA-01 | um Administrador autenticado | ele cadastra um usuário com nome, e-mail, senha inicial e perfil Operador Financeiro | o usuário é criado ativo, com exatamente esse perfil, e a operação é auditada sem a senha | RF-02, INV-1, INV-3, OPEN-35 |
 | CA-02 | um usuário com o e-mail diego@exemplo.com | o Administrador cadastra outro usuário com o mesmo e-mail | o cadastro é recusado, informando o campo e-mail e o motivo | E6, INV-6, RNF-14 |
 | CA-03 | um Administrador autenticado | ele cadastra um usuário sem perfil e sem e-mail | o cadastro é recusado, indicando os dois campos | E7, RNF-14 |
 | CA-04 | um Operador Financeiro autenticado | ele tenta cadastrar um usuário | a operação é negada e nenhum usuário é criado | RNF-02, E4 |
@@ -150,10 +150,10 @@ Os testes automatizados levam no nome o identificador do critério ou da regra, 
 | OPEN-03 | Sessão no servidor ou token | Decidida em 2026-10-16: sessão no servidor. |
 | OPEN-08 | Como o Cliente se autentica | Decidida em 2026-10-16: link com código pelo canal de notificação, na Spec 009. Não bloqueia esta spec. |
 | OPEN-10 | Administrador é perfil próprio ou papel do Dono | Decidida em 2026-10-16: perfil próprio; o Dono pode ter também um usuário Administrador. |
-| OPEN-26 | Matriz inicial de permissões | Decidida em 2026-10-16: a matriz da seção 4, sujeita à revisão desta spec. |
-| OPEN-27 | Algoritmo de hash de senha | Decidida em 2026-10-16: `scrypt`, da biblioteca padrão. |
-| OPEN-28 | Bloqueio após tentativas e expiração de sessão | Decidida em 2026-10-16: fora desta spec. |
-| OPEN-29 | Como o usuário recebe a senha inicial? | Sim, para CA-01. Sugestão: o Administrador informa uma senha provisória no cadastro. |
+| OPEN-32 | Matriz inicial de permissões | Decidida em 2026-10-16: a matriz da seção 4, sujeita à revisão desta spec. |
+| OPEN-33 | Algoritmo de hash de senha | Decidida em 2026-10-16: `scrypt`, da biblioteca padrão. |
+| OPEN-34 | Bloqueio após tentativas e expiração de sessão | Decidida em 2026-10-16: fora desta spec. |
+| OPEN-35 | Como o usuário recebe a senha inicial? | Sim, para CA-01. Sugestão: o Administrador informa uma senha provisória no cadastro. |
 
 ## 8. Verificação
 
