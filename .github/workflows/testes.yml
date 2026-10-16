@@ -1,0 +1,30 @@
+# Executa a suíte de testes a cada PR e a cada push na main (issue #82, RNF-19, RNF-23).
+# Escolha provisória do GitHub Actions: decisão da equipe em OPEN-28.
+name: testes
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  suite:
+    name: suíte (Python ${{ matrix.python }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      # Sem segredo, sem variável de credencial e sem instalar dependência (RNF-23).
+      - name: Executar a suíte
+        run: python -m unittest discover -s tests -t . -v
