@@ -18,7 +18,7 @@ Lista ordenada das unidades implementáveis do sistema. O mapa não é implement
 
 | ID | Spec | RF | RB | RNF | UC | Entidades | Drivers e ADRs | Depende de | Situação |
 |---|---|---|---|---|---|---|---|---|---|
-| 001 | Fundação: estrutura em camadas e auditoria de operações | RF-04, RF-05, RF-61, RF-62 | RB-01, RB-30 | RNF-06, RNF-09, RNF-19, RNF-21, RNF-23 | — | `RegistroAuditoria` | DA-01, DA-02, DA-03, DA-07, DA-09; ADR-001, ADR-004 | OPEN-01, OPEN-02 | A escrever |
+| [001](001-fundacao-camadas-e-auditoria.md) | Fundação: estrutura em camadas e auditoria de operações | RF-04, RF-05, RF-61, RF-62 | RB-01, RB-30 | RNF-06, RNF-09, RNF-19, RNF-21, RNF-23 | — | `RegistroAuditoria` | DA-01, DA-02, DA-03, DA-07, DA-09; ADR-001, ADR-004 | OPEN-01, OPEN-02 | Proposta |
 | 002 | Autenticação e autorização por perfil | RF-02, RF-03, RF-65, RF-66, RF-67 | RB-03 | RNF-01 a RNF-05 | UC-01, UC-02 | `Usuario`, `Perfil` | DA-04 | 001; OPEN-03, OPEN-10 | A escrever |
 | 003 | Cadastro de clientes | RF-01 | — | RNF-14 | UC-03 | `Cliente` | — | 001, 002 | A escrever |
 | 004 | Orçamento: itens, valores e alçada de desconto | RF-06, RF-07, RF-10, RF-13 a RF-18 | RB-15, RB-24 | RNF-03 | UC-04, UC-05 | `Orcamento`, `ItemOrcamento`, `AlcadaDesconto`, `AprovacaoDesconto` | DA-01 | 003 | A escrever |
