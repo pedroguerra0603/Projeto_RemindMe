@@ -4,6 +4,7 @@ Avaliação da qualidade do produto pelas características da ISO/IEC 25010, mai
 
 | Documento | Conteúdo | Issue |
 |---|---|---|
+| [Critérios de qualidade](criterios.md) | Características relevantes, prioridade e como verificar | #60 |
 | [Confiabilidade](confiabilidade.md) | Cenários de falha e recuperação | #48 |
 | [Usabilidade](usabilidade.md) | Checklist e cenários de usabilidade | #52 |
 | [Eficiência](eficiencia.md) | Métricas de desempenho | #58 |
@@ -15,6 +16,8 @@ Avaliação da qualidade do produto pelas características da ISO/IEC 25010, mai
 | [Defeitos](defeitos.md) | Registro de defeitos e evidências | #70 |
 | [Revisão de código](revisao-de-codigo.md) | Checklist de revisão | #71 |
 | [Relatório de qualidade](relatorio-de-qualidade.md) | Consolidação | #72 |
+| [Funcionalidade](funcionalidade.md) | Completude, correção e pertinência das funções implementadas | #62 |
+| [Divergências](divergencias.md) | Código × spec × baseline | #57 |
 
 Os testes estão em [`tests/`](../../tests/README.md). Para executar, na raiz do repositório:
 

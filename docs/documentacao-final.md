@@ -126,7 +126,7 @@ Fonte: [`.specify/open.md`](../.specify/open.md).
 |---|---|
 | Decididas | OPEN-01 (linguagem), OPEN-11 (juros fora do MVP), OPEN-16 (só o Dono cancela título) |
 | Abertas, bloqueiam specs futuras | OPEN-02 (banco), OPEN-03 (sessão), OPEN-04 e OPEN-05 (IA), OPEN-06 e OPEN-14 (renegociação), OPEN-07 (despesas), OPEN-08 (acesso do Cliente), OPEN-10 (Administrador), OPEN-13 (agendador), OPEN-15 (parcelas) |
-| Abertas, não bloqueiam | OPEN-09 (metas operacionais), OPEN-12 (hospedagem), OPEN-17 a OPEN-19 (Spec 006), OPEN-20 (precisão monetária) |
+| Abertas, não bloqueiam | OPEN-09 (metas operacionais), OPEN-12 (hospedagem), OPEN-17 a OPEN-19 (Spec 006), OPEN-20 (precisão monetária), OPEN-21 (antecedência de próximo do vencimento), OPEN-22 (alteração do valor do título), OPEN-23 (estado depois do estorno) |
 
 ## 7. Rastreabilidade
 
@@ -143,4 +143,4 @@ Visão → RF/RNF/RB → UC → Modelo de domínio → DA → DT/ADR → Spec �
 | Estorno só pelo Dono | RF-30, RB-02 | UC-06 | `Pagamento` | DA-04 | 006, CA-15 | `test_CA_15_operador_financeiro_nao_estorna`, `test_RB_02_somente_o_dono_estorna` |
 | Atomicidade | RNF-09 | UC-06 | — | DA-03 | 006, CA-23 | `test_CA_23_falha_na_auditoria_desfaz_o_pagamento` |
 
-A matriz completa de critérios de aceite está em [`qualidade/matriz-criterios-de-aceite.md`](qualidade/matriz-criterios-de-aceite.md).
+A matriz completa de critérios de aceite está em [`qualidade/matriz-criterios-de-aceite.md`](qualidade/matriz-criterios-de-aceite.md). A cadeia requisito → driver → decisão → código → teste, com a cobertura de cada tipo de requisito, está em [`rastreabilidade.md`](rastreabilidade.md).

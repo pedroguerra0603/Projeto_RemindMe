@@ -10,7 +10,7 @@ Regras simples e explícitas para o grupo não travar em discussões repetidas.
 |---|---|---|
 | João Pedro Silva Guerra | [@pedroguerra0603](https://github.com/pedroguerra0603) | Repositório e configurações *(a confirmar)* |
 | Bernardo Sanches | [@besanchess](https://github.com/besanchess) | Documentação *(a confirmar)* |
-| Renan Ribeiro Gandolpho | *(a informar)* | Backlog e Kanban *(a confirmar)* |
+| Renan Ribeiro Gandolpho | [@Renan-Rigan](https://github.com/Renan-Rigan) | Backlog e Kanban *(a confirmar)* |
 
 ## Comunicação
 

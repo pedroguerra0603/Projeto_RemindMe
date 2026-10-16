@@ -147,6 +147,9 @@ Os testes automatizados levam no nome o identificador da regra ou do critério, 
 | OPEN-18 | O Dono pode estornar um pagamento de título Cancelado? | Aberta, surgiu na implementação. Comportamento provisório: recusa. |
 | OPEN-19 | O filtro "período" do RF-22 é sobre o vencimento ou sobre outra data? | Aberta, surgiu na implementação. Comportamento provisório: intervalo de vencimento. |
 | OPEN-20 | Valores monetários podem ter mais de duas casas decimais? | Aberta, surgiu nos testes de exceção (#68). Comportamento atual: aceita. |
+| OPEN-21 | De onde vem a antecedência de próximo do vencimento (RF-23)? | Aberta, surgiu na rastreabilidade (#40). Comportamento atual: o valor é parâmetro da consulta. |
+| OPEN-22 | O valor do título pode ser alterado (RF-31 × INV-5)? | Aberta, surgiu na análise de divergências (#57). Comportamento atual: não há operação que altere o valor. |
+| OPEN-23 | O estorno de pagamento de título Aberto ou Vencido reavalia o estado pelo vencimento (A4)? | Aberta, surgiu na análise de divergências (#57). Comportamento atual: só título Baixado muda de estado no estorno. |
 
 ## 8. Verificação
 
@@ -206,6 +209,7 @@ Verificada em 2026-10-03, com `python3 -m unittest discover -s tests -t .`: 48 t
 | Nome dos testes | Python não aceita hífen em identificador: `RB-23_...` vira `test_RB_23_...`. |
 | Validação de entrada (2026-10-09, #70) | Valor `NaN`, infinito, `float`, texto ou `None` e motivo que não é texto geravam erro interno, e um pagamento em `float` ficava anexado ao título antes do erro. Agora são recusados com motivo, no domínio (E1, E4, E7). Defeitos D-01 a D-05 em [`docs/qualidade/defeitos.md`](../../docs/qualidade/defeitos.md). |
 | Precisão monetária | Valor com mais de duas casas decimais é aceito, até a decisão de OPEN-20. |
+| Análise de divergências (2026-10-16, #57) | Código, spec e baseline comparados. Nenhuma mudança de código; três novas questões (OPEN-21 a OPEN-23). Registro em [`docs/qualidade/divergencias.md`](../../docs/qualidade/divergencias.md). |
 
 ### Reverificação de 2026-10-09
 
