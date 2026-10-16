@@ -1,0 +1,64 @@
+sequenceDiagram
+    autonumber
+    actor Operador as Operador Financeiro
+    actor Dono
+    actor Cliente
+    participant UI as Interface
+    participant App as Serviço de Orçamento
+    participant Orc as Orcamento
+    participant Tit as Titulo
+    participant Canal as Canal de notificação
+    participant Aud as Auditoria
+
+    Operador->>UI: cria orçamento para o cliente (RF-06)
+    UI->>App: criarOrcamento(cliente)
+    App->>Orc: novo, estado Rascunho
+    Operador->>UI: inclui itens e desconto (RF-07)
+    UI->>App: definirItensEDesconto(itens, percentual)
+    App->>Orc: recalcula valores
+    App->>Orc: verifica alçada do perfil (RF-15, RB-15)
+
+    alt desconto acima da alçada
+        Orc-->>App: Pendente de Alçada (RF-16)
+        App->>Aud: registra pendência
+        App-->>UI: aguardando decisão do Dono
+        Dono->>UI: aprova ou rejeita o desconto (UC-05)
+        UI->>App: decidirDesconto(decisao)
+        App->>Orc: registra decisão, volta a Rascunho (RF-17)
+        App->>Aud: registra decisão
+    else desconto dentro da alçada
+        Orc-->>App: desconto aceito
+    end
+
+    Operador->>UI: solicita envio (RF-08)
+    UI->>App: enviarOrcamento()
+    App->>Orc: enviar()
+
+    alt orçamento sem itens
+        Orc-->>App: recusa (RB-24)
+        App-->>UI: informa o motivo
+    else orçamento válido
+        App->>Canal: envia orçamento ao cliente
+        alt falha no envio
+            Canal-->>App: falha
+            App-->>UI: informa a falha, orçamento segue em Rascunho
+        else envio realizado
+            Canal-->>App: enviado
+            App->>Orc: estado Enviado
+            App->>Aud: registra envio
+        end
+    end
+
+    Cliente->>UI: aprova ou rejeita o orçamento (RF-09)
+    UI->>App: registrarDecisao(decisao)
+
+    alt cliente aprova
+        App->>Orc: estado Aprovado
+        App->>Tit: gera título com cliente, valor líquido e condição (RF-11, RF-19, RB-05)
+        App->>Orc: estado Convertido
+        App->>Aud: registra aprovação e conversão
+        App-->>UI: título Aberto
+    else cliente rejeita
+        App->>Orc: estado Rejeitado
+        App->>Aud: registra rejeição
+    end

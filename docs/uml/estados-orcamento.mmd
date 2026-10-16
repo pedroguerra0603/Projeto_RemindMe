@@ -1,0 +1,16 @@
+stateDiagram-v2
+    direction LR
+    [*] --> Rascunho : criado
+    Rascunho --> PendenteAlcada : desconto acima da alçada
+    PendenteAlcada --> Rascunho : decisão do Dono
+    Rascunho --> Enviado : envio
+    Enviado --> Aprovado : cliente aprova
+    Enviado --> Rejeitado : cliente rejeita
+    Aprovado --> Convertido : título gerado
+    Rascunho --> Cancelado : cancelamento
+    PendenteAlcada --> Cancelado : cancelamento
+    Enviado --> Cancelado : cancelamento
+    Rejeitado --> [*]
+    Convertido --> [*]
+    Cancelado --> [*]
+    PendenteAlcada : Pendente de Alçada

@@ -1,0 +1,11 @@
+stateDiagram-v2
+    direction LR
+    [*] --> Pendente : cadastrada ou gerada
+    Pendente --> Cumprida : cumprimento sem exigência de evidência
+    Pendente --> AguardandoEvidencia : cumprimento sem a evidência exigida
+    AguardandoEvidencia --> Cumprida : evidência anexada
+    Pendente --> Atrasada : prazo passa
+    AguardandoEvidencia --> Atrasada : prazo passa
+    Atrasada --> Cumprida : cumprimento completo
+    Cumprida --> [*]
+    AguardandoEvidencia : Aguardando Evidência

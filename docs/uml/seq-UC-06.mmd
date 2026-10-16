@@ -1,0 +1,32 @@
+sequenceDiagram
+    autonumber
+    actor Operador as Operador Financeiro
+    participant UI as Interface
+    participant App as Serviço de Títulos
+    participant Tit as Titulo
+    participant Lanc as LancamentoFinanceiro
+    participant Regua as Régua de cobrança
+    participant Aud as Auditoria
+
+    Operador->>UI: registra pagamento do título (RF-25)
+    UI->>App: registrarPagamento(titulo, valor, data)
+    App->>Tit: registrarPagamento(valor)
+
+    alt valor menor ou igual a zero, ou maior que o saldo
+        Tit-->>App: recusa (RB-23, RF-68)
+        App-->>UI: informa o motivo, nada é gravado
+    else título Baixado ou Cancelado
+        Tit-->>App: recusa (RB-21)
+        App-->>UI: informa o estado do título
+    else pagamento válido
+        Tit-->>App: saldo atualizado
+        App->>Lanc: gera lançamento de receita Pendente de Classificação (RF-51)
+        alt saldo igual a zero
+            App->>Tit: estado Baixado (RF-26, RB-22)
+            App->>Regua: cancela envios pendentes (RF-37)
+        else saldo maior que zero
+            App-->>UI: saldo restante (RF-27)
+        end
+        App->>Aud: registra pagamento e mudança de estado (RB-01)
+        App-->>UI: confirmação
+    end

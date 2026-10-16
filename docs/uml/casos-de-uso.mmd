@@ -1,0 +1,52 @@
+flowchart LR
+    Admin([Administrador])
+    Operador([Operador Financeiro])
+    Cliente([Cliente])
+    Dono([Dono])
+    Contador([Contador])
+
+    subgraph RemindMe
+        UC02(["UC-02 Administrar usuários e perfis"])
+        UC13(["UC-13 Configurar regras"])
+        UC03(["UC-03 Manter clientes"])
+        UC10(["UC-10 Classificar lançamento"])
+        UC04(["UC-04 Conduzir orçamento até o título"])
+        UC07(["UC-07 Renegociar título"])
+        UC06(["UC-06 Registrar pagamento e baixar título"])
+        UC05(["UC-05 Aprovar desconto fora de alçada"])
+        UC09(["UC-09 Gerenciar obrigações"])
+        UC11(["UC-11 Apurar resultado"])
+        UC12(["UC-12 Consultar auditoria"])
+        UC14(["UC-14 Importar e exportar CSV"])
+        UC08(["UC-08 Executar régua de cobrança"])
+        UC01(["UC-01 Autenticar usuário (todos os perfis)"])
+    end
+
+    IA([Serviço de IA])
+    Canal([Canal de notificação])
+    Agendador([Agendador])
+
+    Admin --- UC02
+    Admin --- UC13
+    Operador --- UC03
+    Operador --- UC10
+    Operador --- UC04
+    Operador --- UC06
+    Operador --- UC09
+    Cliente --- UC04
+    Cliente --- UC07
+    Dono --- UC06
+    Dono --- UC05
+    Dono --- UC09
+    Dono --- UC11
+    Dono --- UC12
+    Contador --- UC11
+    Contador --- UC12
+    Contador --- UC14
+    UC10 --- IA
+    UC07 --- IA
+    UC04 --- Canal
+    UC08 --- Canal
+    UC08 --- Agendador
+    UC09 --- Agendador
+    UC05 -. "«extend»" .-> UC04

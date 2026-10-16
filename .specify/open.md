@@ -1,0 +1,45 @@
+# Questões em aberto — RemindMe
+
+Decisões que a baseline ainda não define. O agente não preenche essas lacunas: cada uma exige decisão da equipe. Ao decidir, registre a decisão aqui, com data, e atualize os documentos afetados no mesmo PR. Decisão cara de reverter também vira ADR.
+
+| ID | Questão | Por que está em aberto | Sugestão | Afeta | Situação |
+|---|---|---|---|---|---|
+| OPEN-01 | Qual linguagem e qual framework web? | A baseline descreve o domínio, e não a tecnologia. | Escolher pela familiaridade da equipe, desde que o domínio fique sem dependência do framework (ADR-001). | Todas as specs; `docs/execucao.md` | **Decidida em 2026-10-03:** escolha livre, com o domínio isolado do framework. Adotado Python 3.11 na Spec 006; framework web a escolher na primeira spec com interface. |
+| OPEN-02 | Qual banco de dados? | O modelo conceitual não é modelo físico. | Banco relacional com transações e restrição de unicidade. | Spec 001; `docs/arquitetura.md` | Aberta |
+| OPEN-03 | Sessão no servidor ou token? | Os RNF exigem autenticação, mas não escolhem o mecanismo. | — | Spec 002 | Aberta |
+| OPEN-04 | Qual provedor de IA? | ADR-003 exige que seja trocável, mas não escolhe. | Começar apenas com a IA simulada. | Specs 009 e 011 | Aberta |
+| OPEN-05 | Qual o limiar de confiança para aceitar a sugestão da IA? | RB-08 fala em limiar configurado, sem valor padrão. | 0,85 como padrão, configurável. | Spec 011 | Aberta |
+| OPEN-06 | Quais os limites da renegociação automática? | RB-28 fala em limites configurados, sem defini-los. | Prazo máximo de 30 dias após o vencimento original e no máximo 1 renegociação automática por título. | Spec 009 | Aberta |
+| OPEN-07 | De onde vêm os lançamentos de despesa? | A apuração usa despesas, mas nenhum RF as cria. Contas a pagar está fora do escopo. | Cadastro manual de lançamento de despesa e importação CSV. Exige novo RF. | Specs 011 e 012; `docs/requisitos.md` | Aberta |
+| OPEN-08 | Como o Cliente se autentica? | A persona Cliente não quer criar conta complicada, e RNF-01 exige autenticação. | Link de acesso com código enviado pelo canal de notificação. | Specs 002 e 009 | Aberta |
+| OPEN-09 | Quais as metas de disponibilidade, backup e tempo limite da IA? | RNF-07, RNF-08 e RNF-24 estão com valores propostos **(P)**. | 99% ao mês; backup diário com 7 dias de retenção; 10 segundos. | `docs/requisitos.md` | Aberta |
+| OPEN-10 | Administrador é um perfil próprio ou um papel do Dono? | Os casos de uso tratam o Administrador como ator; as personas têm quatro perfis. | Perfil próprio, que o Dono pode acumular. | Spec 002; `docs/personas.md` | Aberta |
+| OPEN-11 | Há juros ou multa em título vencido? | Nenhum requisito trata disso. O saldo hoje é valor menos pagamentos. | Fora do MVP. | Spec 006 | **Decidida em 2026-10-03:** fora do MVP. |
+| OPEN-12 | Onde o sistema será hospedado para a apresentação? | Não definido. | — | `docs/execucao.md` | Aberta |
+| OPEN-13 | Qual o mecanismo do agendador? | DT-07 define o papel, e não o mecanismo. | Tarefa periódica no próprio processo da aplicação. | Specs 008 e 010 | Aberta |
+| OPEN-14 | O que acontece com a renegociação quando a nova data vence sem pagamento? | RB-20 e RB-28 não cobrem promessa descumprida. | O título volta a Vencido pela regra normal (RF-24) e a régua recomeça. | Spec 009 | Aberta |
+| OPEN-15 | O orçamento aprovado gera um título ou um título por parcela? | RF-19 copia a "condição de pagamento", sem dizer se há parcelas. | Um título por orçamento no MVP. | Specs 005 e 006 | Aberta |
+| OPEN-16 | Qual perfil pode cancelar um título? | RF-31 exige motivo, mas não diz quem pode cancelar. | Somente o Dono, como no estorno. | Spec 006 | **Decidida em 2026-10-03:** somente o Dono. |
+| OPEN-17 | A data de um pagamento pode ser passada ou futura em relação ao registro? | RF-25 não restringe a data. | Aceitar data passada; recusar data futura. | Spec 006 | Aberta |
+| OPEN-18 | O Dono pode estornar um pagamento de título Cancelado? | O estado Cancelado é final (RB-21), mas RF-30 não trata do estorno nesse caso. Surgiu na implementação da Spec 006. | Recusar; para corrigir, o Dono estorna antes de cancelar. Implementado assim, provisoriamente. | Spec 006 | Aberta |
+| OPEN-19 | O filtro "período" do RF-22 é sobre o vencimento ou sobre outra data? | RF-22 lista "vencimento" e "período" como filtros separados, e o título não tem outra data no modelo. Surgiu na implementação da Spec 006. | Intervalo de vencimento. Implementado assim, provisoriamente. | Spec 006; `docs/requisitos.md` | Aberta |
+| OPEN-20 | Valores monetários podem ter mais de duas casas decimais? Se não, a entrada é recusada ou arredondada, e por qual regra? | A baseline não define precisão nem arredondamento. O plano da Spec 006 diz "Decimal, com duas casas", mas o código aceita R$ 0,001 e o saldo passa a ter três casas. Surgiu nos testes de exceção (#68). | Recusar valor com mais de duas casas, com motivo; sem arredondamento automático. | Spec 006; Specs 004 e 012 (desconto e apuração) | Aberta |
+| OPEN-21 | De onde vem a antecedência da sinalização de próximo do vencimento (RF-23), e qual é o valor padrão? | RF-23 fala em número de dias "configurado", mas nenhum RF, nem o UC-13, nem a Spec 014 tratam dessa configuração. Na Spec 006, o valor é passado a cada consulta. Surgiu na rastreabilidade (#40). | Incluir no UC-13 e na Spec 014 como parâmetro configurado pelo Administrador; valor padrão a definir pela equipe. | RF-23; UC-13; Specs 006 e 014 | Aberta |
+| OPEN-22 | O valor de um título pode ser alterado depois de criado? | RF-31, na seção de títulos, exige motivo para "alteração de valor", mas nenhum RF descreve essa alteração, e a Spec 006 tem a invariante INV-5: o valor não muda depois de criado. Surgiu na análise de divergências (#57). | Não pode. As condições mudam por renegociação (RB-28); um valor errado se corrige cancelando o título e cadastrando outro. RF-31 passaria a tratar só de cancelamento e estorno. | RF-31; Spec 006 (INV-5); Spec 009 | Aberta |
+| OPEN-23 | O estorno de um pagamento de título Aberto ou Vencido reavalia o estado pelo vencimento? | A4 da Spec 006 diz que, depois do estorno, o título vai para Aberto ou Vencido conforme o vencimento. A tabela de estados só prevê essa transição a partir de Baixado; Aberto passa a Vencido pela verificação de vencimento (RF-24). O código só muda o estado de título Baixado. Surgiu na análise de divergências (#57). | Seguir a tabela de estados: o estorno só muda o estado de título Baixado. Ajustar a redação de A4. Implementado assim. | Spec 006 (A4); `docs/uml/estados.md` | Aberta |
+
+## Divergências resolvidas na revisão de outubro de 2026
+
+Estas contradições existiam entre os documentos anteriores e foram resolvidas na baseline. A equipe deve confirmar cada uma na revisão do PR.
+
+| Divergência | Resolução adotada |
+|---|---|
+| A antiga RN05 convertia o orçamento automaticamente; RF11 e RF12 descreviam conversão solicitada por usuário. | A conversão é automática na aprovação (RB-05, RF-11). RF-12 protege contra conversão indevida. |
+| A antiga RN16 escalava ao Dono imediatamente; RF49 escalava após período configurado. | Tolerância configurável, com padrão de 0 dias (RB-16). |
+| A antiga RN07 fixava 7 dias; RF44 falava em período configurado. | 7 dias como padrão, configurável por tipo (RB-07). |
+| A persona Contador registrava operações e validava classificações, mas o perfil era somente leitura. | O Contador só consulta e exporta (RB-03). |
+| O modelo ligava `Usuario` e `Perfil` como 1 para 1. | Um perfil tem muitos usuários; cada usuário tem um perfil. |
+| O README chamava o sistema de "Fluxo"; os documentos, de "RemindMe". | RemindMe. |
+| As regras de negócio usavam `RN` e EARS; os casos de uso misturavam `RN` e `RF`. | Prefixo `RB`, forma declarativa, com a indicação do RF que aplica cada uma. |
+| RF11 e RF19 descreviam o mesmo comportamento; RF60 e RF63 repetiam RF05 e RF18. | RF-19 passou a tratar dos dados copiados; RF-60 e RF-63 foram retirados. |
+| Não havia requisitos funcionais para login, portal do cliente, IA e CSV, embora constassem na visão e nos casos de uso. | Criados RF-65 a RF-85. |
