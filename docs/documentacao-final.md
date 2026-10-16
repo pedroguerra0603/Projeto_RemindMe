@@ -126,9 +126,9 @@ Fonte: [`.specify/open.md`](../.specify/open.md).
 
 | Situação | Questões |
 |---|---|
-| Decididas | OPEN-01 (linguagem), OPEN-11 (juros fora do MVP), OPEN-16 (só o Dono cancela título); em 2026-10-16, a confirmar pela equipe: OPEN-03 (sessão no servidor), OPEN-08 (link com código para o Cliente), OPEN-10 (Administrador é perfil próprio), OPEN-26 (matriz de permissões), OPEN-27 (`scrypt`), OPEN-28 (sem bloqueio nem expiração na Spec 002) |
-| Abertas, bloqueiam specs futuras | OPEN-02 (banco), OPEN-04 e OPEN-05 (IA), OPEN-06 e OPEN-14 (renegociação), OPEN-07 (despesas), OPEN-13 (agendador), OPEN-15 (parcelas), OPEN-24 (operação automática na auditoria), OPEN-29 (senha inicial) |
-| Abertas, não bloqueiam | OPEN-09 (metas operacionais), OPEN-12 (hospedagem), OPEN-17 a OPEN-19 (Spec 006), OPEN-20 (precisão monetária), OPEN-21 (antecedência de próximo do vencimento), OPEN-22 (alteração do valor do título), OPEN-23 (estado depois do estorno), OPEN-25 (retenção da auditoria) |
+| Decididas | OPEN-01 (linguagem), OPEN-11 (juros fora do MVP), OPEN-16 (só o Dono cancela título); em 2026-10-16, a confirmar pela equipe: OPEN-03 (sessão no servidor), OPEN-08 (link com código para o Cliente), OPEN-10 (Administrador é perfil próprio), OPEN-32 (matriz de permissões), OPEN-33 (`scrypt`), OPEN-34 (sem bloqueio nem expiração na Spec 002) |
+| Abertas, bloqueiam specs futuras | OPEN-02 (banco), OPEN-04 e OPEN-05 (IA), OPEN-06 e OPEN-14 (renegociação), OPEN-07 (despesas), OPEN-13 (agendador), OPEN-15 (parcelas), OPEN-30 (operação automática na auditoria), OPEN-35 (senha inicial) |
+| Abertas, não bloqueiam | OPEN-09 (metas operacionais), OPEN-12 (hospedagem), OPEN-17 a OPEN-19 (Spec 006), OPEN-20 (precisão monetária), OPEN-21 (antecedência de próximo do vencimento), OPEN-22 (alteração do valor do título), OPEN-23 (estado depois do estorno), OPEN-24 (limite de valor), OPEN-25 (pagamento parcial repetido), OPEN-26 (fuso de referência), OPEN-27 (pytest e cobertura), OPEN-28 (integração contínua), OPEN-29 (ferramentas de API e navegador), OPEN-31 (retenção da auditoria) |
 
 ## 7. Rastreabilidade
 
