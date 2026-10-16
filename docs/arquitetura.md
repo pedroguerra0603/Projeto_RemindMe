@@ -140,6 +140,17 @@ Cada item tem uma questão em aberto, com as restrições que os drivers impõem
 | Hospedagem | — | OPEN-12 |
 | Mecanismo do agendador | Não pode degradar o uso interativo (DA-05) | OPEN-13 |
 
+As estruturas que respondem aos drivers são as decisões DT-01 a DT-09 da seção 3. As tecnologias ainda em aberto são decididas pela equipe quando for escrita a primeira spec que depende de cada uma, e o acompanhamento fica na questão correspondente em [`.specify/open.md`](../.specify/open.md):
+
+| Questão | Primeira spec que depende dela |
+|---|---|
+| OPEN-01 (framework web) | Primeira spec com interface |
+| OPEN-02 | 001 |
+| OPEN-03 | 002 |
+| OPEN-04 | 009 e 011 |
+| OPEN-12 | Entrega (fora das specs) |
+| OPEN-13 | 008 e 010 |
+
 ## 6. Rastreabilidade
 
 | Artefato anterior | Onde aparece na arquitetura |

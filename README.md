@@ -14,7 +14,7 @@ O RemindMe garante que cada cobrança e cada obrigação avance no prazo, com re
 - **Calendário de obrigações.** Compromissos fiscais e contratuais com aviso antecipado, evidência de cumprimento e escalonamento ao dono.
 - **Apuração do resultado.** Derivada dos lançamentos que a própria operação gera.
 
-O sistema tem quatro perfis: Dono, Operador Financeiro, Cliente e Contador. A inteligência artificial é usada em dois pontos, sob um princípio: **a IA extrai e classifica; o sistema decide.**
+O sistema tem quatro perfis de negócio (Dono, Operador Financeiro, Cliente e Contador) e o perfil Administrador, que mantém usuários e configurações. A inteligência artificial é usada em dois pontos, sob um princípio: **a IA extrai e classifica; o sistema decide.**
 
 Detalhes em [visão do produto](docs/visao.md).
 

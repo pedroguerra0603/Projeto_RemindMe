@@ -24,7 +24,7 @@ A causa não é falta de sistema contábil. É falta de rotina com regra: sequê
 
 Micro e pequenas empresas de serviços ou comércio que vendem a prazo para clientes recorrentes e hoje controlam recebíveis em planilha ou de memória.
 
-O sistema tem quatro perfis, descritos em [personas](personas.md):
+O sistema tem quatro perfis de negócio, descritos em [personas](personas.md), e o perfil Administrador, que mantém usuários, permissões e configurações (OPEN-10):
 
 | Perfil | O que busca | O que faz no sistema |
 |---|---|---|

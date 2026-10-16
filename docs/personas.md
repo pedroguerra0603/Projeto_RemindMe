@@ -1,6 +1,6 @@
 # Personas — RemindMe
 
-Quatro personas, uma por perfil de acesso do sistema. As duas primeiras são as principais: usam o sistema todos os dias e orientam as decisões de prioridade.
+Quatro personas, uma por perfil de negócio. O quinto perfil, Administrador, não tem persona: mantém usuários, permissões e configurações e pode ser exercido pela Dona com um segundo usuário (OPEN-10). As duas primeiras são as principais: usam o sistema todos os dias e orientam as decisões de prioridade.
 
 Os nomes e as empresas são fictícios.
 

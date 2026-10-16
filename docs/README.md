@@ -10,7 +10,7 @@ Para uma leitura única e resumida, veja a [documentação final consolidada](do
 |---|---|
 | [Visão](visao.md) | Problema, público-alvo, solução, escopo, critérios de sucesso |
 | [Benchmark](benchmark.md) | Soluções existentes e a lacuna que o projeto ocupa |
-| [Personas](personas.md) | Quatro personas, uma por perfil |
+| [Personas](personas.md) | Quatro personas, uma por perfil de negócio |
 
 ## 2. Requisitos e modelagem
 
