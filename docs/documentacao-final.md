@@ -115,7 +115,7 @@ Fonte: [mapa de specs](../.specify/specs/mapa-de-specs.md). São 16 specs, de 00
 |---|---|---|
 | [006 — Título: cadastro manual, pagamento, baixa e estorno](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md) | Verificada | Plano em [`006-plano.md`](../.specify/plans/006-plano.md); testes em [`tests/`](../tests/README.md) |
 | [001 — Fundação: estrutura em camadas e auditoria](../.specify/specs/001-fundacao-camadas-e-auditoria.md) | Aprovada | Aprovada por João Pedro Guerra em 2026-10-16 |
-| [002 — Autenticação e autorização por perfil](../.specify/specs/002-autenticacao-e-autorizacao.md) | Proposta | Aguarda aprovação da equipe |
+| [002 — Autenticação e autorização por perfil](../.specify/specs/002-autenticacao-e-autorizacao.md) | Aprovada | Aprovada por João Pedro Guerra em 2026-10-16; CA-01 depende de OPEN-35 |
 | 003 a 005, 007 a 016 | A escrever | — |
 
 Tecnologia adotada (OPEN-01): Python 3.11 ou mais recente, somente a biblioteca padrão, testes com `unittest`. Como executar: [`execucao.md`](execucao.md). Estratégia de testes: [`testes.md`](testes.md). Avaliação de qualidade: [`qualidade/`](qualidade/README.md).
