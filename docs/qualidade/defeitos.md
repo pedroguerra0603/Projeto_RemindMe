@@ -15,6 +15,9 @@ Issue #70. Problemas encontrados pelos testes desta rodada de qualidade, correç
 | D-03 | Pagamento em `float` passa pelas validações, é anexado a `titulo.pagamentos` e só então o cálculo do saldo gera `TypeError`. O objeto do domínio fica com um pagamento inválido. Na aplicação, a unidade de trabalho desfaz a gravação, mas qualquer outro chamador do domínio (agendador, importação CSV) ficaria com o título corrompido | Alta | "Nenhum dado é alterado" (`OperacaoRecusada`); INV-1; INV-8 | Corrigido |
 | D-04 | Valor em texto (`"100.00"`) ou `None` gera `TypeError` | Média | "Toda recusa informa o motivo"; RNF-14 | Corrigido |
 | D-05 | Motivo que não é texto (`123`, lista) gera `AttributeError` | Baixa | E4; RF-31 | Corrigido |
+| D-06 | Com mais de 28 dígitos significativos, o saldo é arredondado em silêncio: o título nasce com saldo diferente do valor e pagamentos de centavos não o alteram (issue #78) | Baixa | INV-1 (saldo = valor − pagamentos); RB-22 | **Aberto**, aguarda OPEN-21 (limite de valor). Teste `test_D_06_...` marcado `expectedFailure` |
+
+Detalhes do D-06 em [acurácia monetária](acuracia-monetaria.md), seção 3. Não corrigido porque a correção exige escolher um limite de valor (regra 2 do CLAUDE.md).
 
 Não é defeito, e sim lacuna da baseline: valor com mais de duas casas decimais é aceito. Foi registrado como **OPEN-20** e não foi alterado, para não preencher a lacuna sem decisão da equipe (regra 2 do CLAUDE.md).
 
