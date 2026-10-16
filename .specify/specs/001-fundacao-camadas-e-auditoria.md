@@ -8,8 +8,8 @@
 | **Nome** | Fundação: estrutura em camadas e auditoria de operações |
 | **Objetivo** | Garantir que toda operação que cria, altera ou muda o estado de um registro deixe uma prova imutável de quem fez, o quê, quando e sobre qual registro, gravada junto com a própria operação. |
 | **Valor entregue** | O Dono consegue provar quem fez cada operação, e nenhuma operação acontece sem registro. A base vale para todas as specs seguintes. |
-| **Situação** | Proposta |
-| **Aprovada por** | *(nomes e data)* |
+| **Situação** | **Aprovada** |
+| **Aprovada por** | João Pedro Guerra, em 2026-10-16 |
 
 ## 2. Rastreabilidade
 
@@ -70,7 +70,7 @@ Divergências que esta spec trata: DV-05, sobre o usuário de uma operação aut
 - **A1 — Criação.** No passo 5, um registro criado não tem valor anterior. O registro de auditoria informa o estado inicial como novo valor.
 - **A2 — Mudança de estado.** O campo alterado é o estado, com o estado anterior e o novo.
 - **A3 — Operação com motivo.** Em estorno, cancelamento ou alteração que exige motivo (RF-31), o registro guarda o motivo.
-- **A4 — Operação automática.** Uma operação disparada pelo sistema, sem usuário, como a verificação de vencimento, gera registro sem usuário e identificado como automático (OPEN-30).
+- **A4 — Operação automática.** Uma operação disparada pelo sistema, sem usuário, como a verificação de vencimento, gera registro sem usuário, identificado como automático e com o nome da rotina que disparou a operação (OPEN-30).
 - **A5 — Vários registros afetados.** Uma operação que altera mais de um registro gera um registro de auditoria por registro afetado. Por exemplo, o estorno altera o pagamento e o estado do título.
 
 ### Exceções
@@ -105,7 +105,7 @@ Divergências que esta spec trata: DV-05, sobre o usuário de uma operação aut
 | CA-06 | um título Aberto | a gravação do título falha depois de a auditoria ser gravada | nenhum registro de auditoria daquela operação permanece | RNF-09, E3 |
 | CA-07 | um registro de auditoria gravado | qualquer chamador tenta alterar um de seus campos, inclusive pelo objeto devolvido na leitura | a alteração é recusada e o registro armazenado continua igual | RB-30, RNF-06, E4 |
 | CA-08 | um registro de auditoria gravado | qualquer chamador tenta excluí-lo | não há operação de exclusão, e o registro continua armazenado | RB-30, RNF-06, E4 |
-| CA-09 | um título Aberto com vencimento ontem | a verificação de vencimento é executada sem usuário | o título passa a Vencido, e o registro da mudança de estado não tem usuário e está identificado como automático | INV-3, A4, OPEN-30 |
+| CA-09 | um título Aberto com vencimento ontem | a verificação de vencimento é executada sem usuário | o título passa a Vencido, e o registro da mudança de estado não tem usuário, está identificado como automático e informa a rotina "verificação de vencimento" | INV-3, A4, OPEN-30 |
 | CA-10 | uma operação em andamento | ocorre um erro que não é recusa de regra de negócio | existe um registro de erro com data e hora, operação, usuário e identificador de correlação; nenhuma alteração da operação permanece; e o erro chega a quem chamou | RNF-21, E5 |
 | CA-11 | duas operações executadas em sequência | os registros são lidos | aparecem na ordem em que foram gravados | INV-4 |
 | CA-12 | o código de `src/remindme/` | as importações de cada camada são verificadas | o domínio não importa aplicação nem infraestrutura, e a aplicação não importa infraestrutura | INV-6, RNF-19, ADR-001 |
@@ -118,7 +118,7 @@ Os testes automatizados levam no nome o identificador do critério ou da regra, 
 | ID | Questão | Bloqueia a implementação? |
 |---|---|---|
 | OPEN-02 | Banco de dados | Não. A persistência é em memória; os testes de contrato serão repetidos sobre o banco. |
-| OPEN-30 | Como o registro de auditoria identifica uma operação automática, sem usuário? | Sim, para CA-09. Os demais critérios não dependem dela. |
+| OPEN-30 | Como o registro de auditoria identifica uma operação automática, sem usuário? | Decidida em 2026-10-16 por João Pedro Guerra: usuário vazio e a indicação "automática" no registro, com o nome da rotina que disparou a operação. Não bloqueia mais. |
 | OPEN-31 | Qual a política de retenção dos registros de auditoria? | Não. Nenhum registro é excluído nesta spec. |
 
 ## 8. Verificação

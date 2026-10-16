@@ -114,7 +114,7 @@ Fonte: [mapa de specs](../.specify/specs/mapa-de-specs.md). São 16 specs, de 00
 | Spec | Situação | Evidência |
 |---|---|---|
 | [006 — Título: cadastro manual, pagamento, baixa e estorno](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md) | Verificada | Plano em [`006-plano.md`](../.specify/plans/006-plano.md); testes em [`tests/`](../tests/README.md) |
-| [001 — Fundação: estrutura em camadas e auditoria](../.specify/specs/001-fundacao-camadas-e-auditoria.md) | Proposta | Aguarda aprovação da equipe |
+| [001 — Fundação: estrutura em camadas e auditoria](../.specify/specs/001-fundacao-camadas-e-auditoria.md) | Aprovada | Aprovada por João Pedro Guerra em 2026-10-16 |
 | [002 — Autenticação e autorização por perfil](../.specify/specs/002-autenticacao-e-autorizacao.md) | Proposta | Aguarda aprovação da equipe |
 | 003 a 005, 007 a 016 | A escrever | — |
 
@@ -126,8 +126,8 @@ Fonte: [`.specify/open.md`](../.specify/open.md).
 
 | Situação | Questões |
 |---|---|
-| Decididas | OPEN-01 (linguagem), OPEN-11 (juros fora do MVP), OPEN-16 (só o Dono cancela título); em 2026-10-16, a confirmar pela equipe: OPEN-03 (sessão no servidor), OPEN-08 (link com código para o Cliente), OPEN-10 (Administrador é perfil próprio), OPEN-32 (matriz de permissões), OPEN-33 (`scrypt`), OPEN-34 (sem bloqueio nem expiração na Spec 002) |
-| Abertas, bloqueiam specs futuras | OPEN-02 (banco), OPEN-04 e OPEN-05 (IA), OPEN-06 e OPEN-14 (renegociação), OPEN-07 (despesas), OPEN-13 (agendador), OPEN-15 (parcelas), OPEN-30 (operação automática na auditoria), OPEN-35 (senha inicial) |
+| Decididas | OPEN-01 (linguagem), OPEN-11 (juros fora do MVP), OPEN-16 (só o Dono cancela título); em 2026-10-16, a confirmar pela equipe: OPEN-03 (sessão no servidor), OPEN-08 (link com código para o Cliente), OPEN-10 (Administrador é perfil próprio), OPEN-32 (matriz de permissões), OPEN-33 (`scrypt`), OPEN-34 (sem bloqueio nem expiração na Spec 002), OPEN-30 (operação automática na auditoria) |
+| Abertas, bloqueiam specs futuras | OPEN-02 (banco), OPEN-04 e OPEN-05 (IA), OPEN-06 e OPEN-14 (renegociação), OPEN-07 (despesas), OPEN-13 (agendador), OPEN-15 (parcelas), OPEN-35 (senha inicial) |
 | Abertas, não bloqueiam | OPEN-09 (metas operacionais), OPEN-12 (hospedagem), OPEN-17 a OPEN-19 (Spec 006), OPEN-20 (precisão monetária), OPEN-21 (antecedência de próximo do vencimento), OPEN-22 (alteração do valor do título), OPEN-23 (estado depois do estorno), OPEN-24 (limite de valor), OPEN-25 (pagamento parcial repetido), OPEN-26 (fuso de referência), OPEN-27 (pytest e cobertura), OPEN-28 (integração contínua), OPEN-29 (ferramentas de API e navegador), OPEN-31 (retenção da auditoria) |
 
 ## 7. Rastreabilidade
