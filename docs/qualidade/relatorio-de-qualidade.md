@@ -96,8 +96,42 @@ Execução de 2026-10-09: `python3 -m unittest discover -s tests -t .` → `Ran 
 | Repetir confiabilidade, eficiência e integração com banco real | OPEN-02, Spec 001 |
 | Registrar erro não tratado com identificador de correlação (RNF-21) | Spec 001 |
 | Executar os cenários de usabilidade CU-01 a CU-08 | Primeira spec com interface (OPEN-01) |
-| Rodar a suíte em Windows e macOS, a cada PR | Issue de integração contínua |
+| Conferir o primeiro resultado da suíte em Windows e macOS no fluxo `testes.yml` | Execução do fluxo no GitHub (#82) |
+| Exigir a verificação `testes` para o merge na `main` | Configuração do repositório, por quem o administra (#82, OPEN-25) |
+| Decidir o limite de valor (D-06), a chave de idempotência e o fuso de referência | OPEN-21, OPEN-22, OPEN-23 |
+| Negar por padrão cadastro e pagamento a Contador e Cliente (G-01) | Spec 002 |
+| Decidir pytest e cobertura; ferramentas de API e de navegador | OPEN-24, OPEN-26 |
 
-## 7. Documentos da rodada
+## 7. Rodada complementar de 2026-10-16 (issues #75 a #84)
 
-[Confiabilidade](confiabilidade.md) · [Usabilidade](usabilidade.md) · [Eficiência](eficiencia.md) · [Manutenibilidade](manutenibilidade.md) · [Portabilidade](portabilidade.md) · [Matriz de critérios](matriz-criterios-de-aceite.md) · [Exceções](excecoes.md) · [Regressão](regressao.md) · [Defeitos](defeitos.md) · [Revisão de código](revisao-de-codigo.md)
+Segunda rodada, atribuída a Bernardo Sanches e executada com agente de codificação (Claude Code), sobre o mesmo objeto (Spec 006), depois do merge do PR da primeira rodada.
+
+| Indicador | Fim da primeira rodada | Depois |
+|---|---|---|
+| Testes automatizados | 132 | 199 (9 pulados por depender de specs não aprovadas; 1 falha esperada) |
+| Defeitos conhecidos | 5 encontrados, 5 corrigidos | 6 encontrados, 5 corrigidos, 1 aberto (D-06) |
+| Questões em aberto novas | OPEN-20 | OPEN-21 a OPEN-26 |
+| Integração contínua | nenhuma | fluxo `testes.yml` (provisório, OPEN-25) |
+
+| Issue | Entrega | Documento |
+|---|---|---|
+| #75 | Matriz perfil × operação; 20 testes de autorização, vazamento na recusa e imutabilidade da auditoria. Achado G-01: Contador e Cliente cadastram e pagam até a Spec 002 | [Segurança de acesso](seguranca-de-acesso.md) |
+| #76 | 13 testes de repetição e falha no meio do pagamento. Lacuna OPEN-22: pagamento parcial repetido é registrado duas vezes | [Concorrência e idempotência](concorrencia-e-idempotencia.md) |
+| #77 | 18 testes de borda de dia, data de referência injetada e fuso da máquina. OPEN-23: fuso de referência do sistema | [Datas e fuso](datas-e-fuso.md) |
+| #78 | 16 testes de acurácia monetária. **Defeito D-06**: perda de centavos acima de 28 dígitos; OPEN-21 | [Acurácia monetária](acuracia-monetaria.md), [Defeitos](defeitos.md) |
+| #79 | Contrato dos simuladores do canal e da IA; sem código até a primeira spec que use a porta | [`testes.md`](../testes.md) |
+| #80 | Pirâmide: proporção-alvo, contagem por nível (unidade 50,3%, aplicação 30,1%, integração 4,7%, aceite 15,0%) e lacunas | [`testes.md`](../testes.md) |
+| #81 | Decisão sobre pytest e cobertura registrada como OPEN-24, sem instalar nada | [`.specify/open.md`](../../.specify/open.md) |
+| #82 | Fluxo que roda a suíte a cada PR e push na `main`, em 3 versões do Python e 3 sistemas; proteção da `main` pendente | [`execucao.md`](../execucao.md) |
+| #83 | Plano de testes de API e de ponta a ponta, condicionado a OPEN-01; ferramentas em OPEN-26 | [`testes.md`](../testes.md) |
+| #84 | Processo SDD × ISO/IEC 12207, práticas da ISO 9001 e nível aproximado do CMMI (próximo do 2) | [Processo](processo.md) |
+
+**Conclusão da rodada.** A suíte cresceu 51%, sem alterar o código de produção. Os testes confirmaram o que a Spec 006 promete (recusa por perfil, repetição de estorno e de pagamento integral, bordas de data, centavos) e encontraram uma falha de baixa severidade (D-06) e três lacunas de decisão (OPEN-21, OPEN-22, OPEN-23). Um risco que não é da Spec 006, mas precisa ser fechado antes da primeira interface: sem a Spec 002, nenhuma regra impede o Contador ou o Cliente de cadastrar título e registrar pagamento (G-01).
+
+## 8. Processo
+
+A relação do fluxo SDD com a ISO/IEC 12207, com as práticas da ISO 9001 e com os níveis do CMMI (autoavaliação, sem certificação) está em [Processo e normas de qualidade](processo.md). Em resumo: o processo cobre planejamento, requisitos, decisão, implementação e verificação, com rastreabilidade e revisão fortes; está próximo do nível 2 do CMMI, e o que falta para o seguinte é medir ao longo do tempo, verificar o cumprimento do fluxo (integração contínua obrigatória), tratar riscos com probabilidade e impacto e validar com usuário real.
+
+## 9. Documentos da rodada
+
+[Confiabilidade](confiabilidade.md) · [Usabilidade](usabilidade.md) · [Eficiência](eficiencia.md) · [Manutenibilidade](manutenibilidade.md) · [Portabilidade](portabilidade.md) · [Matriz de critérios](matriz-criterios-de-aceite.md) · [Exceções](excecoes.md) · [Regressão](regressao.md) · [Defeitos](defeitos.md) · [Revisão de código](revisao-de-codigo.md) · [Segurança de acesso](seguranca-de-acesso.md) · [Concorrência e idempotência](concorrencia-e-idempotencia.md) · [Datas e fuso](datas-e-fuso.md) · [Acurácia monetária](acuracia-monetaria.md) · [Processo](processo.md)
