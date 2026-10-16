@@ -29,7 +29,7 @@ O RemindMe é um sistema web de gestão do ciclo de recebíveis e das obrigaçõ
 | Cliente | Sérgio Tavares | Decide orçamentos, consulta os próprios títulos, propõe renegociação |
 | Contador | Helena Prado | Consulta e exporta, somente leitura (RB-03) |
 
-O Administrador aparece nos casos de uso como ator. Se é perfil próprio ou papel do Dono está em aberto (OPEN-10). Detalhes em [personas](personas.md).
+O Administrador é perfil próprio, que mantém usuários, permissões e configurações (OPEN-10, decidida em 2026-10-16). Detalhes em [personas](personas.md).
 
 ## 2. Requisitos
 
@@ -115,7 +115,8 @@ Fonte: [mapa de specs](../.specify/specs/mapa-de-specs.md). São 16 specs, de 00
 |---|---|---|
 | [006 — Título: cadastro manual, pagamento, baixa e estorno](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md) | Verificada | Plano em [`006-plano.md`](../.specify/plans/006-plano.md); testes em [`tests/`](../tests/README.md) |
 | [001 — Fundação: estrutura em camadas e auditoria](../.specify/specs/001-fundacao-camadas-e-auditoria.md) | Proposta | Aguarda aprovação da equipe |
-| 002 a 005, 007 a 016 | A escrever | — |
+| [002 — Autenticação e autorização por perfil](../.specify/specs/002-autenticacao-e-autorizacao.md) | Proposta | Aguarda aprovação da equipe |
+| 003 a 005, 007 a 016 | A escrever | — |
 
 Tecnologia adotada (OPEN-01): Python 3.11 ou mais recente, somente a biblioteca padrão, testes com `unittest`. Como executar: [`execucao.md`](execucao.md). Estratégia de testes: [`testes.md`](testes.md). Avaliação de qualidade: [`qualidade/`](qualidade/README.md).
 
@@ -125,8 +126,8 @@ Fonte: [`.specify/open.md`](../.specify/open.md).
 
 | Situação | Questões |
 |---|---|
-| Decididas | OPEN-01 (linguagem), OPEN-11 (juros fora do MVP), OPEN-16 (só o Dono cancela título) |
-| Abertas, bloqueiam specs futuras | OPEN-02 (banco), OPEN-03 (sessão), OPEN-04 e OPEN-05 (IA), OPEN-06 e OPEN-14 (renegociação), OPEN-07 (despesas), OPEN-08 (acesso do Cliente), OPEN-10 (Administrador), OPEN-13 (agendador), OPEN-15 (parcelas), OPEN-24 (operação automática na auditoria) |
+| Decididas | OPEN-01 (linguagem), OPEN-11 (juros fora do MVP), OPEN-16 (só o Dono cancela título); em 2026-10-16, a confirmar pela equipe: OPEN-03 (sessão no servidor), OPEN-08 (link com código para o Cliente), OPEN-10 (Administrador é perfil próprio), OPEN-26 (matriz de permissões), OPEN-27 (`scrypt`), OPEN-28 (sem bloqueio nem expiração na Spec 002) |
+| Abertas, bloqueiam specs futuras | OPEN-02 (banco), OPEN-04 e OPEN-05 (IA), OPEN-06 e OPEN-14 (renegociação), OPEN-07 (despesas), OPEN-13 (agendador), OPEN-15 (parcelas), OPEN-24 (operação automática na auditoria), OPEN-29 (senha inicial) |
 | Abertas, não bloqueiam | OPEN-09 (metas operacionais), OPEN-12 (hospedagem), OPEN-17 a OPEN-19 (Spec 006), OPEN-20 (precisão monetária), OPEN-21 (antecedência de próximo do vencimento), OPEN-22 (alteração do valor do título), OPEN-23 (estado depois do estorno), OPEN-25 (retenção da auditoria) |
 
 ## 7. Rastreabilidade
