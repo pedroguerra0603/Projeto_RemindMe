@@ -126,7 +126,7 @@ Fonte: [`.specify/open.md`](../.specify/open.md).
 |---|---|
 | Decididas | OPEN-01 (linguagem), OPEN-11 (juros fora do MVP), OPEN-16 (só o Dono cancela título) |
 | Abertas, bloqueiam specs futuras | OPEN-02 (banco), OPEN-03 (sessão), OPEN-04 e OPEN-05 (IA), OPEN-06 e OPEN-14 (renegociação), OPEN-07 (despesas), OPEN-08 (acesso do Cliente), OPEN-10 (Administrador), OPEN-13 (agendador), OPEN-15 (parcelas) |
-| Abertas, não bloqueiam | OPEN-09 (metas operacionais), OPEN-12 (hospedagem), OPEN-17 a OPEN-19 (Spec 006), OPEN-20 (precisão monetária) |
+| Abertas, não bloqueiam | OPEN-09 (metas operacionais), OPEN-12 (hospedagem), OPEN-17 a OPEN-19 (Spec 006), OPEN-20 (precisão monetária), OPEN-21 (antecedência de próximo do vencimento), OPEN-22 (alteração do valor do título), OPEN-23 (estado depois do estorno) |
 
 ## 7. Rastreabilidade
 
