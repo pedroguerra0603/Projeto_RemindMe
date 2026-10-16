@@ -4,6 +4,7 @@ Avaliação da qualidade do produto pelas características da ISO/IEC 25010, mai
 
 | Documento | Conteúdo | Issue |
 |---|---|---|
+| [Critérios de qualidade](criterios.md) | Características relevantes, prioridade e como verificar | #60 |
 | [Confiabilidade](confiabilidade.md) | Cenários de falha e recuperação | #48 |
 | [Usabilidade](usabilidade.md) | Checklist e cenários de usabilidade | #52 |
 | [Eficiência](eficiencia.md) | Métricas de desempenho | #58 |
