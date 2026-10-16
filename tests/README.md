@@ -10,9 +10,11 @@ A estratégia está em [`docs/testes.md`](../docs/testes.md). Cada teste leva o 
 
 | Pasta | Nível |
 |---|---|
-| `dominio/` | Unidade de domínio: regras e transições, sem banco e sem interface |
-| `aplicacao/` | Critérios de aceite de cada spec, com repositórios em memória |
-| `infraestrutura/` | Unidade das implementações em memória: repositório, auditoria, unidade de trabalho, relógio |
+| `dominio/` | Unidade de domínio: regras, transições e registro de auditoria, sem banco e sem interface |
+| `aplicacao/` | Critérios de aceite de cada spec, com repositórios em memória (`test_spec_001_aceite.py`, `test_spec_006_aceite.py`) |
+| `infraestrutura/` | Unidade das implementações em memória: repositório, auditoria, registro de erros, unidade de trabalho, relógio |
 | `integracao/` | Serviço com unidade de trabalho, repositórios, auditoria, relógio e clientes; contrato do repositório de títulos, a reaplicar quando houver banco (OPEN-02) |
 | `arquitetura/` | Regra de dependência entre camadas (ADR-001) e uso só da biblioteca padrão |
 | `desempenho/` | Limite de tempo de RNF-11 e o script de métricas de `docs/qualidade/eficiencia.md` |
+
+Um teste da Spec 001 (`test_CA_13_RNF_23_suite_inteira_passa_sem_variavel_de_credencial`) roda a suíte inteira em outro processo, com o ambiente reduzido ao mínimo, para provar que ela não depende de credencial (RNF-23). O processo filho é marcado pela variável `REMINDME_CA_13_PROCESSO_FILHO` e não repete esse teste.

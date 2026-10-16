@@ -115,12 +115,16 @@ class ServicoComInfraestrutura(unittest.TestCase):
                 (2, "operador", "mudar estado", "Aberto", "Vencido", None),
                 (3, "operador", "registrar pagamento", None, f"pagamento {segundo}: 700.00", None),
                 (3, "operador", "mudar estado", "Vencido", "Baixado", None),
-                (4, "dono", "estornar pagamento", f"pagamento {segundo}", "estornado", "cheque devolvido"),
+                (4, "dono", "estornar pagamento", "não", "sim", "cheque devolvido"),
                 (4, "dono", "mudar estado", "Baixado", "Vencido", "cheque devolvido"),
                 (5, "dono", "mudar estado", "Vencido", "Cancelado", "acordo comercial"),
             ],
         )
-        self.assertTrue(all(r.registro_afetado == f"titulo {t.id}" for r in self.auditoria.registros))
+        # Spec 001, A5 e CA-03: o registro afetado do estorno é o pagamento; os demais são o título.
+        self.assertEqual(
+            [r.registro_afetado for r in self.auditoria.registros],
+            [f"titulo {t.id}"] * 5 + [f"pagamento {segundo}"] + [f"titulo {t.id}"] * 2,
+        )
 
     def test_dois_servicos_sobre_o_mesmo_armazenamento_veem_as_mesmas_gravacoes(self):
         outro = self.novo_servico()

@@ -199,7 +199,7 @@ Verificada em 2026-10-03, com `python3 -m unittest discover -s tests -t .`: 48 t
 
 | Item | Situação |
 |---|---|
-| A Spec 001 (auditoria) ainda não existe | A auditoria é gravada por uma interface, com implementação em memória. A Spec 001 vai substituí-la sem mudar o domínio. |
+| Auditoria (Spec 001) | Quando esta spec foi verificada, a Spec 001 ainda não existia, e a auditoria era gravada por uma interface, com implementação em memória. A [Spec 001](001-fundacao-camadas-e-auditoria.md) foi implementada e verificada em 2026-10-16, sem mudar o domínio do título: as operações desta spec passaram a gravar a auditoria por `OperacaoAuditada`, com campo, valor anterior e novo valor; o estorno passou a ter o pagamento como registro afetado (Spec 001, A5); e a verificação de vencimentos pode rodar sem usuário, como operação automática. Os 24 critérios desta spec continuam passando. |
 | Persistência | Em memória, com transação por cópia e restauração. O banco depende de OPEN-02. |
 | Estado Em Renegociação | Fica fora de `EstadoTitulo` até a Spec 009, como está no escopo. |
 | Quem cadastra título e registra pagamento | Sem restrição de perfil nesta spec. A autorização geral, inclusive RB-03 (Contador só consulta), é da Spec 002. |

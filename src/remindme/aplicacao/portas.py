@@ -1,5 +1,6 @@
 """Interfaces que a aplicação usa e a infraestrutura implementa."""
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Protocol
 
@@ -14,7 +15,26 @@ class RepositorioTitulos(Protocol):
 
 
 class RepositorioAuditoria(Protocol):
+    """Somente inclusão (RB-30, ADR-004): não há operação de alteração nem de exclusão."""
+
     def registrar(self, registro: RegistroAuditoria) -> None: ...
+
+
+@dataclass(frozen=True)
+class RegistroErro:
+    """RNF-21: o que se registra de um erro não tratado. Fica fora da transação da operação."""
+
+    data_hora: datetime
+    operacao: str
+    usuario_id: Optional[str]
+    correlacao: str
+    erro: str
+
+
+class RegistroErros(Protocol):
+    """Destino dos registros de erro não tratado (RNF-21). O destino real está em aberto (OPEN-36)."""
+
+    def registrar(self, registro: RegistroErro) -> None: ...
 
 
 class ConsultaClientes(Protocol):

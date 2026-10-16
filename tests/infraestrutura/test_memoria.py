@@ -4,11 +4,13 @@ import unittest
 from datetime import date, datetime
 from decimal import Decimal
 
+from remindme.aplicacao.portas import RegistroErro
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.titulo import EstadoTitulo, Titulo
 from remindme.infraestrutura.memoria import (
     AuditoriaEmMemoria,
     ClientesEmMemoria,
+    RegistroErrosEmMemoria,
     RelogioFixo,
     RepositorioTitulosEmMemoria,
     UnidadeDeTrabalhoEmMemoria,
@@ -68,6 +70,32 @@ class Auditoria(unittest.TestCase):
             auditoria.registrar(RegistroAuditoria("u", datetime(2026, 10, 3), "a", "x"))
         self.assertEqual(auditoria.registros, [])
 
+    def test_RB_30_so_grava_registro_de_auditoria(self):
+        auditoria = AuditoriaEmMemoria()
+        with self.assertRaises(TypeError):
+            auditoria.registrar({"operacao": "a"})
+        self.assertEqual(auditoria.registros, [])
+
+    def test_RB_30_leitura_devolve_copias_em_lista_nova(self):
+        auditoria = AuditoriaEmMemoria()
+        r1 = RegistroAuditoria("u", datetime(2026, 10, 3), "a", "titulo t1")
+        auditoria.registrar(r1)
+        lida = auditoria.registros
+        self.assertIsNot(lida, auditoria.registros)
+        self.assertIsNot(lida[0], r1)
+        lida.append(r1)
+        self.assertEqual(auditoria.registros, [r1])
+
+
+class RegistroErros(unittest.TestCase):
+    def test_RNF_21_registros_de_erro_sao_acrescentados_em_ordem(self):
+        erros = RegistroErrosEmMemoria()
+        e1 = RegistroErro(datetime(2026, 10, 16), "a", "u", "c1", "RuntimeError: x")
+        e2 = RegistroErro(datetime(2026, 10, 16), "b", None, "c2", "RuntimeError: y")
+        erros.registrar(e1)
+        erros.registrar(e2)
+        self.assertEqual(erros.registros, [e1, e2])
+
 
 class UnidadeDeTrabalho(unittest.TestCase):
     def setUp(self):
@@ -88,6 +116,19 @@ class UnidadeDeTrabalho(unittest.TestCase):
                 raise ValueError("falha")
         self.assertIsNone(self.titulos.obter("t1"))
         self.assertEqual(self.auditoria.registros, [])
+
+    def test_RNF_09_falha_desfaz_so_os_registros_da_transacao(self):
+        """Spec 001, E3: registro de auditoria gravado e depois falha na gravação; o anterior permanece."""
+        anterior = RegistroAuditoria("u", datetime(2026, 10, 3), "anterior", "titulo t0")
+        with self.uow as uow:
+            uow.auditoria.registrar(anterior)
+        with self.assertRaises(ValueError):
+            with self.uow as uow:
+                uow.auditoria.registrar(RegistroAuditoria("u", datetime(2026, 10, 3), "a", "titulo t1"))
+                uow.titulos.salvar(titulo())
+                raise ValueError("falha na gravação do título")
+        self.assertEqual(self.auditoria.registros, [anterior])
+        self.assertIsNone(self.titulos.obter("t1"))
 
     def test_RNF_09_falha_nao_e_engolida(self):
         with self.assertRaisesRegex(ValueError, "original"):

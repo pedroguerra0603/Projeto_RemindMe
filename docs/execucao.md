@@ -1,6 +1,6 @@
 # Como executar — RemindMe
 
-O projeto ainda não tem interface. O que existe é o domínio e a camada de aplicação da [Spec 006](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md), verificados por testes.
+O projeto ainda não tem interface. O que existe é a fundação da [Spec 001](../.specify/specs/001-fundacao-camadas-e-auditoria.md) (camadas, auditoria de operações e registro de erro não tratado) e o domínio e a camada de aplicação da [Spec 006](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md), verificados por testes.
 
 ## Pré-requisitos
 

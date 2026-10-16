@@ -189,12 +189,15 @@ class AuditoriaSomenteInclusao(Base):
             self.servico.cancelar_titulo(usuario(Perfil.CONTADOR), self.titulo.id, "motivo")
         self.assertEqual(self.auditoria.registros[: len(antes)], antes)
 
-    def test_ADR_004_provisorio_o_duble_em_memoria_expoe_a_lista_de_registros(self):
-        """Fragilidade conhecida (S-01), e não defeito da Spec 006: `registros` é uma lista pública do dublê
-        de teste, e quem tem acesso ao objeto pode apagá-la. O adaptador real (OPEN-02) precisa impedir a
-        alteração na própria camada de persistência. Este teste só documenta o fato."""
-        self.assertIsInstance(self.auditoria.registros, list)
-        self.assertIsInstance(self.auditoria.registros[0], RegistroAuditoria)
+    def test_ADR_004_a_lista_devolvida_pela_auditoria_em_memoria_nao_altera_o_armazenado(self):
+        """S-01 resolvida pela Spec 001 (CA-07, CA-08): `registros` devolve uma lista nova a cada leitura.
+        Apagar ou trocar itens dessa lista não apaga nem altera o que está armazenado. O adaptador real
+        (OPEN-02) continua precisando impedir a alteração na própria camada de persistência."""
+        lida = self.auditoria.registros
+        self.assertIsInstance(lida[0], RegistroAuditoria)
+        quantidade = len(lida)
+        lida.clear()
+        self.assertEqual(len(self.auditoria.registros), quantidade)
 
 
 class Pendentes(unittest.TestCase):

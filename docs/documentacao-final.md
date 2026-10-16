@@ -114,7 +114,7 @@ Fonte: [mapa de specs](../.specify/specs/mapa-de-specs.md). São 16 specs, de 00
 | Spec | Situação | Evidência |
 |---|---|---|
 | [006 — Título: cadastro manual, pagamento, baixa e estorno](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md) | Verificada | Plano em [`006-plano.md`](../.specify/plans/006-plano.md); testes em [`tests/`](../tests/README.md) |
-| [001 — Fundação: estrutura em camadas e auditoria](../.specify/specs/001-fundacao-camadas-e-auditoria.md) | Aprovada | Aprovada por João Pedro Guerra em 2026-10-16 |
+| [001 — Fundação: estrutura em camadas e auditoria](../.specify/specs/001-fundacao-camadas-e-auditoria.md) | Verificada | Plano em [`001-plano.md`](../.specify/plans/001-plano.md); seção 8 da spec |
 | [002 — Autenticação e autorização por perfil](../.specify/specs/002-autenticacao-e-autorizacao.md) | Aprovada | Aprovada por João Pedro Guerra em 2026-10-16; CA-01 depende de OPEN-35 |
 | 003 a 005, 007 a 016 | A escrever | — |
 

@@ -8,7 +8,7 @@
 | **Nome** | Fundação: estrutura em camadas e auditoria de operações |
 | **Objetivo** | Garantir que toda operação que cria, altera ou muda o estado de um registro deixe uma prova imutável de quem fez, o quê, quando e sobre qual registro, gravada junto com a própria operação. |
 | **Valor entregue** | O Dono consegue provar quem fez cada operação, e nenhuma operação acontece sem registro. A base vale para todas as specs seguintes. |
-| **Situação** | **Aprovada** |
+| **Situação** | **Verificada** — todos os critérios de aceitação passaram (seção 8). |
 | **Aprovada por** | João Pedro Guerra, em 2026-10-16 |
 
 ## 2. Rastreabilidade
@@ -123,4 +123,63 @@ Os testes automatizados levam no nome o identificador do critério ou da regra, 
 
 ## 8. Verificação
 
-A preencher depois da implementação.
+Verificada em 2026-10-16, com `python3 -m unittest discover -s tests -t .`: 235 testes, todos passando (9 pulados, pendentes de outras specs, e 1 falha esperada, o defeito conhecido de `tests/dominio/test_acuracia_monetaria.py`; nenhum dos dois é desta spec). Antes desta spec eram 199 testes. Testes em [`tests/aplicacao/test_spec_001_aceite.py`](../../tests/aplicacao/test_spec_001_aceite.py) (critérios), [`tests/dominio/test_auditoria.py`](../../tests/dominio/test_auditoria.py) (registro de auditoria) e [`tests/infraestrutura/test_memoria.py`](../../tests/infraestrutura/test_memoria.py) (auditoria em memória, registro de erros e unidade de trabalho). Plano em [`plans/001-plano.md`](../plans/001-plano.md). Executado em Python 3.11, 3.12 e 3.13, com o mesmo resultado.
+
+### Critérios de aceitação
+
+| Critério | Teste | Resultado |
+|---|---|---|
+| CA-01 | `test_CA_01_cadastro_de_titulo_gera_registro_com_estado_inicial` | Passou |
+| CA-02 | `test_CA_02_pagamento_gera_registro_do_pagamento_e_da_mudanca_de_estado` | Passou |
+| CA-03 | `test_CA_03_estorno_gera_registro_do_pagamento_e_da_mudanca_de_estado` | Passou |
+| CA-04 | `test_CA_04_RB_01_pagamento_recusado_nao_grava_auditoria` | Passou |
+| CA-05 | `test_CA_05_falha_na_auditoria_durante_o_pagamento_desfaz_tudo` (o primeiro registro é gravado e o segundo falha) | Passou |
+| CA-06 | `test_CA_06` (2 testes: falha na gravação do segundo título depois da auditoria do primeiro, na verificação de vencimentos; falha na gravação do título no cadastro) | Passou |
+| CA-07 | `test_CA_07` (3 testes: todos os campos, objeto lido com a imutabilidade contornada, objeto alterado depois de gravado) | Passou |
+| CA-08 | `test_CA_08` (2 testes: porta, implementação e serviço sem alterar nem excluir; apagar a lista lida não exclui) | Passou |
+| CA-09 | `test_CA_09` (2 testes: sem usuário, automática com a rotina "verificação de vencimento"; com usuário, não automática) | Passou |
+| CA-10 | `test_CA_10` (5 testes: registro, desfazer e propagação; correlação própria por erro; operação automática; recusa não é erro; falha ao registrar o erro não esconde o original) | Passou |
+| CA-11 | `test_CA_11_registros_aparecem_na_ordem_de_gravacao` | Passou |
+| CA-12 | `test_CA_12_RNF_19_dominio_e_aplicacao_importam_somente_camadas_permitidas`; `test_ADR_001_cada_camada_importa_somente_as_camadas_permitidas` | Passou |
+| CA-13 | `test_CA_13_RNF_23_suite_inteira_passa_sem_variavel_de_credencial` (a suíte roda em outro processo, só com `PATH` e variáveis mínimas do sistema); `test_RNF_23_codigo_nao_le_variaveis_de_ambiente` | Passou |
+
+### Invariantes
+
+| Invariante | Como foi verificada | Resultado |
+|---|---|---|
+| INV-1 | CA-07 e CA-08; `test_RB_30_nenhum_campo_do_registro_muda`; `test_RB_30_leitura_devolve_copias_em_lista_nova` | Passou |
+| INV-2 | CA-01 a CA-06 e CA-10; os testes de recusa e de falha da Spec 006 (`test_confiabilidade.py`, `test_idempotencia.py`, `test_integracao.py`) continuam passando | Passou |
+| INV-3 | `test_INV_3_*` e `test_OPEN_30_*` em `tests/dominio/test_auditoria.py`: o registro incompleto não é criado; CA-09 | Passou |
+| INV-4 | CA-11; `test_ADR_004_registros_sao_acrescentados_em_ordem` | Passou |
+| INV-5 | `test_INV_5_a_auditoria_e_gravada_em_um_unico_ponto_da_aplicacao`: só `aplicacao/auditoria.py` cria `RegistroAuditoria` ou chama `auditoria.registrar` | Passou |
+| INV-6 | CA-12; `test_OPEN_01_codigo_usa_somente_a_biblioteca_padrao` | Passou |
+| INV-7 | CA-13 | Passou |
+
+### Verificação de sensibilidade
+
+Erros introduzidos de propósito, um de cada vez, e desfeitos em seguida. Em todos, a suíte falhou nos testes esperados e voltou a passar depois de desfeito o erro.
+
+| Erro introduzido | Testes que falharam (amostra) |
+|---|---|
+| Gravar registro de auditoria quando a operação é recusada | CA-04 e 7 testes de recusa da Spec 006 |
+| `RegistroAuditoria` sem `frozen` | CA-07, `test_RB_30_*`, `test_RNF_06_*` |
+| Auditoria em memória devolvendo a própria lista e os próprios objetos | CA-07, CA-08, `test_ADR_004_a_lista_devolvida_...` |
+| Unidade de trabalho que não desfaz em falha | CA-05, CA-06, CA-10 e os testes de RNF-09 da Spec 006 |
+| Operação automática gravada com um usuário fictício | CA-09 |
+| Erro não tratado sem registro | CA-10 |
+
+### Divergências e limitações
+
+| Item | Situação |
+|---|---|
+| Testes da Spec 006 ajustados | `test_UC_06_ciclo_completo_grava_estado_e_trilha_de_auditoria` (`tests/integracao/test_integracao.py`): o registro do estorno passou a ter o pagamento como registro afetado e "não" → "sim" no campo estornado (A5, CA-03). `test_ADR_004_provisorio_o_duble_em_memoria_expoe_a_lista_de_registros` (`tests/aplicacao/test_seguranca_de_acesso.py`) documentava a fragilidade S-01, que esta spec resolve; passou a se chamar `test_ADR_004_a_lista_devolvida_pela_auditoria_em_memoria_nao_altera_o_armazenado`. Nenhum outro teste mudou. |
+| Destino do registro de erro e origem do identificador de correlação | Em aberto: **OPEN-36**. O registro passa pela porta `RegistroErros`, com implementação em memória; o identificador é gerado pela aplicação. |
+| Porta de erros opcional | `ServicoTitulos` recebe `erros` como parâmetro opcional, para não mudar a criação do serviço nos testes da Spec 006. Sem a porta, o erro é desfeito e propagado, mas não registrado. |
+| Consulta de títulos | Não altera dados, não é auditada e não recebe usuário; um erro nela não gera registro de erro. A consulta com usuário depende da Spec 002. |
+| Operação do registro de mudança de estado | Continua "mudar estado", como na Spec 006, e não o nome da operação solicitada. A spec não fixa os nomes das operações. |
+| CA-06 | A falha da gravação de um título depois de uma auditoria já gravada só acontece, na mesma operação, na verificação de vencimentos com dois títulos: nas demais operações, o título é gravado antes da auditoria. O teste usa dois títulos Abertos, e não um. A unidade de trabalho também é testada diretamente nessa ordem (`test_RNF_09_falha_desfaz_so_os_registros_da_transacao`). |
+| Persistência | Em memória. A garantia de RB-30 no armazenamento real (por exemplo, permissão só de inclusão) depende de OPEN-02. |
+| Glossário | "Registro de erro" e "identificador de correlação" não estão em `docs/glossario.md`; o código usa `RegistroErro` e `correlacao`. Proposta de inclusão no glossário, a aprovar. |
+| ADR-004 | Continua "Proposto, aguardando aprovação" (DV-13), embora esta spec o implemente. |
+| DV-05 | Tratada: a verificação de vencimento aceita usuário vazio, e o registro identifica a operação automática e a rotina (OPEN-30). |
+| Nome dos testes | Python não aceita hífen em identificador: `CA-07` vira `test_CA_07_...`. |

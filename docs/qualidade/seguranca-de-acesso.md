@@ -43,6 +43,8 @@ A matriz também está no código do teste (`MATRIZ`), e um teste confere que el
 
 A lista `AuditoriaEmMemoria.registros` é pública e mutável. Ela é um dublê de teste, não o adaptador real, mas quem tiver o objeto pode apagá-la. O que impede alteração e exclusão é a **interface da porta** (só `registrar`) e a imutabilidade do registro. Para o armazenamento real, a garantia (por exemplo, permissão de banco só de inclusão) é da persistência escolhida em OPEN-02. O teste `test_ADR_004_provisorio_...` apenas documenta o fato.
 
+**Resolvida pela Spec 001 (2026-10-16).** `AuditoriaEmMemoria.registros` passou a ser uma propriedade que devolve, a cada leitura, uma lista nova com cópias dos registros: apagar a lista ou alterar um objeto devolvido não altera o armazenado (CA-07, CA-08). O teste passou a se chamar `test_ADR_004_a_lista_devolvida_pela_auditoria_em_memoria_nao_altera_o_armazenado`. A garantia no armazenamento real continua dependendo de OPEN-02.
+
 ## 4. Pendente, sem código antecipado (regra 1 do CLAUDE.md)
 
 | Caso | Depende de | Teste registrado como pulado |

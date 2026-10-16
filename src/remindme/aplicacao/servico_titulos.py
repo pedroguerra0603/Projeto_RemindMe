@@ -1,4 +1,7 @@
-"""Casos de uso da Spec 006: cadastro manual, pagamento, vencimento, estorno, cancelamento e consulta."""
+"""Casos de uso da Spec 006: cadastro manual, pagamento, vencimento, estorno, cancelamento e consulta.
+
+Cada operação que altera dados passa por `OperacaoAuditada` (Spec 001).
+"""
 
 import uuid
 from dataclasses import dataclass
@@ -6,9 +9,9 @@ from datetime import date
 from decimal import Decimal
 from typing import List, Optional
 
-from remindme.aplicacao.portas import ConsultaClientes, Relogio, UnidadeDeTrabalho
+from remindme.aplicacao.auditoria import Alteracao, Auditar, OperacaoAuditada
+from remindme.aplicacao.portas import ConsultaClientes, RegistroErros, Relogio, UnidadeDeTrabalho
 from remindme.dominio import regras
-from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.erros import OperacaoRecusada
 from remindme.dominio.titulo import EstadoTitulo, Titulo
 from remindme.dominio.usuario import Usuario
@@ -37,11 +40,20 @@ class VisaoTitulo:
     proximo_do_vencimento: bool
 
 
+ROTINA_VERIFICACAO_DE_VENCIMENTO = "verificação de vencimento"
+
+
 class ServicoTitulos:
-    def __init__(self, uow: UnidadeDeTrabalho, clientes: ConsultaClientes, relogio: Relogio):
+    def __init__(
+        self,
+        uow: UnidadeDeTrabalho,
+        clientes: ConsultaClientes,
+        relogio: Relogio,
+        erros: Optional[RegistroErros] = None,
+    ):
         self._uow = uow
         self._clientes = clientes
-        self._relogio = relogio
+        self._operacao = OperacaoAuditada(uow, relogio, erros)
 
     def cadastrar_titulo(
         self,
@@ -51,40 +63,50 @@ class ServicoTitulos:
         vencimento: Optional[date],
         condicao_pagamento: Optional[str] = None,
     ) -> Titulo:
-        if not self._clientes.existe(cliente_id):
-            raise OperacaoRecusada("Cliente inexistente.")
-        titulo = Titulo.cadastrar_manual(
-            _novo_id(), cliente_id, valor, vencimento, condicao_pagamento
-        )
-        with self._uow as uow:
+        def acao(uow: UnidadeDeTrabalho, auditar: Auditar) -> Titulo:
+            if not self._clientes.existe(cliente_id):
+                raise OperacaoRecusada("Cliente inexistente.")
+            titulo = Titulo.cadastrar_manual(
+                _novo_id(), cliente_id, valor, vencimento, condicao_pagamento
+            )
             uow.titulos.salvar(titulo)
-            self._auditar(usuario, "cadastrar título", titulo, None, titulo.estado.value)
-        return titulo
+            auditar(Alteracao(_registro(titulo), "estado", None, titulo.estado.value))
+            return titulo
+
+        return self._operacao.executar(usuario, "cadastrar título", acao)
 
     def registrar_pagamento(
         self, usuario: Usuario, titulo_id: str, valor: Decimal, data: date
     ) -> Titulo:
-        with self._uow as uow:
+        def acao(uow: UnidadeDeTrabalho, auditar: Auditar) -> Titulo:
             titulo = self._obter(titulo_id)
             estado_anterior = titulo.estado
             pagamento = titulo.registrar_pagamento(_novo_id(), valor, data)
             uow.titulos.salvar(titulo)
-            self._auditar(
-                usuario, "registrar pagamento", titulo, None, f"pagamento {pagamento.id}: {valor}"
+            # Spec 006, CA-22: o registro do pagamento tem o título como registro afetado.
+            auditar(
+                Alteracao(_registro(titulo), "pagamento", None, f"pagamento {pagamento.id}: {valor}")
             )
-            self._auditar_estado(usuario, titulo, estado_anterior)
-        return titulo
+            _auditar_estado(auditar, titulo, estado_anterior)
+            return titulo
 
-    def verificar_vencimentos(self, usuario: Usuario, data_referencia: date) -> List[str]:
-        """A3. O disparo periódico é da Spec 008."""
-        vencidos = []
-        with self._uow as uow:
+        return self._operacao.executar(usuario, "registrar pagamento", acao)
+
+    def verificar_vencimentos(self, usuario: Optional[Usuario], data_referencia: date) -> List[str]:
+        """A3 da Spec 006. Sem usuário, é operação automática (Spec 001, A4). O disparo periódico é da Spec 008."""
+
+        def acao(uow: UnidadeDeTrabalho, auditar: Auditar) -> List[str]:
+            vencidos = []
             for titulo in uow.titulos.listar():
                 if titulo.marcar_vencido(data_referencia):
                     uow.titulos.salvar(titulo)
-                    self._auditar_estado(usuario, titulo, EstadoTitulo.ABERTO)
+                    _auditar_estado(auditar, titulo, EstadoTitulo.ABERTO)
                     vencidos.append(titulo.id)
-        return vencidos
+            return vencidos
+
+        return self._operacao.executar(
+            usuario, "verificar vencimentos", acao, rotina=ROTINA_VERIFICACAO_DE_VENCIMENTO
+        )
 
     def estornar_pagamento(
         self,
@@ -94,27 +116,30 @@ class ServicoTitulos:
         motivo: Optional[str],
         data_referencia: date,
     ) -> Titulo:
-        regras.exigir_permissao_de_estorno(usuario)
-        with self._uow as uow:
+        def acao(uow: UnidadeDeTrabalho, auditar: Auditar) -> Titulo:
+            regras.exigir_permissao_de_estorno(usuario)
             titulo = self._obter(titulo_id)
             estado_anterior = titulo.estado
-            titulo.estornar_pagamento(pagamento_id, motivo, data_referencia)
+            pagamento = titulo.estornar_pagamento(pagamento_id, motivo, data_referencia)
             uow.titulos.salvar(titulo)
-            self._auditar(
-                usuario, "estornar pagamento", titulo, f"pagamento {pagamento_id}", "estornado", motivo
-            )
-            self._auditar_estado(usuario, titulo, estado_anterior, motivo)
-        return titulo
+            # Spec 001, A5 e CA-03: o pagamento é o registro afetado do estorno.
+            auditar(Alteracao(f"pagamento {pagamento.id}", "estornado", "não", "sim", motivo))
+            _auditar_estado(auditar, titulo, estado_anterior, motivo)
+            return titulo
+
+        return self._operacao.executar(usuario, "estornar pagamento", acao)
 
     def cancelar_titulo(self, usuario: Usuario, titulo_id: str, motivo: Optional[str]) -> Titulo:
-        regras.exigir_permissao_de_cancelamento(usuario)
-        with self._uow as uow:
+        def acao(uow: UnidadeDeTrabalho, auditar: Auditar) -> Titulo:
+            regras.exigir_permissao_de_cancelamento(usuario)
             titulo = self._obter(titulo_id)
             estado_anterior = titulo.estado
             titulo.cancelar(motivo)
             uow.titulos.salvar(titulo)
-            self._auditar_estado(usuario, titulo, estado_anterior, motivo)
-        return titulo
+            _auditar_estado(auditar, titulo, estado_anterior, motivo)
+            return titulo
+
+        return self._operacao.executar(usuario, "cancelar título", acao)
 
     def consultar_titulos(
         self, filtro: FiltroTitulos, data_referencia: date, antecedencia_dias: int
@@ -142,32 +167,20 @@ class ServicoTitulos:
             raise OperacaoRecusada("Título não encontrado.")
         return titulo
 
-    def _auditar_estado(
-        self, usuario: Usuario, titulo: Titulo, anterior: EstadoTitulo, motivo: Optional[str] = None
-    ) -> None:
-        if titulo.estado is not anterior:
-            self._auditar(
-                usuario, "mudar estado", titulo, anterior.value, titulo.estado.value, motivo
-            )
 
-    def _auditar(
-        self,
-        usuario: Usuario,
-        operacao: str,
-        titulo: Titulo,
-        valor_anterior: Optional[str],
-        valor_novo: Optional[str],
-        motivo: Optional[str] = None,
-    ) -> None:
-        self._uow.auditoria.registrar(
-            RegistroAuditoria(
-                usuario_id=usuario.id,
-                data_hora=self._relogio.agora(),
-                operacao=operacao,
-                registro_afetado=f"titulo {titulo.id}",
-                valor_anterior=valor_anterior,
-                valor_novo=valor_novo,
-                motivo=motivo,
+def _registro(titulo: Titulo) -> str:
+    return f"titulo {titulo.id}"
+
+
+def _auditar_estado(
+    auditar: Auditar, titulo: Titulo, anterior: EstadoTitulo, motivo: Optional[str] = None
+) -> None:
+    """A2: a mudança de estado é auditada com o campo estado."""
+    if titulo.estado is not anterior:
+        auditar(
+            Alteracao(
+                _registro(titulo), "estado", anterior.value, titulo.estado.value, motivo,
+                operacao="mudar estado",
             )
         )
 
