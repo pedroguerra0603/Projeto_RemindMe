@@ -9,7 +9,7 @@
 | **Objetivo** | Garantir que só usuários ativos e autenticados operem o sistema e que cada um execute apenas o que seu perfil permite, com tudo negado por padrão. |
 | **Valor entregue** | A Dona sabe que o Contador não altera dados, que só ela estorna e cancela e que um usuário inativado perde o acesso na hora. O Administrador mantém usuários e permissões sem mexer no código. |
 | **Situação** | Proposta |
-| **Aprovada por** | *(nomes e data)* |
+| **Aprovada por** | *João Pedro Silva Guerra - 22/10/26* |
 
 ## 2. Rastreabilidade
 
