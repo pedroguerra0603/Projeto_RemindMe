@@ -103,24 +103,26 @@ class ServicoComInfraestrutura(unittest.TestCase):
         self.assertEqual(salvo.saldo, Decimal("700.00"))
         self.assertEqual(salvo.valor, Decimal("1000.00"))
 
+        primeiro = salvo.pagamentos[0].id
         trilha = [
-            (r.data_hora.minute, r.usuario_id, r.operacao, r.valor_anterior, r.valor_novo, r.motivo)
+            (r.data_hora.minute, r.usuario_id, r.operacao, r.registro_afetado, r.campo,
+             r.valor_anterior, r.valor_novo, r.motivo)
             for r in self.auditoria.registros
         ]
+        titulo, p1, p2 = f"titulo {t.id}", f"titulo {t.id}, pagamento {primeiro}", f"titulo {t.id}, pagamento {segundo}"
         self.assertEqual(
             trilha,
             [
-                (0, "operador", "cadastrar título", None, "Aberto", None),
-                (1, "operador", "registrar pagamento", None, f"pagamento {salvo.pagamentos[0].id}: 300.00", None),
-                (2, "operador", "mudar estado", "Aberto", "Vencido", None),
-                (3, "operador", "registrar pagamento", None, f"pagamento {segundo}: 700.00", None),
-                (3, "operador", "mudar estado", "Vencido", "Baixado", None),
-                (4, "dono", "estornar pagamento", f"pagamento {segundo}", "estornado", "cheque devolvido"),
-                (4, "dono", "mudar estado", "Baixado", "Vencido", "cheque devolvido"),
-                (5, "dono", "mudar estado", "Vencido", "Cancelado", "acordo comercial"),
+                (0, "operador", "cadastrar título", titulo, "estado", None, "Aberto", None),
+                (1, "operador", "registrar pagamento", p1, "valor", None, "300.00", None),
+                (2, "operador", "mudar estado", titulo, "estado", "Aberto", "Vencido", None),
+                (3, "operador", "registrar pagamento", p2, "valor", None, "700.00", None),
+                (3, "operador", "mudar estado", titulo, "estado", "Vencido", "Baixado", None),
+                (4, "dono", "estornar pagamento", p2, "estornado", "não", "sim", "cheque devolvido"),
+                (4, "dono", "mudar estado", titulo, "estado", "Baixado", "Vencido", "cheque devolvido"),
+                (5, "dono", "mudar estado", titulo, "estado", "Vencido", "Cancelado", "acordo comercial"),
             ],
         )
-        self.assertTrue(all(r.registro_afetado == f"titulo {t.id}" for r in self.auditoria.registros))
 
     def test_dois_servicos_sobre_o_mesmo_armazenamento_veem_as_mesmas_gravacoes(self):
         outro = self.novo_servico()

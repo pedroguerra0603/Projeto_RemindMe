@@ -8,7 +8,7 @@
 | **Nome** | Fundação: estrutura em camadas e auditoria de operações |
 | **Objetivo** | Garantir que toda operação que cria, altera ou muda o estado de um registro deixe uma prova imutável de quem fez, o quê, quando e sobre qual registro, gravada junto com a própria operação. |
 | **Valor entregue** | O Dono consegue provar quem fez cada operação, e nenhuma operação acontece sem registro. A base vale para todas as specs seguintes. |
-| **Situação** | **Aprovada** |
+| **Situação** | **Verificada** — todos os critérios de aceitação passaram (seção 8). |
 | **Aprovada por** | João Pedro Guerra, em 2026-10-16 |
 
 ## 2. Rastreabilidade
@@ -123,4 +123,46 @@ Os testes automatizados levam no nome o identificador do critério ou da regra, 
 
 ## 8. Verificação
 
-A preencher depois da implementação.
+Verificada em 2026-10-23, com `python3 -m unittest discover -s tests -t .`: 216 testes, todos passando (9 pulados por dependerem de specs futuras, 1 falha esperada já registrada). A mesma suíte passou com o ambiente vazio (`env -i PATH="$PATH" HOME=/tmp`). Testes em [`tests/aplicacao/test_spec_001_aceite.py`](../../tests/aplicacao/test_spec_001_aceite.py). Plano em [`plans/001-plano.md`](../plans/001-plano.md) e tarefas em [`tasks/001-tarefas.md`](../tasks/001-tarefas.md).
+
+### Critérios de aceitação
+
+| Critério | Teste | Resultado |
+|---|---|---|
+| CA-01 | `test_CA_01` | Passou |
+| CA-02 | `test_CA_02` | Passou |
+| CA-03 | `test_CA_03` (inclui RB-01) | Passou |
+| CA-04 | `test_CA_04` | Passou |
+| CA-05 | `test_CA_05` | Passou |
+| CA-06 | `test_CA_06` | Passou |
+| CA-07 | `test_CA_07` (inclui RB-30) | Passou |
+| CA-08 | `test_CA_08` (inclui RB-30) | Passou |
+| CA-09 | `test_CA_09` | Passou |
+| CA-10 | `test_CA_10` | Passou |
+| CA-11 | `test_CA_11` | Passou |
+| CA-12 | `test_CA_12`; também `test_ADR_001_*` em `tests/arquitetura/test_camadas.py` | Passou |
+| CA-13 | `test_CA_13` e execução da suíte com o ambiente vazio | Passou |
+
+### Invariantes
+
+| Invariante | Como foi verificada | Resultado |
+|---|---|---|
+| INV-1 | CA-07 e CA-08 | Passou |
+| INV-2 | CA-01 a CA-06; testes de confiabilidade da Spec 006 (`tests/aplicacao/test_confiabilidade.py`) | Passou |
+| INV-3 | `test_INV_3_*`: o registro recusa a criação sem data e hora, operação, registro afetado ou usuário, salvo em operação automática com rotina | Passou |
+| INV-4 | CA-11 | Passou |
+| INV-5 | `test_INV_5_*`: só `aplicacao/auditoria.py` cria `RegistroAuditoria` | Passou |
+| INV-6 | CA-12 | Passou |
+| INV-7 | CA-13 | Passou |
+
+### Divergências e limitações
+
+| Item | Situação |
+|---|---|
+| Atributos do registro | O registro ganhou `campo`, `automatica` e `rotina`, exigidos por RF-05, A4 e OPEN-30. O diagrama de classes de [`docs/modelo-dominio.md`](../../docs/modelo-dominio.md) ainda não os mostra; a atualização da baseline fica proposta para a equipe. |
+| Registro do pagamento | A referência passou de `titulo <id>` para `titulo <id>, pagamento <id>`, e os valores passaram para os campos `valor` e `estornado`. Os testes da Spec 006 que liam o formato antigo foram ajustados no mesmo PR. |
+| Ordem de gravação | A auditoria passou a ser gravada antes do título, dentro da mesma transação, para cobrir E3. A linha "depois da gravação" de [`docs/qualidade/concorrencia-e-idempotencia.md`](../../docs/qualidade/concorrencia-e-idempotencia.md) ficou imprecisa; a correção do documento fica proposta para a equipe. |
+| Fragilidade S-01 | A leitura da auditoria em memória devolve cópia e não aceita atribuição. A garantia no armazenamento real continua dependendo de OPEN-02. [`docs/qualidade/seguranca-de-acesso.md`](../../docs/qualidade/seguranca-de-acesso.md) ainda descreve a lista como mutável; a atualização fica proposta para a equipe. |
+| Registro de erro | Fica no `logging` da biblioteca padrão por padrão e em memória nos testes. O armazenamento definitivo depende de OPEN-02. |
+| Persistência | Em memória, com transação por cópia e restauração (OPEN-02). |
+| Retenção | Nenhum registro é excluído (OPEN-31). |

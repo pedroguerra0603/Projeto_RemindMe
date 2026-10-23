@@ -4,6 +4,7 @@ import copy
 from datetime import datetime
 from typing import Dict, List, Optional, Set
 
+from remindme.aplicacao.portas import RegistroErro
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.titulo import Titulo
 
@@ -24,16 +25,35 @@ class RepositorioTitulosEmMemoria:
 
 
 class AuditoriaEmMemoria:
-    """Somente inclusão (ADR-004). `falhar` simula falha na gravação (CA-23)."""
+    """Somente inclusão (ADR-004, RB-30). `falhar` simula falha na gravação (CA-23; Spec 001, CA-05)."""
 
     def __init__(self):
-        self.registros: List[RegistroAuditoria] = []
+        self._registros: List[RegistroAuditoria] = []
         self.falhar = False
 
     def registrar(self, registro: RegistroAuditoria) -> None:
         if self.falhar:
             raise RuntimeError("Falha simulada na gravação da auditoria.")
-        self.registros.append(registro)
+        self._registros.append(registro)
+
+    @property
+    def registros(self) -> List[RegistroAuditoria]:
+        """Leitura na ordem de gravação (INV-4). Devolve uma cópia: mexer nela não altera o armazenado."""
+        return list(self._registros)
+
+
+class RegistroErrosEmMemoria:
+    """Registro de erro não tratado (RNF-21). Fica fora da unidade de trabalho e não é desfeito."""
+
+    def __init__(self):
+        self._registros: List[RegistroErro] = []
+
+    def registrar(self, registro: RegistroErro) -> None:
+        self._registros.append(registro)
+
+    @property
+    def registros(self) -> List[RegistroErro]:
+        return list(self._registros)
 
 
 class UnidadeDeTrabalhoEmMemoria:
@@ -45,12 +65,12 @@ class UnidadeDeTrabalhoEmMemoria:
         self._copia = None
 
     def __enter__(self):
-        self._copia = (copy.deepcopy(self.titulos.dados), list(self.auditoria.registros))
+        self._copia = (copy.deepcopy(self.titulos.dados), list(self.auditoria._registros))
         return self
 
     def __exit__(self, tipo, valor, rastro):
         if tipo is not None:
-            self.titulos.dados, self.auditoria.registros = self._copia
+            self.titulos.dados, self.auditoria._registros = self._copia
         self._copia = None
 
 

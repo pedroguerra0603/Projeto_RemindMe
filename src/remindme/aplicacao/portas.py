@@ -1,5 +1,6 @@
 """Interfaces que a aplicação usa e a infraestrutura implementa."""
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Protocol
 
@@ -15,6 +16,23 @@ class RepositorioTitulos(Protocol):
 
 class RepositorioAuditoria(Protocol):
     def registrar(self, registro: RegistroAuditoria) -> None: ...
+
+
+@dataclass(frozen=True)
+class RegistroErro:
+    """RNF-21: data e hora, operação, usuário e identificador de correlação de um erro não tratado."""
+
+    data_hora: datetime
+    operacao: str
+    usuario_id: Optional[str]
+    correlacao: str
+    erro: str
+
+
+class RegistroErros(Protocol):
+    """Fica fora da transação: o registro de erro permanece quando a operação é desfeita (RNF-21)."""
+
+    def registrar(self, registro: RegistroErro) -> None: ...
 
 
 class ConsultaClientes(Protocol):
