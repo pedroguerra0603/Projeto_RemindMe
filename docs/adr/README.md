@@ -9,6 +9,8 @@ Um ADR registra uma decisão cara de reverter: o que foi decidido, por quê, que
 | [ADR-003](ADR-003-ia-extrai-e-classifica-o-sistema-decide.md) | A IA extrai e classifica; o sistema decide | Proposto |
 | [ADR-004](ADR-004-auditoria-somente-inclusao.md) | Auditoria somente de inclusão, na mesma transação | Proposto |
 | [ADR-005](ADR-005-banco-relacional.md) | Banco de dados relacional | Aceito |
+| [ADR-006](ADR-006-interface-web-sobre-wsgi-da-biblioteca-padrao.md) | Interface web sobre o WSGI da biblioteca padrão | Aceito |
+| [ADR-007](ADR-007-sqlite-como-banco-do-mvp.md) | SQLite como banco relacional do MVP | Aceito |
 
 Situações possíveis: Proposto, Aceito, Substituído por ADR-nnn, Rejeitado. Um ADR aceito não é editado; uma nova decisão gera um novo ADR que substitui o anterior.
 

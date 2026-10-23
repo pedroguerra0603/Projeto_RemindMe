@@ -5,6 +5,7 @@ Lista ordenada das unidades implementáveis do sistema. O mapa não é implement
 - **Situação do mapa:** Proposto, aguardando revisão da equipe.
 - **Gerado em:** 2026-10-03, por agente (Claude), a partir da baseline revisada na mesma data.
 - **Revisado por:** *(preencher com nomes e data)*
+- **Alteração autorizada:** em 2026-10-23, João Pedro Silva Guerra autorizou o agente a incluir a Spec 017, a primeira com interface, e a seguir com as specs necessárias para ela. As perguntas de revisão abaixo continuam a cargo da equipe.
 
 ## Como o mapa foi montado
 

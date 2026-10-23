@@ -5,7 +5,9 @@ from datetime import datetime
 from typing import List, Optional, Protocol
 
 from remindme.dominio.auditoria import RegistroAuditoria
+from remindme.dominio.permissoes import MatrizPermissoes
 from remindme.dominio.titulo import Titulo
+from remindme.dominio.usuario import Usuario
 
 
 class RepositorioTitulos(Protocol):
@@ -16,6 +18,41 @@ class RepositorioTitulos(Protocol):
 
 class RepositorioAuditoria(Protocol):
     def registrar(self, registro: RegistroAuditoria) -> None: ...
+
+
+class RepositorioUsuarios(Protocol):
+    """A senha fica só como hash, guardado à parte do usuário (RNF-04, INV-3)."""
+
+    def obter(self, usuario_id: str) -> Optional[Usuario]: ...
+    def obter_por_email(self, email: str) -> Optional[Usuario]: ...
+    def salvar(self, usuario: Usuario) -> None: ...
+    def listar(self) -> List[Usuario]: ...
+    def guardar_hash(self, usuario_id: str, hash_da_senha: str) -> None: ...
+    def hash_de(self, usuario_id: str) -> Optional[str]: ...
+
+
+@dataclass(frozen=True)
+class Sessao:
+    """Sessão guardada no servidor (OPEN-03). `chave` é o resumo do identificador entregue ao navegador:
+    quem lê o armazenamento não obtém o identificador. `protecao` acompanha os formulários (CSRF)."""
+
+    chave: str
+    usuario_id: str
+    aberta_em: datetime
+    expira_em: datetime
+    protecao: str
+
+
+class RepositorioSessoes(Protocol):
+    def obter(self, chave: str) -> Optional[Sessao]: ...
+    def salvar(self, sessao: Sessao) -> None: ...
+    def remover(self, chave: str) -> None: ...
+    def remover_do_usuario(self, usuario_id: str) -> None: ...
+
+
+class RepositorioPermissoes(Protocol):
+    def obter(self) -> MatrizPermissoes: ...
+    def salvar(self, matriz: MatrizPermissoes) -> None: ...
 
 
 @dataclass(frozen=True)
@@ -40,10 +77,16 @@ class ConsultaClientes(Protocol):
 
 
 class UnidadeDeTrabalho(Protocol):
-    """Transação: tudo o que é feito dentro do bloco é gravado junto, ou nada é (RNF-09)."""
+    """Transação: tudo o que é feito dentro do bloco é gravado junto, ou nada é (RNF-09).
+
+    Um bloco aberto dentro de outro participa da mesma transação.
+    """
 
     titulos: RepositorioTitulos
     auditoria: RepositorioAuditoria
+    usuarios: RepositorioUsuarios
+    sessoes: RepositorioSessoes
+    permissoes: RepositorioPermissoes
 
     def __enter__(self) -> "UnidadeDeTrabalho": ...
     def __exit__(self, tipo, valor, rastro) -> None: ...
@@ -51,3 +94,8 @@ class UnidadeDeTrabalho(Protocol):
 
 class Relogio(Protocol):
     def agora(self) -> datetime: ...
+
+
+class CifradorDeSenha(Protocol):
+    def gerar(self, senha: str) -> str: ...
+    def conferir(self, senha: str, guardado: str) -> bool: ...

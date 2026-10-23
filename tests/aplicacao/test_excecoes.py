@@ -20,6 +20,7 @@ from remindme.infraestrutura.memoria import (
     RepositorioTitulosEmMemoria,
     UnidadeDeTrabalhoEmMemoria,
 )
+from tests.apoio import ComSessoes
 
 HOJE = date(2026, 10, 3)
 FUTURO = HOJE + timedelta(days=30)
@@ -40,21 +41,22 @@ def titulo():
     return Titulo.cadastrar_manual("t1", "c1", Decimal("100.00"), FUTURO)
 
 
-class ReferenciasInexistentes(unittest.TestCase):
+class ReferenciasInexistentes(ComSessoes, unittest.TestCase):
     def setUp(self):
         self.titulos = RepositorioTitulosEmMemoria()
         self.auditoria = AuditoriaEmMemoria()
+        self.uow = UnidadeDeTrabalhoEmMemoria(self.titulos, self.auditoria)
         self.servico = ServicoTitulos(
-            UnidadeDeTrabalhoEmMemoria(self.titulos, self.auditoria),
+            self.uow,
             ClientesEmMemoria({"c1"}),
             RelogioFixo(datetime(2026, 10, 3, 10, 0)),
         )
 
     def test_titulo_inexistente_e_recusado_em_toda_operacao(self):
         for nome, operacao in {
-            "pagamento": lambda: self.servico.registrar_pagamento(OPERADOR, "x", Decimal("1"), HOJE),
-            "estorno": lambda: self.servico.estornar_pagamento(DONO, "x", "p", "motivo", HOJE),
-            "cancelamento": lambda: self.servico.cancelar_titulo(DONO, "x", "motivo"),
+            "pagamento": lambda: self.servico.registrar_pagamento(self.sessao(OPERADOR), "x", Decimal("1"), HOJE),
+            "estorno": lambda: self.servico.estornar_pagamento(self.sessao(DONO), "x", "p", "motivo", HOJE),
+            "cancelamento": lambda: self.servico.cancelar_titulo(self.sessao(DONO), "x", "motivo"),
         }.items():
             with self.subTest(operacao=nome):
                 with self.assertRaisesRegex(OperacaoRecusada, "Título não encontrado"):
@@ -62,17 +64,17 @@ class ReferenciasInexistentes(unittest.TestCase):
         self.assertEqual(self.auditoria.registros, [])
 
     def test_E5_pagamento_de_outro_titulo_nao_e_estornado(self):
-        a = self.servico.cadastrar_titulo(OPERADOR, "c1", Decimal("100.00"), FUTURO)
-        b = self.servico.cadastrar_titulo(OPERADOR, "c1", Decimal("100.00"), FUTURO)
-        a = self.servico.registrar_pagamento(OPERADOR, a.id, Decimal("10.00"), HOJE)
+        a = self.servico.cadastrar_titulo(self.sessao(OPERADOR), "c1", Decimal("100.00"), FUTURO)
+        b = self.servico.cadastrar_titulo(self.sessao(OPERADOR), "c1", Decimal("100.00"), FUTURO)
+        a = self.servico.registrar_pagamento(self.sessao(OPERADOR), a.id, Decimal("10.00"), HOJE)
         with self.assertRaisesRegex(OperacaoRecusada, "Pagamento não encontrado"):
-            self.servico.estornar_pagamento(DONO, b.id, a.pagamentos[0].id, "motivo", HOJE)
+            self.servico.estornar_pagamento(self.sessao(DONO), b.id, a.pagamentos[0].id, "motivo", HOJE)
         self.assertFalse(self.titulos.obter(a.id).pagamentos[0].estornado)
 
     def test_E7_cliente_vazio_e_recusado(self):
         for cliente in ("", None):
             with self.subTest(cliente=cliente), self.assertRaises(OperacaoRecusada):
-                self.servico.cadastrar_titulo(OPERADOR, cliente, Decimal("1.00"), FUTURO)
+                self.servico.cadastrar_titulo(self.sessao(OPERADOR), cliente, Decimal("1.00"), FUTURO)
 
 
 class ValoresInvalidos(unittest.TestCase):

@@ -20,6 +20,7 @@ from remindme.infraestrutura.memoria import (
     RepositorioTitulosEmMemoria,
     UnidadeDeTrabalhoEmMemoria,
 )
+from tests.apoio import ComSessoes
 from tests.arquitetura.test_camadas import PERMITIDAS, RAIZ, importacoes
 
 HOJE = date(2026, 10, 3)
@@ -46,7 +47,7 @@ class ClientesQueFalham:
         raise ConnectionError("Consulta de clientes indisponível.")
 
 
-class Spec001(unittest.TestCase):
+class Spec001(ComSessoes, unittest.TestCase):
     def setUp(self):
         self.titulos = RepositorioQueFalha()
         self.auditoria = AuditoriaEmMemoria()
@@ -56,7 +57,7 @@ class Spec001(unittest.TestCase):
         self.servico = ServicoTitulos(self.uow, ClientesEmMemoria({"c1"}), self.relogio, self.erros)
 
     def novo_titulo(self, valor="100.00", vencimento=FUTURO):
-        return self.servico.cadastrar_titulo(OPERADOR, "c1", Decimal(valor), vencimento)
+        return self.servico.cadastrar_titulo(self.sessao(OPERADOR), "c1", Decimal(valor), vencimento)
 
     def fotografia(self):
         return (
@@ -77,7 +78,7 @@ class Spec001(unittest.TestCase):
     def test_CA_02_pagamento_gera_registro_do_pagamento_e_da_mudanca_de_estado(self):
         t = self.novo_titulo()
         antes = len(self.auditoria.registros)
-        t = self.servico.registrar_pagamento(OPERADOR, t.id, Decimal("100.00"), HOJE)
+        t = self.servico.registrar_pagamento(self.sessao(OPERADOR), t.id, Decimal("100.00"), HOJE)
         pagamento, estado = self.auditoria.registros[antes:]
         self.assertEqual(pagamento.registro_afetado, f"titulo {t.id}, pagamento {t.pagamentos[0].id}")
         self.assertEqual((pagamento.campo, pagamento.valor_anterior, pagamento.valor_novo), ("valor", None, "100.00"))
@@ -86,10 +87,10 @@ class Spec001(unittest.TestCase):
 
     def test_CA_03_RB_01_estorno_audita_o_pagamento_com_motivo_e_o_estado_do_titulo(self):
         t = self.novo_titulo()
-        t = self.servico.registrar_pagamento(OPERADOR, t.id, Decimal("100.00"), HOJE)
+        t = self.servico.registrar_pagamento(self.sessao(OPERADOR), t.id, Decimal("100.00"), HOJE)
         pagamento_id = t.pagamentos[0].id
         antes = len(self.auditoria.registros)
-        self.servico.estornar_pagamento(DONO, t.id, pagamento_id, "cheque devolvido", HOJE)
+        self.servico.estornar_pagamento(self.sessao(DONO), t.id, pagamento_id, "cheque devolvido", HOJE)
         pagamento, estado = self.auditoria.registros[antes:]
         self.assertEqual(pagamento.registro_afetado, f"titulo {t.id}, pagamento {pagamento_id}")
         self.assertEqual((pagamento.campo, pagamento.valor_anterior, pagamento.valor_novo), ("estornado", "não", "sim"))
@@ -100,10 +101,10 @@ class Spec001(unittest.TestCase):
 
     def test_CA_04_operacao_recusada_nao_grava_auditoria(self):
         t = self.novo_titulo()
-        t = self.servico.registrar_pagamento(OPERADOR, t.id, Decimal("100.00"), HOJE)
+        t = self.servico.registrar_pagamento(self.sessao(OPERADOR), t.id, Decimal("100.00"), HOJE)
         antes = self.auditoria.registros
         with self.assertRaises(OperacaoRecusada):
-            self.servico.registrar_pagamento(OPERADOR, t.id, Decimal("10.00"), HOJE)
+            self.servico.registrar_pagamento(self.sessao(OPERADOR), t.id, Decimal("10.00"), HOJE)
         self.assertEqual(self.auditoria.registros, antes)
         self.assertEqual(self.erros.registros, [])
 
@@ -112,7 +113,7 @@ class Spec001(unittest.TestCase):
         antes = self.fotografia()
         self.auditoria.falhar = True
         with self.assertRaises(RuntimeError):
-            self.servico.registrar_pagamento(OPERADOR, t.id, Decimal("100.00"), HOJE)
+            self.servico.registrar_pagamento(self.sessao(OPERADOR), t.id, Decimal("100.00"), HOJE)
         self.assertEqual(self.fotografia(), antes)
         self.assertIs(self.titulos.obter(t.id).estado, EstadoTitulo.ABERTO)
 
@@ -121,7 +122,7 @@ class Spec001(unittest.TestCase):
         antes = self.fotografia()
         self.titulos.falhar = True
         with self.assertRaises(RuntimeError):
-            self.servico.registrar_pagamento(OPERADOR, t.id, Decimal("100.00"), HOJE)
+            self.servico.registrar_pagamento(self.sessao(OPERADOR), t.id, Decimal("100.00"), HOJE)
         self.assertEqual(self.fotografia(), antes)
 
     def test_CA_07_RB_30_registro_gravado_nao_e_alterado(self):
@@ -146,7 +147,7 @@ class Spec001(unittest.TestCase):
 
     def test_CA_09_verificacao_de_vencimento_sem_usuario_e_automatica(self):
         t = self.novo_titulo(vencimento=ONTEM)
-        self.assertEqual(self.servico.verificar_vencimentos(None, HOJE), [t.id])
+        self.assertEqual(self.servico.verificar_vencimentos_automaticamente(HOJE), [t.id])
         self.assertIs(self.titulos.obter(t.id).estado, EstadoTitulo.VENCIDO)
         registro = self.auditoria.registros[-1]
         self.assertIsNone(registro.usuario_id)
@@ -158,7 +159,7 @@ class Spec001(unittest.TestCase):
         servico = ServicoTitulos(self.uow, ClientesQueFalham(), self.relogio, self.erros)
         antes = self.fotografia()
         with self.assertRaises(ConnectionError) as ctx:
-            servico.cadastrar_titulo(OPERADOR, "c1", Decimal("100.00"), FUTURO)
+            servico.cadastrar_titulo(self.sessao(OPERADOR), "c1", Decimal("100.00"), FUTURO)
         self.assertEqual(self.fotografia(), antes)
         [erro] = self.erros.registros
         self.assertEqual((erro.data_hora, erro.operacao, erro.usuario_id), (AGORA, "cadastrar título", OPERADOR.id))

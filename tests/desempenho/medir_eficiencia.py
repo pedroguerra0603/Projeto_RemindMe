@@ -21,6 +21,7 @@ from remindme.infraestrutura.memoria import (
     RepositorioTitulosEmMemoria,
     UnidadeDeTrabalhoEmMemoria,
 )
+from tests.apoio import abrir_sessao
 
 HOJE = date(2026, 10, 3)
 DONO = Usuario("dono", "Dono", Perfil.DONO)
@@ -30,40 +31,42 @@ REPETICOES = 20
 
 
 def montar(volume):
-    """Serviço com `volume` títulos de 50 clientes; metade vence ontem."""
+    """Serviço com `volume` títulos de 50 clientes; metade vence ontem. Devolve também uma sessão por usuário."""
+    uow = UnidadeDeTrabalhoEmMemoria(RepositorioTitulosEmMemoria(), AuditoriaEmMemoria())
     servico = ServicoTitulos(
-        UnidadeDeTrabalhoEmMemoria(RepositorioTitulosEmMemoria(), AuditoriaEmMemoria()),
+        uow,
         ClientesEmMemoria({f"c{i}" for i in range(50)}),
         RelogioFixo(datetime(2026, 10, 3, 10, 0)),
     )
+    sessoes = {u: abrir_sessao(uow, u) for u in (DONO, OPERADOR)}
     ids = []
     for i in range(volume):
         vencimento = HOJE - timedelta(days=1) if i % 2 else HOJE + timedelta(days=i % 60)
-        ids.append(servico.cadastrar_titulo(OPERADOR, f"c{i % 50}", Decimal("1000.00"), vencimento).id)
-    return servico, ids
+        ids.append(servico.cadastrar_titulo(sessoes[OPERADOR], f"c{i % 50}", Decimal("1000.00"), vencimento).id)
+    return servico, ids, sessoes
 
 
-def operacoes(servico, ids):
+def operacoes(servico, ids, sessoes):
     """Cada operação recebe o número da repetição e escolhe um título diferente."""
     pagamentos = {}
 
     def registrar(n):
-        pagamentos[n] = servico.registrar_pagamento(OPERADOR, ids[n], Decimal("1.00"), HOJE).pagamentos[0].id
+        pagamentos[n] = servico.registrar_pagamento(sessoes[OPERADOR], ids[n], Decimal("1.00"), HOJE).pagamentos[0].id
 
     return {
-        "cadastrar título": lambda n: servico.cadastrar_titulo(OPERADOR, "c1", Decimal("10.00"), HOJE),
+        "cadastrar título": lambda n: servico.cadastrar_titulo(sessoes[OPERADOR], "c1", Decimal("10.00"), HOJE),
         "registrar pagamento": registrar,
-        "estornar pagamento": lambda n: servico.estornar_pagamento(DONO, ids[n], pagamentos[n], "medição", HOJE),
-        "cancelar título": lambda n: servico.cancelar_titulo(DONO, ids[-1 - n], "medição"),
-        "consultar com filtro": lambda n: servico.consultar_titulos(FiltroTitulos(cliente_id="c1"), HOJE, 5),
-        "verificar vencimentos (lote)": lambda n: servico.verificar_vencimentos(OPERADOR, HOJE),
+        "estornar pagamento": lambda n: servico.estornar_pagamento(sessoes[DONO], ids[n], pagamentos[n], "medição", HOJE),
+        "cancelar título": lambda n: servico.cancelar_titulo(sessoes[DONO], ids[-1 - n], "medição"),
+        "consultar com filtro": lambda n: servico.consultar_titulos(sessoes[OPERADOR], FiltroTitulos(cliente_id="c1"), HOJE, 5),
+        "verificar vencimentos (lote)": lambda n: servico.verificar_vencimentos(sessoes[OPERADOR], HOJE),
     }
 
 
 def medir(volume):
-    servico, ids = montar(volume)
+    servico, ids, sessoes = montar(volume)
     resultado = {}
-    for nome, operacao in operacoes(servico, ids).items():
+    for nome, operacao in operacoes(servico, ids, sessoes).items():
         tempos = []
         for n in range(REPETICOES):
             inicio = time.perf_counter()
@@ -76,10 +79,10 @@ def medir(volume):
 
 def memoria(volume):
     tracemalloc.start()
-    servico, ids = montar(volume)
+    servico, ids, sessoes = montar(volume)
     em_uso, _ = tracemalloc.get_traced_memory()
     tracemalloc.reset_peak()
-    servico.registrar_pagamento(OPERADOR, ids[0], Decimal("1.00"), HOJE)
+    servico.registrar_pagamento(sessoes[OPERADOR], ids[0], Decimal("1.00"), HOJE)
     _, pico = tracemalloc.get_traced_memory()
     tracemalloc.stop()
     return em_uso / 1024 / 1024, (pico - em_uso) / 1024 / 1024

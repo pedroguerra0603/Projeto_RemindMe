@@ -8,7 +8,7 @@
 | **Nome** | Autenticação e autorização por perfil |
 | **Objetivo** | Garantir que só usuários ativos e autenticados operem o sistema e que cada um execute apenas o que seu perfil permite, com tudo negado por padrão. |
 | **Valor entregue** | A Dona sabe que o Contador não altera dados, que só ela estorna e cancela e que um usuário inativado perde o acesso na hora. O Administrador mantém usuários e permissões sem mexer no código. |
-| **Situação** | **Aprovada** |
+| **Situação** | **Verificada** — todos os critérios de aceitação passaram (seção 8). |
 | **Aprovada por** | João Pedro Silva Guerra, em 2026-10-22 |
 
 ## 2. Rastreabilidade
@@ -96,6 +96,7 @@ Proposta montada a partir das personas e dos atores dos casos de uso. **P** = pe
 | Cancelar título | UC-06 | P F (OPEN-16) | — F | — F | — F | — F |
 | Consultar títulos | UC-06 | P | P | P | Só os próprios, F (RB-26; Spec 009) | — |
 | Manter clientes | UC-03 | P | P | — F (RB-03) | — | — |
+| Consultar clientes (OPEN-42) | UC-03 | P | P | P | — | — |
 | Conduzir orçamento | UC-04 | P | P | — F (RB-03) | Decidir o próprio (Spec 005) | — |
 | Aprovar desconto fora da alçada | UC-05 | P F (RB-15) | — F | — F | — F | — F |
 | Gerenciar obrigações | UC-09 | P | P | — F (RB-03) | — | — |
@@ -154,7 +155,57 @@ Os testes automatizados levam no nome o identificador do critério ou da regra, 
 | OPEN-33 | Algoritmo de hash de senha | Decidida em 2026-10-16 e confirmada em 2026-10-23: `scrypt`, da biblioteca padrão. |
 | OPEN-34 | Bloqueio após tentativas e expiração de sessão | Decidida em 2026-10-16 e confirmada em 2026-10-23: fora desta spec. |
 | OPEN-35 | Como o usuário recebe a senha inicial? | Decidida em 2026-10-23: o Administrador informa uma senha provisória no cadastro. Não bloqueia mais. |
+| OPEN-39 | Como é criado o primeiro Administrador? | Decidida em 2026-10-23, por delegação: comando de instalação, só quando não há Administrador ativo. |
+| OPEN-42 | Quem consulta clientes? | Decidida em 2026-10-23, por delegação: Dono, Operador Financeiro e Contador; linha nova na matriz. |
+| OPEN-43 | Quanto tempo vale uma sessão? | Decidida em 2026-10-23, por delegação: 8 horas a partir da entrada. |
+| OPEN-44 | Qual o tamanho mínimo da senha? | Decidida em 2026-10-23, por delegação: 8 caracteres. |
+| OPEN-45 | O último Administrador ativo pode ser inativado ou rebaixado? | Decidida em 2026-10-23, por delegação: não; e o perfil Administrador não perde a administração de usuários e permissões. |
+| OPEN-46 | O cadastro de usuário aceita o perfil Cliente? | Decidida em 2026-10-23, por delegação: não; o Cliente acessa por link com código (Spec 009). |
+| OPEN-47 | Entrar e sair são auditados? | Decidida em 2026-10-23, por delegação: sim, sem senha e sem identificador da sessão. |
 
 ## 8. Verificação
 
-A preencher depois da implementação.
+Verificada em 2026-10-23, com `python3 -m unittest discover -s tests -t .`: 254 testes, todos passando (7 pulados por dependerem de specs futuras). Testes em [`tests/aplicacao/test_spec_002_aceite.py`](../../tests/aplicacao/test_spec_002_aceite.py) (critérios e decisões) e [`tests/dominio/test_permissoes.py`](../../tests/dominio/test_permissoes.py) (matriz e usuário). Plano em [`plans/002-plano.md`](../plans/002-plano.md) e tarefas em [`tasks/002-tarefas.md`](../tasks/002-tarefas.md).
+
+### Critérios de aceitação
+
+| Critério | Teste | Resultado |
+|---|---|---|
+| CA-01 | `test_CA_01` | Passou |
+| CA-02 | `test_CA_02` (inclui RNF-14) | Passou |
+| CA-03 | `test_CA_03` (inclui RNF-14) | Passou |
+| CA-04 | `test_CA_04` | Passou |
+| CA-05 | `test_CA_05` (inclui RNF-04) | Passou |
+| CA-06 | `test_CA_06` (inclui RF-65) | Passou |
+| CA-07 | `test_CA_07` (inclui RF-66) | Passou |
+| CA-08 | `test_CA_08` | Passou |
+| CA-09 | `test_CA_09` (inclui RNF-01) | Passou |
+| CA-10 | `test_CA_10` (inclui RB-03); também a matriz de `test_seguranca_de_acesso.py` | Passou |
+| CA-11 | `test_CA_11` | Passou |
+| CA-12 | `test_CA_12` (inclui RF-03) | Passou |
+| CA-13 | `test_CA_13`; `test_RB_02_RB_15_OPEN_16_*`, `test_RB_03_*`, `test_RB_26_*` | Passou |
+| CA-14 | `test_CA_14` | Passou |
+| CA-15 | `test_CA_15` (inclui RF-05) | Passou |
+| CA-16 | `test_CA_16` (inclui RNF-03 e RB-02) | Passou |
+
+### Invariantes
+
+| Invariante | Como foi verificada | Resultado |
+|---|---|---|
+| INV-1 | `test_RF_02_*`, CA-01, CA-15: o perfil é um único valor de `Perfil` | Passou |
+| INV-2 | CA-09, CA-10, CA-14 e a matriz de `test_seguranca_de_acesso.py`; toda operação dos serviços recebe a sessão | Passou |
+| INV-3 | CA-01, CA-05, `test_OPEN_47_*` | Passou |
+| INV-4 | CA-13 e `PermissoesFixadas` | Passou |
+| INV-5 | `test_INV_5_somente_a_execucao_chama_a_autorizacao` | Passou |
+| INV-6 | CA-02 e `test_INV_6_*` | Passou |
+
+### Divergências e limitações
+
+| Item | Situação |
+|---|---|
+| Assinatura dos serviços | As operações da Spec 006 passaram a receber a sessão no lugar do usuário. Os testes antigos abrem sessões direto no dublê (`tests/apoio.py`); o comportamento verificado não mudou. |
+| `Auditoria` da Spec 001 | A transação e o erro não tratado foram para `Execucao`, junto da autorização. A gravação da auditoria continua só em `OperacaoAuditada` (Spec 001, INV-5). O plano da Spec 001 foi atualizado. |
+| Linha nova na matriz | "Consultar clientes", decidida em OPEN-42, para o Contador ver o cliente dos títulos que consulta. |
+| Defeito encontrado pelos testes | Perfil desconhecido fazia a mensagem de negação falhar em vez de negar. Corrigido em `dominio/permissoes.py` (`test_RNF_02_perfil_desconhecido_e_negado_em_tudo`). |
+| Telas | Login, painel, logout e telas de usuários e permissões ficam na Spec 017. |
+| Persistência | Em memória nesta spec; o SQLite entra na Spec 017 (ADR-007), com os mesmos testes de contrato. |

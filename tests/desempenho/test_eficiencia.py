@@ -29,21 +29,21 @@ def p95(operacao):
 class Eficiencia(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.servico, cls.ids = montar(VOLUME)
+        cls.servico, cls.ids, cls.sessoes = montar(VOLUME)
 
     def test_RNF_11_cadastro_responde_em_menos_de_2_segundos(self):
-        tempo = p95(lambda n: self.servico.cadastrar_titulo(OPERADOR, "c1", Decimal("10.00"), HOJE))
+        tempo = p95(lambda n: self.servico.cadastrar_titulo(self.sessoes[OPERADOR], "c1", Decimal("10.00"), HOJE))
         self.assertLess(tempo, LIMITE_RNF_11)
 
     def test_RNF_11_consulta_responde_em_menos_de_2_segundos(self):
-        tempo = p95(lambda n: self.servico.consultar_titulos(FiltroTitulos(cliente_id="c1"), HOJE, 5))
+        tempo = p95(lambda n: self.servico.consultar_titulos(self.sessoes[OPERADOR], FiltroTitulos(cliente_id="c1"), HOJE, 5))
         self.assertLess(tempo, LIMITE_RNF_11)
 
     def test_RNF_11_pagamento_e_cancelamento_respondem_em_menos_de_2_segundos(self):
         pagamento = p95(
-            lambda n: self.servico.registrar_pagamento(OPERADOR, self.ids[n], Decimal("1.00"), HOJE)
+            lambda n: self.servico.registrar_pagamento(self.sessoes[OPERADOR], self.ids[n], Decimal("1.00"), HOJE)
         )
-        cancelamento = p95(lambda n: self.servico.cancelar_titulo(DONO, self.ids[-1 - n], "medição"))
+        cancelamento = p95(lambda n: self.servico.cancelar_titulo(self.sessoes[DONO], self.ids[-1 - n], "medição"))
         self.assertLess(pagamento, LIMITE_RNF_11)
         self.assertLess(cancelamento, LIMITE_RNF_11)
 
