@@ -293,8 +293,9 @@ class SegurancaDoServidor(Base):
         linha = threading.Thread(target=servidor.serve_forever, daemon=True)
         linha.start()
         try:
-            contexto = ssl.create_default_context(cafile=certificado)
+            contexto = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             contexto.check_hostname = False
+            contexto.verify_mode = ssl.CERT_NONE  # certificado autoassinado: o teste é do HTTPS, e não da cadeia
             conexao = http.client.HTTPSConnection("127.0.0.1", servidor.server_address[1], context=contexto, timeout=10)
             conexao.request("GET", "/entrar")
             resposta = conexao.getresponse()

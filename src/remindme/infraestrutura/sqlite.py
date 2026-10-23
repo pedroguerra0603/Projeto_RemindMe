@@ -156,8 +156,12 @@ class UnidadeDeTrabalhoSQLite:
         profundidade = getattr(self._local, "profundidade", 0)
         if profundidade == 0:
             conexao = sqlite3.connect(self.caminho, timeout=10, isolation_level=None)
-            conexao.execute("PRAGMA foreign_keys = ON")
-            conexao.execute("BEGIN IMMEDIATE")
+            try:
+                conexao.execute("PRAGMA foreign_keys = ON")
+                conexao.execute("BEGIN IMMEDIATE")
+            except Exception:
+                conexao.close()
+                raise
             self._local.conexao = conexao
         self._local.profundidade = profundidade + 1
         return self
