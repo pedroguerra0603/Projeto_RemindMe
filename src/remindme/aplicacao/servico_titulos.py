@@ -6,9 +6,9 @@ from datetime import date
 from decimal import Decimal
 from typing import List, Optional
 
-from remindme.aplicacao.portas import ConsultaClientes, Relogio, UnidadeDeTrabalho
+from remindme.aplicacao.auditoria import Auditoria, OperacaoAuditada, RegistroErrosNoLog
+from remindme.aplicacao.portas import ConsultaClientes, RegistroErros, Relogio, UnidadeDeTrabalho
 from remindme.dominio import regras
-from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.erros import OperacaoRecusada
 from remindme.dominio.titulo import EstadoTitulo, Titulo
 from remindme.dominio.usuario import Usuario
@@ -38,10 +38,16 @@ class VisaoTitulo:
 
 
 class ServicoTitulos:
-    def __init__(self, uow: UnidadeDeTrabalho, clientes: ConsultaClientes, relogio: Relogio):
+    def __init__(
+        self,
+        uow: UnidadeDeTrabalho,
+        clientes: ConsultaClientes,
+        relogio: Relogio,
+        erros: Optional[RegistroErros] = None,
+    ):
         self._uow = uow
         self._clientes = clientes
-        self._relogio = relogio
+        self._auditoria = Auditoria(uow, relogio, erros or RegistroErrosNoLog())
 
     def cadastrar_titulo(
         self,
@@ -51,38 +57,38 @@ class ServicoTitulos:
         vencimento: Optional[date],
         condicao_pagamento: Optional[str] = None,
     ) -> Titulo:
-        if not self._clientes.existe(cliente_id):
-            raise OperacaoRecusada("Cliente inexistente.")
-        titulo = Titulo.cadastrar_manual(
-            _novo_id(), cliente_id, valor, vencimento, condicao_pagamento
-        )
-        with self._uow as uow:
-            uow.titulos.salvar(titulo)
-            self._auditar(usuario, "cadastrar título", titulo, None, titulo.estado.value)
+        with self._auditoria.operacao("cadastrar título", usuario) as op:
+            if not self._clientes.existe(cliente_id):
+                raise OperacaoRecusada("Cliente inexistente.")
+            titulo = Titulo.cadastrar_manual(
+                _novo_id(), cliente_id, valor, vencimento, condicao_pagamento
+            )
+            op.registrar(_ref(titulo), "estado", None, titulo.estado.value)
+            op.uow.titulos.salvar(titulo)
         return titulo
 
     def registrar_pagamento(
         self, usuario: Usuario, titulo_id: str, valor: Decimal, data: date
     ) -> Titulo:
-        with self._uow as uow:
+        with self._auditoria.operacao("registrar pagamento", usuario) as op:
             titulo = self._obter(titulo_id)
             estado_anterior = titulo.estado
             pagamento = titulo.registrar_pagamento(_novo_id(), valor, data)
-            uow.titulos.salvar(titulo)
-            self._auditar(
-                usuario, "registrar pagamento", titulo, None, f"pagamento {pagamento.id}: {valor}"
-            )
-            self._auditar_estado(usuario, titulo, estado_anterior)
+            op.registrar(_ref(titulo, pagamento.id), "valor", None, str(valor))
+            _auditar_estado(op, titulo, estado_anterior)
+            op.uow.titulos.salvar(titulo)
         return titulo
 
-    def verificar_vencimentos(self, usuario: Usuario, data_referencia: date) -> List[str]:
-        """A3. O disparo periódico é da Spec 008."""
+    def verificar_vencimentos(self, usuario: Optional[Usuario], data_referencia: date) -> List[str]:
+        """A3. Sem usuário, é a rotina automática (Spec 001, A4). O disparo periódico é da Spec 008."""
         vencidos = []
-        with self._uow as uow:
-            for titulo in uow.titulos.listar():
+        with self._auditoria.operacao(
+            "verificar vencimentos", usuario, rotina="verificação de vencimento"
+        ) as op:
+            for titulo in op.uow.titulos.listar():
                 if titulo.marcar_vencido(data_referencia):
-                    uow.titulos.salvar(titulo)
-                    self._auditar_estado(usuario, titulo, EstadoTitulo.ABERTO)
+                    _auditar_estado(op, titulo, EstadoTitulo.ABERTO)
+                    op.uow.titulos.salvar(titulo)
                     vencidos.append(titulo.id)
         return vencidos
 
@@ -95,25 +101,23 @@ class ServicoTitulos:
         data_referencia: date,
     ) -> Titulo:
         regras.exigir_permissao_de_estorno(usuario)
-        with self._uow as uow:
+        with self._auditoria.operacao("estornar pagamento", usuario) as op:
             titulo = self._obter(titulo_id)
             estado_anterior = titulo.estado
             titulo.estornar_pagamento(pagamento_id, motivo, data_referencia)
-            uow.titulos.salvar(titulo)
-            self._auditar(
-                usuario, "estornar pagamento", titulo, f"pagamento {pagamento_id}", "estornado", motivo
-            )
-            self._auditar_estado(usuario, titulo, estado_anterior, motivo)
+            op.registrar(_ref(titulo, pagamento_id), "estornado", "não", "sim", motivo)
+            _auditar_estado(op, titulo, estado_anterior, motivo)
+            op.uow.titulos.salvar(titulo)
         return titulo
 
     def cancelar_titulo(self, usuario: Usuario, titulo_id: str, motivo: Optional[str]) -> Titulo:
         regras.exigir_permissao_de_cancelamento(usuario)
-        with self._uow as uow:
+        with self._auditoria.operacao("cancelar título", usuario) as op:
             titulo = self._obter(titulo_id)
             estado_anterior = titulo.estado
             titulo.cancelar(motivo)
-            uow.titulos.salvar(titulo)
-            self._auditar_estado(usuario, titulo, estado_anterior, motivo)
+            _auditar_estado(op, titulo, estado_anterior, motivo)
+            op.uow.titulos.salvar(titulo)
         return titulo
 
     def consultar_titulos(
@@ -142,35 +146,6 @@ class ServicoTitulos:
             raise OperacaoRecusada("Título não encontrado.")
         return titulo
 
-    def _auditar_estado(
-        self, usuario: Usuario, titulo: Titulo, anterior: EstadoTitulo, motivo: Optional[str] = None
-    ) -> None:
-        if titulo.estado is not anterior:
-            self._auditar(
-                usuario, "mudar estado", titulo, anterior.value, titulo.estado.value, motivo
-            )
-
-    def _auditar(
-        self,
-        usuario: Usuario,
-        operacao: str,
-        titulo: Titulo,
-        valor_anterior: Optional[str],
-        valor_novo: Optional[str],
-        motivo: Optional[str] = None,
-    ) -> None:
-        self._uow.auditoria.registrar(
-            RegistroAuditoria(
-                usuario_id=usuario.id,
-                data_hora=self._relogio.agora(),
-                operacao=operacao,
-                registro_afetado=f"titulo {titulo.id}",
-                valor_anterior=valor_anterior,
-                valor_novo=valor_novo,
-                motivo=motivo,
-            )
-        )
-
 
 def _atende(titulo: Titulo, filtro: FiltroTitulos) -> bool:
     return (
@@ -179,6 +154,22 @@ def _atende(titulo: Titulo, filtro: FiltroTitulos) -> bool:
         and (filtro.vencimento_de is None or titulo.vencimento >= filtro.vencimento_de)
         and (filtro.vencimento_ate is None or titulo.vencimento <= filtro.vencimento_ate)
     )
+
+
+def _auditar_estado(
+    op: OperacaoAuditada, titulo: Titulo, anterior: EstadoTitulo, motivo: Optional[str] = None
+) -> None:
+    if titulo.estado is not anterior:
+        op.registrar(
+            _ref(titulo), "estado", anterior.value, titulo.estado.value, motivo, operacao="mudar estado"
+        )
+
+
+def _ref(titulo: Titulo, pagamento_id: Optional[str] = None) -> str:
+    """O pagamento existe dentro do título, e a referência nomeia os dois (Spec 006, CA-22)."""
+    if pagamento_id is None:
+        return f"titulo {titulo.id}"
+    return f"titulo {titulo.id}, pagamento {pagamento_id}"
 
 
 def _novo_id() -> str:

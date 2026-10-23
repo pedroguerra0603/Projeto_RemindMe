@@ -215,12 +215,12 @@ class Spec006(unittest.TestCase):
 
     def test_CA_22_pagamento_gera_registro_de_auditoria(self):
         t = self.novo_titulo()
-        self.servico.registrar_pagamento(OPERADOR, t.id, R("400.00"), HOJE)
+        t = self.servico.registrar_pagamento(OPERADOR, t.id, R("400.00"), HOJE)
         registro = self.auditoria.registros[-1]
         self.assertEqual(registro.usuario_id, OPERADOR.id)
         self.assertEqual(registro.data_hora, datetime(2026, 10, 3, 10, 0))
         self.assertEqual(registro.operacao, "registrar pagamento")
-        self.assertEqual(registro.registro_afetado, f"titulo {t.id}")
+        self.assertEqual(registro.registro_afetado, f"titulo {t.id}, pagamento {t.pagamentos[0].id}")
 
     def test_CA_22_RB_01_mudancas_de_estado_sao_auditadas(self):
         t, pagamento_id = self.baixado_por_pagamento(FUTURO)

@@ -10,4 +10,4 @@ A organização segue as camadas de [`docs/arquitetura.md`](../docs/arquitetura.
 | `remindme/aplicacao` | Aplicação | Um serviço por caso de uso; permissão, transação e auditoria; interfaces em `portas.py` |
 | `remindme/infraestrutura` | Infraestrutura | Implementações das interfaces; por enquanto, em memória |
 
-Specs implementadas: [006](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md).
+Specs implementadas: [001](../.specify/specs/001-fundacao-camadas-e-auditoria.md) e [006](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md).

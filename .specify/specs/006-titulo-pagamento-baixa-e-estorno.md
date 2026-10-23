@@ -199,7 +199,7 @@ Verificada em 2026-10-03, com `python3 -m unittest discover -s tests -t .`: 48 t
 
 | Item | Situação |
 |---|---|
-| A Spec 001 (auditoria) ainda não existe | A auditoria é gravada por uma interface, com implementação em memória. A Spec 001 vai substituí-la sem mudar o domínio. |
+| Auditoria (Spec 001) | Implementada em 2026-10-23 pela Spec 001, sem mudar o domínio do título. O registro do pagamento passou a nomear o título e o pagamento (`titulo <id>, pagamento <id>`), o que continua atendendo CA-22. |
 | Persistência | Em memória, com transação por cópia e restauração. O banco depende de OPEN-02. |
 | Estado Em Renegociação | Fica fora de `EstadoTitulo` até a Spec 009, como está no escopo. |
 | Quem cadastra título e registra pagamento | Sem restrição de perfil nesta spec. A autorização geral, inclusive RB-03 (Contador só consulta), é da Spec 002. |
