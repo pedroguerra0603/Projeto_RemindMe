@@ -15,7 +15,7 @@
 
 ## Fluxo principal
 
-1. O Administrador escolhe o que configurar: alçadas de desconto, régua de cobrança, tipos de obrigação e antecedência de aviso, categorias financeiras, limiar de confiança da IA, limites de renegociação ou canal de notificação.
+1. O Administrador escolhe o que configurar: alçadas de desconto, régua de cobrança, tipos de obrigação e antecedência de aviso, antecedência da sinalização de próximo do vencimento dos títulos (RF-23, OPEN-21), categorias financeiras, limiar de confiança da IA, limites de renegociação ou canal de notificação.
 2. O Administrador informa os novos valores.
 3. O sistema valida a configuração.
 4. O sistema grava a configuração e registra a alteração na auditoria.

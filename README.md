@@ -24,8 +24,8 @@ Detalhes em [visão do produto](docs/visao.md).
 |---|---|---|
 | 1. Problema e contexto | [Visão](docs/visao.md), [benchmark](docs/benchmark.md), [personas](docs/personas.md) | Escrito |
 | 2. Requisitos e modelagem | [Requisitos](docs/requisitos.md), [glossário](docs/glossario.md), [modelo de domínio](docs/modelo-dominio.md), [casos de uso](docs/casos-de-uso/README.md) | Escrito |
-| 3. Arquitetura e decisões | [Arquitetura](docs/arquitetura.md), [ADRs](docs/adr/README.md), [constituição](CLAUDE.md), [segurança](docs/seguranca.md) | Proposto; linguagem decidida (OPEN-01), demais tecnologias em aberto |
-| 4. Implementação e validação | [Mapa de specs](.specify/specs/mapa-de-specs.md), [Spec 006](.specify/specs/006-titulo-pagamento-baixa-e-estorno.md), [qualidade](docs/qualidade/README.md), [rastreabilidade](docs/rastreabilidade.md) | Mapa proposto; Spec 006 aprovada, implementada e verificada, em Python 3.11 |
+| 3. Arquitetura e decisões | [Arquitetura](docs/arquitetura.md), [ADRs](docs/adr/README.md), [constituição](SPECS.md), [segurança](docs/seguranca.md) | Tecnologias decididas: Python 3.11 com a biblioteca padrão, interface WSGI (ADR-006) e SQLite (ADR-007) |
+| 4. Implementação e validação | [Mapa de specs](.specify/specs/mapa-de-specs.md), [specs](.specify/specs/), [qualidade](docs/qualidade/README.md), [rastreabilidade](docs/rastreabilidade.md) | Specs 001, 002, 003, 006, 013 e 017 verificadas: auditoria, acesso por perfil, clientes, títulos e pagamentos, consulta de auditoria e a interface web |
 
 As decisões que ainda dependem da equipe estão em [questões em aberto](.specify/open.md).
 
@@ -35,13 +35,21 @@ Toda a documentação está em [`/docs`](docs/README.md). O índice indica a ord
 
 ## Como executar
 
-Ainda não há interface. O domínio e a camada de aplicação da Spec 006 são verificados por testes, que rodam com Python 3.11 ou mais recente, sem dependência externa:
+Com Python 3.11 ou mais recente, sem instalar nada, na raiz do repositório:
+
+```
+python3 iniciar.py demonstracao
+```
+
+Abra **http://localhost:8000** e entre com `carla@demo.example` (Dono), `diego@demo.example` (Operador Financeiro), `helena@demo.example` (Contador) ou `admin@demo.example` (Administrador). A senha aparece no terminal.
+
+Testes:
 
 ```
 python3 -m unittest discover -s tests -t .
 ```
 
-Detalhes em [`docs/execucao.md`](docs/execucao.md).
+Uso com dados reais, HTTPS e demais opções em [`docs/execucao.md`](docs/execucao.md).
 
 ## Estrutura do repositório
 
@@ -49,8 +57,9 @@ Detalhes em [`docs/execucao.md`](docs/execucao.md).
 |---|---|
 | [`docs/`](docs/README.md) | Visão, requisitos, modelagem, arquitetura e combinados |
 | [`.specify/`](.specify/README.md) | Mapa de specs, specs, planos, tarefas e questões em aberto |
-| [`CLAUDE.md`](CLAUDE.md) | Constituição: regras para agentes de codificação |
+| [`SPECS.md`](SPECS.md) | Constituição: regras para agentes de codificação |
 | [`src/`](src/README.md) | Código |
+| [`iniciar.py`](iniciar.py) | Atalho para iniciar a aplicação |
 | [`tests/`](tests/README.md) | Testes |
 
 ## Como contribuir
