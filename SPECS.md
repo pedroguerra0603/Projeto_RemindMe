@@ -1,4 +1,4 @@
-# CLAUDE.md — Constituição do projeto RemindMe
+# SPECS.md — Constituição do projeto RemindMe
 
 Instruções permanentes para agentes de codificação neste repositório. Valem para qualquer agente; quem usa outra ferramenta deve apontar seu arquivo de instruções para este.
 
