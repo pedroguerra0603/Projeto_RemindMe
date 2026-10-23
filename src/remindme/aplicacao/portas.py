@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import List, Optional, Protocol
 
 from remindme.dominio.auditoria import RegistroAuditoria
+from remindme.dominio.cliente import Cliente
 from remindme.dominio.permissoes import MatrizPermissoes
 from remindme.dominio.titulo import Titulo
 from remindme.dominio.usuario import Usuario
@@ -14,6 +15,16 @@ class RepositorioTitulos(Protocol):
     def obter(self, titulo_id: str) -> Optional[Titulo]: ...
     def salvar(self, titulo: Titulo) -> None: ...
     def listar(self) -> List[Titulo]: ...
+
+
+class RepositorioClientes(Protocol):
+    """Também responde à consulta de existência usada pelo cadastro de títulos (Spec 003, INV-5)."""
+
+    def obter(self, cliente_id: str) -> Optional[Cliente]: ...
+    def obter_por_documento(self, documento: str) -> Optional[Cliente]: ...
+    def salvar(self, cliente: Cliente) -> None: ...
+    def listar(self) -> List[Cliente]: ...
+    def existe(self, cliente_id: str) -> bool: ...
 
 
 class RepositorioAuditoria(Protocol):
@@ -83,6 +94,7 @@ class UnidadeDeTrabalho(Protocol):
     """
 
     titulos: RepositorioTitulos
+    clientes: RepositorioClientes
     auditoria: RepositorioAuditoria
     usuarios: RepositorioUsuarios
     sessoes: RepositorioSessoes
