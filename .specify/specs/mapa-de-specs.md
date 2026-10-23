@@ -18,24 +18,24 @@ Lista ordenada das unidades implementáveis do sistema. O mapa não é implement
 
 | ID | Spec | RF | RB | RNF | UC | Entidades | Drivers e ADRs | Depende de | Situação |
 |---|---|---|---|---|---|---|---|---|---|
-| [001](001-fundacao-camadas-e-auditoria.md) | Fundação: estrutura em camadas e auditoria de operações | RF-04, RF-05, RF-61, RF-62 | RB-01, RB-30 | RNF-06, RNF-09, RNF-19, RNF-21, RNF-23 | — | `RegistroAuditoria` | DA-01, DA-02, DA-03, DA-07, DA-09; ADR-001, ADR-004 | OPEN-01, OPEN-02 | **Verificada** |
-| [002](002-autenticacao-e-autorizacao.md) | Autenticação e autorização por perfil | RF-02, RF-03, RF-65, RF-66, RF-67 | RB-03 | RNF-01 a RNF-05 | UC-01, UC-02 | `Usuario`, `Perfil` | DA-04 | 001; OPEN-03, OPEN-10 (decididas) | Proposta |
+| [001](001-fundacao-camadas-e-auditoria.md) | Fundação: estrutura em camadas e auditoria de operações | RF-04, RF-05, RF-61, RF-62 | RB-01, RB-30 | RNF-06, RNF-09, RNF-19, RNF-21, RNF-23 | — | `RegistroAuditoria` | DA-01, DA-02, DA-03, DA-07, DA-09; ADR-001, ADR-004 | OPEN-01, OPEN-02 (decididas; produto do banco em OPEN-36) | **Verificada** |
+| [002](002-autenticacao-e-autorizacao.md) | Autenticação e autorização por perfil | RF-02, RF-03, RF-65, RF-66, RF-67 | RB-03 | RNF-01 a RNF-05 | UC-01, UC-02 | `Usuario`, `Perfil` | DA-04 | 001; OPEN-03, OPEN-10, OPEN-35 (decididas) | **Aprovada** |
 | 003 | Cadastro de clientes | RF-01 | — | RNF-14 | UC-03 | `Cliente` | — | 001, 002 | A escrever |
 | 004 | Orçamento: itens, valores e alçada de desconto | RF-06, RF-07, RF-10, RF-13 a RF-18 | RB-15, RB-24 | RNF-03 | UC-04, UC-05 | `Orcamento`, `ItemOrcamento`, `AlcadaDesconto`, `AprovacaoDesconto` | DA-01 | 003 | A escrever |
-| 005 | Envio, decisão do cliente e conversão em título | RF-08, RF-09, RF-11, RF-12, RF-19 | RB-05, RB-18 | RNF-09 | UC-04 | `Orcamento`, `Titulo` | DA-01, DA-07; ADR-002 | 004, 006; OPEN-15 | A escrever |
+| 005 | Envio, decisão do cliente e conversão em título | RF-08, RF-09, RF-11, RF-12, RF-19 | RB-05, RB-18 | RNF-09 | UC-04 | `Orcamento`, `Titulo` | DA-01, DA-07; ADR-002 | 004, 006; OPEN-15 (decidida) | A escrever |
 | [006](006-titulo-pagamento-baixa-e-estorno.md) | Título: cadastro manual, pagamento, baixa e estorno | RF-20 a RF-27, RF-30, RF-31, RF-68 | RB-01, RB-02, RB-21, RB-22, RB-23 | RNF-09, RNF-19 | UC-06 | `Titulo`, `Pagamento` | DA-01, DA-03, DA-09; ADR-001 | 001; para o uso completo, 002 e 003 | **Verificada** |
 | 007 | Régua de cobrança: configuração | RF-32, RF-36 | RB-10 | RNF-18, RNF-20 | UC-13 | `ReguaCobranca`, `EtapaCobranca` | DA-10 | 002 | A escrever |
-| 008 | Régua de cobrança: execução e histórico | RF-33, RF-34, RF-35, RF-37, RF-38, RF-39, RF-70, RF-71 | RB-10, RB-11, RB-18 | RNF-12, RNF-13 | UC-08 | `TentativaCobranca` | DA-05, DA-07, DA-08; ADR-002 | 006, 007; OPEN-13 | A escrever |
-| 009 | Renegociação com extração de intenção | RF-28, RF-29, RF-69, RF-72 a RF-76 | RB-11, RB-17, RB-20, RB-26, RB-27, RB-28 | RNF-22, RNF-24, RNF-25 | UC-07 | `Renegociacao` | DA-06; ADR-003 | 006, 008; OPEN-04, OPEN-06, OPEN-08, OPEN-14 | A escrever |
-| 010 | Calendário de obrigações | RF-40 a RF-50, RF-77 | RB-04, RB-07, RB-13, RB-16, RB-29 | RNF-15 | UC-09 | `Obrigacao`, `Evidencia` | DA-01, DA-05 | 002; OPEN-13 | A escrever |
-| 011 | Lançamentos e classificação assistida por IA | RF-51, RF-52, RF-58, RF-59, RF-78 a RF-81 | RB-08, RB-09, RB-12, RB-14, RB-27 | RNF-22, RNF-24, RNF-26 | UC-10 | `LancamentoFinanceiro`, `CategoriaFinanceira`, `SugestaoClassificacao` | DA-06; ADR-003 | 006; OPEN-04, OPEN-05, OPEN-07 | A escrever |
+| 008 | Régua de cobrança: execução e histórico | RF-33, RF-34, RF-35, RF-37, RF-38, RF-39, RF-70, RF-71 | RB-10, RB-11, RB-18 | RNF-12, RNF-13 | UC-08 | `TentativaCobranca` | DA-05, DA-07, DA-08; ADR-002 | 006, 007; OPEN-13 (decidida) | A escrever |
+| 009 | Renegociação com extração de intenção | RF-28, RF-29, RF-69, RF-72 a RF-76 | RB-11, RB-17, RB-20, RB-26, RB-27, RB-28 | RNF-22, RNF-24, RNF-25 | UC-07 | `Renegociacao` | DA-06; ADR-003 | 006, 008; OPEN-04, OPEN-06, OPEN-08, OPEN-14 (decididas) | A escrever |
+| 010 | Calendário de obrigações | RF-40 a RF-50, RF-77 | RB-04, RB-07, RB-13, RB-16, RB-29 | RNF-15 | UC-09 | `Obrigacao`, `Evidencia` | DA-01, DA-05 | 002; OPEN-13 (decidida) | A escrever |
+| 011 | Lançamentos e classificação assistida por IA | RF-51, RF-52, RF-58, RF-59, RF-78 a RF-81, RF-86 | RB-08, RB-09, RB-12, RB-14, RB-27 | RNF-22, RNF-24, RNF-26 | UC-10 | `LancamentoFinanceiro`, `CategoriaFinanceira`, `SugestaoClassificacao` | DA-06; ADR-003 | 006; OPEN-04, OPEN-05, OPEN-07 (decididas) | A escrever |
 | 012 | Apuração do resultado | RF-53 a RF-57, RF-82 | RB-06, RB-12 | RNF-11 | UC-11 | `LancamentoFinanceiro`, `CategoriaFinanceira` | — | 011 | A escrever |
 | 013 | Consulta de auditoria | RF-64 | RB-30 | RNF-06 | UC-12 | `RegistroAuditoria` | DA-02; ADR-004 | 001, 002 | A escrever |
-| 014 | Configuração de regras | RF-03, RF-14 | RB-07, RB-08, RB-16, RB-28 | RNF-18, RNF-20 | UC-13 | `AlcadaDesconto`, `CategoriaFinanceira` | DA-10 | 002 | A escrever |
-| 015 | Importação e exportação em CSV | RF-83, RF-84, RF-85 | RB-19 | RNF-09 | UC-14 | `Cliente`, `Titulo`, `LancamentoFinanceiro` | DA-03 | 003, 006, 012 | A escrever |
+| 014 | Configuração de regras | RF-03, RF-14, RF-23 | RB-07, RB-08, RB-16, RB-28 | RNF-18, RNF-20 | UC-13 | `AlcadaDesconto`, `CategoriaFinanceira` | DA-10 | 002; OPEN-37 | A escrever |
+| 015 | Importação e exportação em CSV | RF-83, RF-84, RF-85 | RB-19 | RNF-09 | UC-14 | `Cliente`, `Titulo`, `LancamentoFinanceiro` | DA-03 | 003, 006, 011, 012 | A escrever |
 | 016 | Painel por perfil | — | RB-13 | RNF-15, RNF-16, RNF-17 | UC-01 | — | — | 006, 010, 011 | A escrever |
 
-RNF-07 (disponibilidade) e RNF-08 (backup) são operacionais. Não pertencem a nenhuma spec de comportamento e serão tratados na entrega, depois de OPEN-09 e OPEN-12.
+RNF-07 (disponibilidade) e RNF-08 (backup) são operacionais. Não pertencem a nenhuma spec de comportamento e serão tratados na entrega. As metas foram confirmadas em OPEN-09; a hospedagem ainda depende de OPEN-12.
 
 ## Justificativa da ordem
 

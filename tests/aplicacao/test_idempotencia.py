@@ -86,10 +86,10 @@ class PagamentosEmSequencia(Base):
         self.assertEqual(salvo.saldo, Decimal("10.00"))
         self.assertEqual(recusas, 17)
 
-    def test_OPEN_22_provisorio_pagamento_parcial_repetido_e_registrado_duas_vezes(self):
-        """Lacuna, e não defeito: sem chave de idempotência, dois pedidos iguais de pagamento parcial são
-        indistinguíveis de dois pagamentos reais, e os dois são registrados. Caracteriza o comportamento
-        atual; a decisão está em OPEN-25."""
+    def test_OPEN_25_sem_identificador_do_pedido_pagamento_parcial_repetido_e_registrado_duas_vezes(self):
+        """OPEN-25, decidida em 2026-10-23: a interface envia um identificador do pedido, e o sistema ignora o
+        segundo pedido com o mesmo identificador. O identificador nasce com a primeira spec com interface;
+        até lá, dois pedidos iguais de pagamento parcial continuam indistinguíveis de dois pagamentos reais."""
         for _ in range(2):
             self.servico.registrar_pagamento(OPERADOR, self.titulo.id, Decimal("30.00"), HOJE)
         self.assertEqual(self.salvo().saldo, Decimal("40.00"))

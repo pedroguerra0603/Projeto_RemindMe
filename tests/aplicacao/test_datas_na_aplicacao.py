@@ -50,6 +50,15 @@ class DatasNaAplicacao(unittest.TestCase):
             [datetime(2026, 10, 3, 23, 59, 59), datetime(2026, 10, 4, 0, 0, 1)],
         )
 
+    def test_OPEN_17_o_servico_recusa_pagamento_com_data_posterior_ao_dia_do_relogio(self):
+        t = self.servico.cadastrar_titulo(OPERADOR, "c1", Decimal("10.00"), HOJE)
+        antes = self.auditoria.registros
+        with self.assertRaisesRegex(OperacaoRecusada, "posterior a hoje"):
+            self.servico.registrar_pagamento(OPERADOR, t.id, Decimal("10.00"), HOJE + timedelta(days=1))
+        self.assertEqual(self.auditoria.registros, antes)
+        self.servico.registrar_pagamento(OPERADOR, t.id, Decimal("10.00"), HOJE)
+        self.assertIs(self.titulos.obter(t.id).estado, EstadoTitulo.BAIXADO)
+
     def test_RF_22_filtro_de_periodo_inclui_os_dois_extremos(self):
         for dias in (-1, 0, 1, 2):
             self.servico.cadastrar_titulo(OPERADOR, "c1", Decimal("10.00"), HOJE + timedelta(days=dias))

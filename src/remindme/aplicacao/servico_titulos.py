@@ -47,6 +47,7 @@ class ServicoTitulos:
     ):
         self._uow = uow
         self._clientes = clientes
+        self._relogio = relogio
         self._auditoria = Auditoria(uow, relogio, erros or RegistroErrosNoLog())
 
     def cadastrar_titulo(
@@ -73,7 +74,9 @@ class ServicoTitulos:
         with self._auditoria.operacao("registrar pagamento", usuario) as op:
             titulo = self._obter(titulo_id)
             estado_anterior = titulo.estado
-            pagamento = titulo.registrar_pagamento(_novo_id(), valor, data)
+            pagamento = titulo.registrar_pagamento(
+                _novo_id(), valor, data, hoje=self._relogio.agora().date()
+            )
             op.registrar(_ref(titulo, pagamento.id), "valor", None, str(valor))
             _auditar_estado(op, titulo, estado_anterior)
             op.uow.titulos.salvar(titulo)

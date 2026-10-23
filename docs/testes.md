@@ -165,11 +165,11 @@ A verificação de cada spec é registrada na seção 8 da própria spec, com um
 
 A [matriz de critérios](qualidade/matriz-criterios-de-aceite.md) liga cada critério ao teste.
 
-A suíte roda a cada PR e a cada push na `main` (`.github/workflows/testes.yml`), sem credencial externa. A ferramenta de integração contínua é provisória, até a decisão de OPEN-28. Como ler o resultado: [`execucao.md`](execucao.md).
+A suíte roda a cada PR e a cada push na `main` (`.github/workflows/testes.yml`), sem credencial externa. A ferramenta de integração contínua é o GitHub Actions (OPEN-28, decidida em 2026-10-23). Como ler o resultado: [`execucao.md`](execucao.md).
 
 ## Ferramentas de teste
 
-O executor é o `unittest` da biblioteca padrão e a cobertura não é medida. Se a equipe adotar pytest ou coverage.py, esta seção, o `CLAUDE.md` e `execucao.md` mudam no mesmo PR da decisão (OPEN-27).
+O executor é o `unittest` da biblioteca padrão (OPEN-27, decidida em 2026-10-23). A cobertura pode ser medida no desenvolvimento com coverage.py, como ferramenta opcional de quem quiser instalá-la: `python3 -m coverage run -m unittest discover -s tests -t .` e `python3 -m coverage report`. A suíte não depende dela, e o fluxo de integração contínua não a instala.
 
 ## Rastreabilidade
 

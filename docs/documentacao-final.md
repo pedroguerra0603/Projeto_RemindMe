@@ -37,11 +37,11 @@ Fonte: [`requisitos.md`](requisitos.md). RF e RNF em EARS; RB em forma declarati
 
 | Tipo | Identificadores | Retirados | Grupos |
 |---|---|---|---|
-| RF | RF-01 a RF-85 | RF-60, RF-63 | Acesso; orçamentos; descontos e alçadas; títulos e pagamentos; cobrança; renegociação; obrigações; lançamentos e IA; apuração; auditoria; importação e exportação |
+| RF | RF-01 a RF-86 | RF-60, RF-63 | Acesso; orçamentos; descontos e alçadas; títulos e pagamentos; cobrança; renegociação; obrigações; lançamentos e IA; apuração; auditoria; importação e exportação |
 | RNF | RNF-01 a RNF-26 | RNF-10 | Segurança e privacidade; confiabilidade; desempenho; usabilidade; manutenibilidade e evolução |
 | RB | RB-01 a RB-30 | — (RB-25 não foi usado) | Estados, valores, alçadas, auditoria, IA, régua e obrigações |
 
-Os requisitos que mais pesam na arquitetura viraram drivers (seção 5). Os valores marcados com **(P)** em RNF-07, RNF-08 e RNF-24 ainda aguardam confirmação (OPEN-09).
+Os requisitos que mais pesam na arquitetura viraram drivers (seção 5). Os valores de RNF-07, RNF-08 e RNF-24 foram confirmados em 2026-10-23 (OPEN-09).
 
 Vocabulário obrigatório: [glossário](glossario.md). Termos como "fatura", "boleto" e "duplicata" não são usados no lugar de *título*.
 
@@ -126,8 +126,8 @@ Fonte: [`.specify/open.md`](../.specify/open.md).
 
 | Situação | Questões |
 |---|---|
-| Decididas | OPEN-01 (linguagem), OPEN-11 (juros fora do MVP), OPEN-16 (só o Dono cancela título); em 2026-10-16, a confirmar pela equipe: OPEN-03 (sessão no servidor), OPEN-08 (link com código para o Cliente), OPEN-10 (Administrador é perfil próprio), OPEN-32 (matriz de permissões), OPEN-33 (`scrypt`), OPEN-34 (sem bloqueio nem expiração na Spec 002), OPEN-30 (operação automática na auditoria) |
-| Abertas, bloqueiam specs futuras | OPEN-02 (banco), OPEN-04 e OPEN-05 (IA), OPEN-06 e OPEN-14 (renegociação), OPEN-07 (despesas), OPEN-13 (agendador), OPEN-15 (parcelas), OPEN-35 (senha inicial) |
+| Decididas | OPEN-01 (linguagem), OPEN-11 (juros fora do MVP), OPEN-16 (só o Dono cancela título), OPEN-30 (operação automática na auditoria); confirmadas ou decididas em 2026-10-23 por João Pedro Silva Guerra: OPEN-02 (banco relacional, ADR-005), OPEN-03 (sessão no servidor), OPEN-04 (só IA simulada no MVP), OPEN-05 (limiar 0,85), OPEN-06 e OPEN-14 (renegociação), OPEN-07 (despesas, RF-86), OPEN-08 (link com código para o Cliente), OPEN-09 (metas operacionais), OPEN-10 (Administrador é perfil próprio), OPEN-13 (agendador no processo), OPEN-15 (um título por orçamento), OPEN-17 a OPEN-26 (Spec 006, valor, fuso e pedido repetido), OPEN-27 (coverage.py opcional), OPEN-28 (GitHub Actions), OPEN-31 (retenção), OPEN-32 (matriz de permissões), OPEN-33 (`scrypt`), OPEN-34 (sem bloqueio nem expiração na Spec 002), OPEN-35 (senha provisória) |
+| Abertas, bloqueiam specs futuras | OPEN-36 (produto do banco), OPEN-37 (valor padrão da antecedência, Spec 014) |
 | Abertas, não bloqueiam | OPEN-09 (metas operacionais), OPEN-12 (hospedagem), OPEN-17 a OPEN-19 (Spec 006), OPEN-20 (precisão monetária), OPEN-21 (antecedência de próximo do vencimento), OPEN-22 (alteração do valor do título), OPEN-23 (estado depois do estorno), OPEN-24 (limite de valor), OPEN-25 (pagamento parcial repetido), OPEN-26 (fuso de referência), OPEN-27 (pytest e cobertura), OPEN-28 (integração contínua), OPEN-29 (ferramentas de API e navegador), OPEN-31 (retenção da auditoria) |
 
 ## 7. Rastreabilidade

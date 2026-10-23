@@ -26,7 +26,9 @@ Os termos em itálico do domínio estão definidos no [glossário](glossario.md)
 
 Identificadores: `RF-nn`, `RNF-nn`, `RB-nn`, `UC-nn`. Um identificador nunca é reaproveitado: requisito retirado fica marcado como retirado.
 
-Valores marcados com **(P)** são metas propostas que a equipe ainda precisa confirmar. Estão listados em [`.specify/open.md`](../.specify/open.md).
+As metas de RNF-07, RNF-08 e RNF-24, antes propostas, foram confirmadas em 2026-10-23 (OPEN-09, em [`.specify/open.md`](../.specify/open.md)).
+
+A data de referência do sistema ("hoje") é a de America/Sao_Paulo, e os horários são guardados em UTC (OPEN-26).
 
 ---
 
@@ -75,7 +77,7 @@ Valores marcados com **(P)** são metas propostas que a equipe ainda precisa con
 | RF-19 | WHEN o sistema gerar um título a partir de um orçamento, THE SYSTEM SHALL copiar do orçamento o cliente, o valor líquido e a condição de pagamento. | UC-04 | RB-05 |
 | RF-20 | WHEN um usuário autorizado submeter o cadastro manual de um título com cliente, valor e vencimento válidos, THE SYSTEM SHALL criar o título no estado Aberto. | UC-06 | RB-21 |
 | RF-21 | WHEN um título for criado, THE SYSTEM SHALL armazenar valor, vencimento, cliente, origem, condição de pagamento e estado. | UC-06 | |
-| RF-22 | WHEN um usuário consultar títulos, THE SYSTEM SHALL permitir filtrar por cliente, vencimento, estado e período. | UC-06 | |
+| RF-22 | WHEN um usuário consultar títulos, THE SYSTEM SHALL permitir filtrar por cliente, estado e período de vencimento. | UC-06 | |
 | RF-23 | WHILE faltar para o vencimento de um título Aberto um número de dias menor ou igual ao configurado, THE SYSTEM SHALL sinalizá-lo como próximo do vencimento. | UC-06 | |
 | RF-24 | IF a data de vencimento de um título Aberto passar sem que o saldo seja zero, THEN THE SYSTEM SHALL mudar o estado para Vencido. | UC-06 | RB-21 |
 | RF-25 | WHEN um usuário autorizado registrar um pagamento, THE SYSTEM SHALL associá-lo ao título e reduzir o saldo no valor pago. | UC-06 | RB-23 |
@@ -84,7 +86,7 @@ Valores marcados com **(P)** são metas propostas que a equipe ainda precisa con
 | RF-28 | WHEN uma renegociação for aprovada, THE SYSTEM SHALL aplicar o novo vencimento ao título, devolvê-lo ao estado Aberto e manter o vínculo com as condições originais. | UC-07 | RB-28, RB-21 |
 | RF-29 | WHEN uma renegociação for registrada, THE SYSTEM SHALL armazenar as condições anteriores, as novas condições, o responsável e a data. | UC-07 | RB-28 |
 | RF-30 | WHEN o Dono solicitar o estorno de um pagamento, THE SYSTEM SHALL anular o pagamento, restaurar o saldo e devolver o título ao estado Aberto ou Vencido conforme o vencimento. | UC-06 | RB-02, RB-21 |
-| RF-31 | IF um cancelamento, estorno ou alteração de valor for solicitado sem motivo informado, THEN THE SYSTEM SHALL recusar a operação. | UC-06 | RB-01 |
+| RF-31 | IF um cancelamento ou estorno for solicitado sem motivo informado, THEN THE SYSTEM SHALL recusar a operação. O valor de um título não muda depois de criado (OPEN-22). | UC-06 | RB-01 |
 | RF-68 | IF o valor de um pagamento for maior que o saldo do título ou menor ou igual a zero, THEN THE SYSTEM SHALL recusar o pagamento. | UC-06 | RB-23 |
 | RF-69 | WHEN um cliente autenticado consultar seus títulos, THE SYSTEM SHALL apresentar somente os títulos desse cliente, com valor, vencimento, saldo e estado. | UC-07 | RB-26 |
 
@@ -143,6 +145,7 @@ Valores marcados com **(P)** são metas propostas que a equipe ainda precisa con
 | RF-79 | WHEN a sugestão indicar uma categoria existente no plano de contas com confiança maior ou igual ao limiar configurado, THE SYSTEM SHALL confirmar a classificação automaticamente. | UC-10 | RB-08 |
 | RF-80 | IF a sugestão tiver confiança abaixo do limiar, indicar categoria inexistente ou o serviço de IA falhar, THEN THE SYSTEM SHALL colocar o lançamento na fila de revisão humana. | UC-10 | RB-14 |
 | RF-81 | WHEN um usuário confirmar uma categoria diferente da sugerida, THE SYSTEM SHALL registrar a divergência com a sugestão original, a categoria final e o usuário. | UC-10 | RB-09 |
+| RF-86 | WHEN um usuário autorizado cadastrar um lançamento de despesa, THE SYSTEM SHALL registrá-lo com valor, data e descrição, e tratá-lo como os demais lançamentos gerados (OPEN-07). | UC-10 | RB-12 |
 
 ### 1.9 Apuração do resultado
 
@@ -168,7 +171,7 @@ Valores marcados com **(P)** são metas propostas que a equipe ainda precisa con
 
 | ID | Cláusula | UC | RB |
 |---|---|---|---|
-| RF-83 | WHEN um usuário autorizado enviar um arquivo CSV de clientes ou títulos, THE SYSTEM SHALL validar formato, colunas obrigatórias e valores, e apresentar os erros por linha antes de importar. | UC-14 | RB-19 |
+| RF-83 | WHEN um usuário autorizado enviar um arquivo CSV de clientes, títulos ou lançamentos de despesa, THE SYSTEM SHALL validar formato, colunas obrigatórias e valores, e apresentar os erros por linha antes de importar. | UC-14 | RB-19 |
 | RF-84 | IF o arquivo enviado tiver qualquer linha inválida, THEN THE SYSTEM SHALL recusar a importação inteira. | UC-14 | RB-19 |
 | RF-85 | WHEN um usuário autorizado solicitar a exportação de títulos, lançamentos ou da demonstração de resultado, THE SYSTEM SHALL gerar um arquivo CSV com os dados filtrados. | UC-14 | RB-19 |
 
@@ -193,11 +196,11 @@ Valores marcados com **(P)** são metas propostas que a equipe ainda precisa con
 
 | ID | Cláusula | Verificação |
 |---|---|---|
-| RNF-07 | THE SYSTEM SHOULD estar disponível em 99% do tempo de cada mês **(P)**. | Monitoramento |
-| RNF-08 | THE SYSTEM SHALL executar backup diário dos dados e manter as cópias dos últimos 7 dias **(P)**. | Verificação da rotina e de uma restauração |
+| RNF-07 | THE SYSTEM SHOULD estar disponível em 99% do tempo de cada mês. | Monitoramento |
+| RNF-08 | THE SYSTEM SHALL executar backup diário dos dados e manter as cópias dos últimos 7 dias. | Verificação da rotina e de uma restauração |
 | RNF-09 | IF ocorrer falha durante uma operação financeira, THEN THE SYSTEM SHALL desfazer todas as alterações da operação. | Teste com falha injetada |
 | RNF-10 | *Retirado.* Coberto por RNF-09 e RF-84. | |
-| RNF-24 | IF o serviço de IA não responder em 10 segundos **(P)**, THEN THE SYSTEM SHALL tratar a chamada como falha. | Teste com serviço simulado lento |
+| RNF-24 | IF o serviço de IA não responder em 10 segundos, THEN THE SYSTEM SHALL tratar a chamada como falha. | Teste com serviço simulado lento |
 
 ### 2.3 Desempenho
 
@@ -246,7 +249,7 @@ Regras de negócio são verdades do domínio que existiriam mesmo sem o sistema.
 | RB-09 | Toda correção humana de uma sugestão da IA fica registrada como divergência. | RF-81 |
 | RB-10 | Título Vencido é cobrado pela régua até ser Baixado, Cancelado ou entrar em renegociação. | RF-34, RF-37 |
 | RB-11 | Título Em Renegociação não recebe cobrança automática. | RF-70 |
-| RB-12 | Lançamento sem classificação confirmada não entra na apuração do resultado. | RF-58, RF-53, RF-54, RF-55, RF-82 |
+| RB-12 | Lançamento sem classificação confirmada não entra na apuração do resultado. | RF-58, RF-53, RF-54, RF-55, RF-82, RF-86 |
 | RB-13 | Obrigação Aguardando Evidência permanece como pendência visível do Operador Financeiro. | RF-77 |
 | RB-14 | Sugestão da IA que não atende à RB-08 é decidida por uma pessoa. | RF-80 |
 | RB-15 | Cada perfil tem um percentual máximo de desconto (alçada). Desconto acima da alçada de quem elaborou o orçamento depende de aprovação do Dono. O Dono não tem limite. | RF-14, RF-15, RF-16, RF-17 |

@@ -8,6 +8,7 @@ Um ADR registra uma decisão cara de reverter: o que foi decidido, por quê, que
 | [ADR-002](ADR-002-canal-de-notificacao-substituivel.md) | Canal de notificação substituível, simulado por padrão | Proposto |
 | [ADR-003](ADR-003-ia-extrai-e-classifica-o-sistema-decide.md) | A IA extrai e classifica; o sistema decide | Proposto |
 | [ADR-004](ADR-004-auditoria-somente-inclusao.md) | Auditoria somente de inclusão, na mesma transação | Proposto |
+| [ADR-005](ADR-005-banco-relacional.md) | Banco de dados relacional | Aceito |
 
 Situações possíveis: Proposto, Aceito, Substituído por ADR-nnn, Rejeitado. Um ADR aceito não é editado; uma nova decisão gera um novo ADR que substitui o anterior.
 
