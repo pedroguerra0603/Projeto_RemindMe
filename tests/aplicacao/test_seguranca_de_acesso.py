@@ -185,15 +185,16 @@ class AuditoriaSomenteInclusao(Base):
         with self.assertRaises(dataclasses.FrozenInstanceError):
             self.auditoria.registros[0].campo_novo = "x"
 
-    def test_RB_30_a_porta_de_auditoria_so_oferece_incluir(self):
+    def test_RB_30_a_porta_de_auditoria_so_oferece_incluir_e_ler(self):
+        """A leitura entrou com a Spec 013 (consulta de auditoria); alteração e exclusão continuam fora."""
         publicos = {n for n, _ in inspect.getmembers(portas.RepositorioAuditoria) if not n.startswith("_")}
-        self.assertEqual(publicos, {"registrar"})
+        self.assertEqual(publicos, {"registrar", "listar"})
 
-    def test_RB_30_a_auditoria_em_memoria_so_oferece_incluir(self):
+    def test_RB_30_a_auditoria_em_memoria_so_oferece_incluir_e_ler(self):
         publicos = {
             n for n, _ in inspect.getmembers(AuditoriaEmMemoria, callable) if not n.startswith("_")
         }
-        self.assertEqual(publicos, {"registrar"})
+        self.assertEqual(publicos, {"registrar", "listar"})
 
     def test_RB_30_o_servico_nao_oferece_alterar_nem_excluir_auditoria(self):
         publicos = {n for n, _ in inspect.getmembers(ServicoTitulos, callable) if not n.startswith("_")}

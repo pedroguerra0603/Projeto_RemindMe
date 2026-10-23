@@ -31,7 +31,7 @@ Lista ordenada das unidades implementáveis do sistema. O mapa não é implement
 | 010 | Calendário de obrigações | RF-40 a RF-50, RF-77 | RB-04, RB-07, RB-13, RB-16, RB-29 | RNF-15 | UC-09 | `Obrigacao`, `Evidencia` | DA-01, DA-05 | 002; OPEN-13 (decidida) | A escrever |
 | 011 | Lançamentos e classificação assistida por IA | RF-51, RF-52, RF-58, RF-59, RF-78 a RF-81, RF-86 | RB-08, RB-09, RB-12, RB-14, RB-27 | RNF-22, RNF-24, RNF-26 | UC-10 | `LancamentoFinanceiro`, `CategoriaFinanceira`, `SugestaoClassificacao` | DA-06; ADR-003 | 006; OPEN-04, OPEN-05, OPEN-07 (decididas) | A escrever |
 | 012 | Apuração do resultado | RF-53 a RF-57, RF-82 | RB-06, RB-12 | RNF-11 | UC-11 | `LancamentoFinanceiro`, `CategoriaFinanceira` | — | 011 | A escrever |
-| 013 | Consulta de auditoria | RF-64 | RB-30 | RNF-06 | UC-12 | `RegistroAuditoria` | DA-02; ADR-004 | 001, 002 | A escrever |
+| [013](013-consulta-de-auditoria.md) | Consulta de auditoria | RF-64 | RB-30 | RNF-06 | UC-12 | `RegistroAuditoria` | DA-02; ADR-004 | 001, 002 | **Verificada** |
 | 014 | Configuração de regras | RF-03, RF-14, RF-23 | RB-07, RB-08, RB-16, RB-28 | RNF-18, RNF-20 | UC-13 | `AlcadaDesconto`, `CategoriaFinanceira` | DA-10 | 002; OPEN-37 | A escrever |
 | 015 | Importação e exportação em CSV | RF-83, RF-84, RF-85 | RB-19 | RNF-09 | UC-14 | `Cliente`, `Titulo`, `LancamentoFinanceiro` | DA-03 | 003, 006, 011, 012 | A escrever |
 | 016 | Painel por perfil | — | RB-13 | RNF-15, RNF-16, RNF-17 | UC-01 | — | — | 006, 010, 011 | A escrever |

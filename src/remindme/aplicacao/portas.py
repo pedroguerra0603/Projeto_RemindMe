@@ -28,7 +28,10 @@ class RepositorioClientes(Protocol):
 
 
 class RepositorioAuditoria(Protocol):
+    """Somente inclusão e leitura: não há operação de alteração nem de exclusão (RB-30, RNF-06)."""
+
     def registrar(self, registro: RegistroAuditoria) -> None: ...
+    def listar(self) -> List[RegistroAuditoria]: ...
 
 
 class RepositorioUsuarios(Protocol):

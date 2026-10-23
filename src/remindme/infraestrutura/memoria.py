@@ -76,6 +76,9 @@ class AuditoriaEmMemoria:
         """Leitura na ordem de gravação (INV-4). Devolve uma cópia: mexer nela não altera o armazenado."""
         return list(self._registros)
 
+    def listar(self) -> List[RegistroAuditoria]:
+        return self.registros
+
     def _estado(self):
         return list(self._registros)
 

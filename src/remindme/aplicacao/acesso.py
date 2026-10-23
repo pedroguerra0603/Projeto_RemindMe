@@ -2,7 +2,7 @@
 
 import hashlib
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 
 from remindme.aplicacao.portas import Relogio, Sessao, UnidadeDeTrabalho
@@ -47,7 +47,7 @@ class Autorizacao:
         if not isinstance(identificador, str) or not identificador:
             raise SessaoInvalida("É preciso entrar no sistema para continuar.")
         sessao = uow.sessoes.obter(chave_da_sessao(identificador))
-        if sessao is None or self._relogio.agora() >= sessao.expira_em:
+        if sessao is None or _comparavel(self._relogio.agora()) >= _comparavel(sessao.expira_em):
             raise SessaoInvalida()
         usuario = uow.usuarios.obter(sessao.usuario_id)
         if usuario is None or not usuario.ativo:
@@ -59,3 +59,8 @@ class Autorizacao:
         _, usuario = self.sessao(uow, identificador)
         uow.permissoes.obter().exigir(usuario.perfil, operacao)
         return usuario
+
+
+def _comparavel(momento: datetime) -> datetime:
+    """Os horários ficam em UTC (OPEN-26); um horário sem fuso, como o dos dublês, é lido como UTC."""
+    return momento if momento.tzinfo else momento.replace(tzinfo=timezone.utc)
