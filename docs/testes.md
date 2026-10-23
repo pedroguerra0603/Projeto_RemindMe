@@ -1,6 +1,6 @@
 # Estratégia de Testes e Qualidade — RemindMe
 
-> Os testes usam `unittest`, da biblioteca padrão do Python, pela decisão de OPEN-01 (2026-10-03). A Spec 006 é a primeira implementada: a suíte está em [`tests/`](../tests/README.md), e a avaliação de qualidade, em [`qualidade/`](qualidade/README.md). Ainda não há interface nem API, porque o framework web está em aberto (OPEN-01); os testes desses níveis estão apenas planejados, abaixo. Como executar: [`execucao.md`](execucao.md).
+> Os testes usam `unittest`, da biblioteca padrão do Python, pela decisão de OPEN-01 (2026-10-03). A suíte está em [`tests/`](../tests/README.md), e a avaliação de qualidade, em [`qualidade/`](qualidade/README.md). Desde a Spec 017 (2026-10-23), há interface web: os testes de API chamam a aplicação WSGI no próprio processo (`tests/apresentacao/`), e o fluxo crítico roda no navegador com Playwright, opcional (`tests/ponta_a_ponta/`), conforme OPEN-29. A suíte de 2026-10-23 tem 331 testes. A tabela da pirâmide abaixo é a de 2026-10-16. Como executar: [`execucao.md`](execucao.md).
 
 ## Princípios
 
@@ -64,7 +64,7 @@ Esta seção é proposta de alteração da baseline (regra 4 do CLAUDE.md) e agu
 
 ## Testes de API e de ponta a ponta (planejamento)
 
-Issue #83. Esta seção **planeja**; não implementa. Nenhum código de teste é escrito antes de existir spec aprovada com interface (regra 1 do CLAUDE.md). Todo o plano está **condicionado à decisão de OPEN-01** (framework web) e, para o ambiente de execução, de OPEN-12 (hospedagem).
+Issue #83. Esta seção foi escrita como plano; a Spec 017 implementou os testes de API, o fluxo "Registrar pagamento integral e ver o título Baixado" no navegador e a recusa de rede sem TLS (OPEN-38). O fluxo do orçamento depende da Spec 004. Nenhum código de teste é escrito antes de existir spec aprovada com interface (regra 1 do CLAUDE.md). Todo o plano está **condicionado à decisão de OPEN-01** (framework web) e, para o ambiente de execução, de OPEN-12 (hospedagem).
 
 ### Fluxos críticos candidatos a ponta a ponta
 

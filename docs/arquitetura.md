@@ -133,20 +133,26 @@ Cada item tem uma questão, com as restrições que os drivers impõem.
 
 | Escolha | Restrição vinda dos drivers | Questão |
 |---|---|---|
-| Linguagem e framework web | Deve permitir domínio sem dependência do framework (DA-01) | OPEN-01: linguagem decidida em 2026-10-03 (Python 3.11, somente a biblioteca padrão); framework web a escolher na primeira spec com interface |
-| Banco de dados | Deve oferecer transações (DA-03) e restrição de unicidade (DA-08) | OPEN-02, decidida em 2026-10-23: banco relacional ([ADR-005](adr/ADR-005-banco-relacional.md)); produto em OPEN-36 |
+| Linguagem e framework web | Deve permitir domínio sem dependência do framework (DA-01) | OPEN-01: linguagem decidida em 2026-10-03 (Python 3.11, somente a biblioteca padrão); interface web decidida em 2026-10-23: WSGI da biblioteca padrão, sem framework ([ADR-006](adr/ADR-006-interface-web-sobre-wsgi-da-biblioteca-padrao.md)) |
+| Banco de dados | Deve oferecer transações (DA-03) e restrição de unicidade (DA-08) | OPEN-02 e OPEN-36, decididas em 2026-10-23: banco relacional, SQLite ([ADR-005](adr/ADR-005-banco-relacional.md), [ADR-007](adr/ADR-007-sqlite-como-banco-do-mvp.md)) |
 | Mecanismo de sessão | Deve permitir negar por padrão em toda rota (DA-04) | OPEN-03, decidida: sessão guardada no servidor |
 | Provedor de IA | Deve ser trocável sem alterar o domínio (DA-06, DA-07) | OPEN-04, decidida em 2026-10-23: o MVP usa só a IA simulada |
-| Hospedagem | — | OPEN-12 |
+| Hospedagem | — | OPEN-12, decidida em 2026-10-23: execução local na apresentação; HTTPS conforme OPEN-38 |
 | Mecanismo do agendador | Não pode degradar o uso interativo (DA-05) | OPEN-13, decidida em 2026-10-23: tarefa periódica no próprio processo da aplicação |
 
-As estruturas que respondem aos drivers são as decisões DT-01 a DT-09 da seção 3. As tecnologias ainda em aberto são decididas pela equipe quando for escrita a primeira spec que depende de cada uma, e o acompanhamento fica na questão correspondente em [`.specify/open.md`](../.specify/open.md):
+As estruturas que respondem aos drivers são as decisões DT-01 a DT-09 da seção 3. Todas as escolhas de tecnologia do MVP estão decididas; a primeira spec que as usou é a 017, e o acompanhamento fica em [`.specify/open.md`](../.specify/open.md).
 
-| Questão | Primeira spec que depende dela |
+### Onde cada camada está no código
+
+| Camada | Pasta |
 |---|---|
-| OPEN-01 (framework web) | Primeira spec com interface |
-| OPEN-36 (produto do banco) | Spec com persistência real |
-| OPEN-12 | Entrega (fora das specs) |
+| Apresentação | `src/remindme/apresentacao/web/` (Spec 017) |
+| Entradas automáticas | `src/remindme/entradas/` (agendador, Spec 017) |
+| Aplicação | `src/remindme/aplicacao/` |
+| Domínio | `src/remindme/dominio/` |
+| Infraestrutura | `src/remindme/infraestrutura/` (SQLite, relógio e dublês em memória) |
+
+A montagem das camadas fica em `src/remindme/inicializacao.py`, o único módulo que conhece todas.
 
 ## 6. Rastreabilidade
 

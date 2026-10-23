@@ -85,7 +85,7 @@ Monólito web em camadas, com o domínio isolado de framework, banco e serviços
 
 | Camada | Responsabilidade | Pacote atual |
 |---|---|---|
-| Apresentação e entradas automáticas | Telas, API, agendador, recepção de mensagens | Ainda não existe (OPEN-01, OPEN-13) |
+| Apresentação e entradas automáticas | Telas, API, agendador, recepção de mensagens | Interface web e agendador de vencimento desde a Spec 017 (ADR-006, OPEN-13); recepção de mensagens na Spec 009 |
 | Aplicação | Um serviço por caso de uso: permissão, transação, auditoria | `src/remindme/aplicacao` |
 | Domínio | Classes, estados e regras de negócio | `src/remindme/dominio` |
 | Infraestrutura | Persistência, canal, IA, relógio | `src/remindme/infraestrutura` (em memória) |
@@ -118,7 +118,7 @@ Fonte: [mapa de specs](../.specify/specs/mapa-de-specs.md). São 16 specs, de 00
 | [002 — Autenticação e autorização por perfil](../.specify/specs/002-autenticacao-e-autorizacao.md) | Proposta | Aguarda aprovação da equipe |
 | 003 a 005, 007 a 016 | A escrever | — |
 
-Tecnologia adotada (OPEN-01): Python 3.11 ou mais recente, somente a biblioteca padrão, testes com `unittest`. Como executar: [`execucao.md`](execucao.md). Estratégia de testes: [`testes.md`](testes.md). Avaliação de qualidade: [`qualidade/`](qualidade/README.md).
+Tecnologia adotada (OPEN-01): Python 3.11 ou mais recente, somente a biblioteca padrão, com interface web sobre WSGI (ADR-006), banco SQLite (ADR-007) e testes com `unittest`. Para ver a aplicação: `python3 iniciar.py demonstracao`. Como executar: [`execucao.md`](execucao.md). Estratégia de testes: [`testes.md`](testes.md). Avaliação de qualidade: [`qualidade/`](qualidade/README.md).
 
 ## 6. Decisões em aberto
 
@@ -126,9 +126,8 @@ Fonte: [`.specify/open.md`](../.specify/open.md).
 
 | Situação | Questões |
 |---|---|
-| Decididas | OPEN-01 (linguagem), OPEN-11 (juros fora do MVP), OPEN-16 (só o Dono cancela título), OPEN-30 (operação automática na auditoria); confirmadas ou decididas em 2026-10-23 por João Pedro Silva Guerra: OPEN-02 (banco relacional, ADR-005), OPEN-03 (sessão no servidor), OPEN-04 (só IA simulada no MVP), OPEN-05 (limiar 0,85), OPEN-06 e OPEN-14 (renegociação), OPEN-07 (despesas, RF-86), OPEN-08 (link com código para o Cliente), OPEN-09 (metas operacionais), OPEN-10 (Administrador é perfil próprio), OPEN-13 (agendador no processo), OPEN-15 (um título por orçamento), OPEN-17 a OPEN-26 (Spec 006, valor, fuso e pedido repetido), OPEN-27 (coverage.py opcional), OPEN-28 (GitHub Actions), OPEN-31 (retenção), OPEN-32 (matriz de permissões), OPEN-33 (`scrypt`), OPEN-34 (sem bloqueio nem expiração na Spec 002), OPEN-35 (senha provisória) |
-| Abertas, bloqueiam specs futuras | OPEN-36 (produto do banco), OPEN-37 (valor padrão da antecedência, Spec 014) |
-| Abertas, não bloqueiam | OPEN-09 (metas operacionais), OPEN-12 (hospedagem), OPEN-17 a OPEN-19 (Spec 006), OPEN-20 (precisão monetária), OPEN-21 (antecedência de próximo do vencimento), OPEN-22 (alteração do valor do título), OPEN-23 (estado depois do estorno), OPEN-24 (limite de valor), OPEN-25 (pagamento parcial repetido), OPEN-26 (fuso de referência), OPEN-27 (pytest e cobertura), OPEN-28 (integração contínua), OPEN-29 (ferramentas de API e navegador), OPEN-31 (retenção da auditoria) |
+| Decididas | Todas as 48 questões registradas. Até 2026-10-16: OPEN-01, OPEN-11, OPEN-16 e OPEN-30. Em 2026-10-23, aceitas por João Pedro Silva Guerra: OPEN-02 a OPEN-10, OPEN-13 a OPEN-15, OPEN-17 a OPEN-28, OPEN-31 a OPEN-35. Em 2026-10-23, por delegação ao agente, a confirmar no PR: OPEN-01 (interface web), OPEN-12, OPEN-29, OPEN-36 e OPEN-37 e as novas OPEN-38 a OPEN-48 |
+| Abertas | Nenhuma |
 
 ## 7. Rastreabilidade
 

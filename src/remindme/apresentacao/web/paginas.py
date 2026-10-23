@@ -657,6 +657,8 @@ def _valor_exibido(campo_: Optional[str], texto: Optional[str]) -> str:
         return f.moeda(lido) if lido is not None else texto
     if campo_ == "documento":
         return f.documento(texto)
+    if campo_ == "contato":
+        return f.contato(texto)
     return texto
 
 

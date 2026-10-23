@@ -1,11 +1,52 @@
 # Como executar — RemindMe
 
-O projeto ainda não tem interface. O que existe é o domínio e a camada de aplicação da [Spec 006](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md), verificados por testes.
+O RemindMe roda como aplicação web local, com Python 3.11 ou mais recente e **sem instalar nada**: servidor, banco (SQLite) e testes usam só a biblioteca padrão (OPEN-01, ADR-006, ADR-007). A primeira interface é a da [Spec 017](../.specify/specs/017-interface-web.md).
+
+## Ver a aplicação em 1 minuto (demonstração)
+
+Na raiz do repositório:
+
+```
+python3 iniciar.py demonstracao
+```
+
+O comando cria o banco `remindme-demonstracao.db` com dados de exemplo, mostra no terminal os usuários e a senha gerada, e inicia o servidor. Abra **http://localhost:8000** no navegador e entre com um dos usuários:
+
+| Perfil | E-mail |
+|---|---|
+| Dono | `carla@demo.example` |
+| Operador Financeiro | `diego@demo.example` |
+| Contador | `helena@demo.example` |
+| Administrador | `admin@demo.example` |
+
+A senha é a mesma para todos e aparece no terminal. Para escolher a senha, use `--senha` (pelo menos 8 caracteres): `python3 iniciar.py demonstracao --senha minha-senha-de-apresentacao`. Para recomeçar do zero, acrescente `--substituir`. `Ctrl+C` encerra o servidor; para voltar depois ao mesmo banco, `python3 iniciar.py --banco remindme-demonstracao.db`.
+
+A demonstração tem clientes e títulos em todos os estados: Aberto, Vencido (pela verificação automática), Baixado, Cancelado, com pagamento parcial e com estorno, além da trilha de auditoria de cada operação.
+
+## Uso com dados reais
+
+```
+python3 iniciar.py criar-administrador      # pergunta nome, e-mail e senha (OPEN-39)
+python3 iniciar.py                          # servidor em http://localhost:8000, banco remindme.db
+```
+
+O Administrador cadastra os demais usuários pela tela **Usuários**, com senha provisória (OPEN-35), e ajusta a tela **Permissões**. As permissões fixadas por regra de negócio aparecem com cadeado e não mudam.
+
+| Opção | Uso |
+|---|---|
+| `--banco arquivo.db` | Arquivo SQLite (padrão: `remindme.db`). Bancos `*.db` não vão para o Git. |
+| `--porta 8000` | Porta do servidor |
+| `--host 127.0.0.1` | Endereço de escuta. Sem certificado, só a própria máquina (OPEN-38) |
+| `--certificado cert.pem --chave chave.pem` | Liga o HTTPS (RNF-05); com eles, o servidor pode atender pela rede (`--host 0.0.0.0`) |
+
+`python3 -m remindme` também funciona, com a pasta `src` no caminho de importação (por exemplo, `PYTHONPATH=src python3 -m remindme`). O comando `iniciar.py` faz isso sozinho.
+
+**Verificação automática de vencimento.** Com o servidor no ar, os títulos Abertos com vencimento passado passam a Vencido na inicialização e a cada hora, com registro de operação automática na auditoria (OPEN-13, OPEN-48). O "hoje" é o de America/Sao_Paulo (OPEN-26).
 
 ## Pré-requisitos
 
 - Python 3.11 ou mais recente.
-- Nenhuma dependência externa: o código e os testes usam apenas a biblioteca padrão.
+- Nenhuma dependência externa para usar ou testar. O Playwright é opcional, só para o teste de navegador.
 
 ## Executar os testes
 
@@ -31,10 +72,16 @@ A suíte roda sozinha a cada PR e a cada push na `main`, pelo fluxo [`.github/wo
 
 **Proteção da `main` (configuração do repositório, feita por quem o administra).** Para o merge exigir a suíte aprovada: *Settings → Branches → Branch protection rule* (ou *Rulesets*) para `main` → marcar *Require status checks to pass before merging* → selecionar as verificações `testes / suíte (...)`. Isso não pode ser feito por código do repositório; **está pendente** e é o último critério da issue #82. Os resultados das combinações de Windows e macOS são os primeiros para essa suíte (a portabilidade nesses sistemas ainda não foi verificada, em [`qualidade/portabilidade.md`](qualidade/portabilidade.md)): se alguma falhar na primeira execução, é um achado de portabilidade, e não um erro do fluxo.
 
-## A definir
+## Teste de navegador (opcional)
 
-As instruções de configuração e de execução da aplicação serão escritas aqui quando houver interface. Dependem do framework web (OPEN-01), do banco de dados (OPEN-02) e da hospedagem (OPEN-12), em [`.specify/open.md`](../.specify/open.md).
+O teste de ponta a ponta (`tests/ponta_a_ponta/`) só roda com o Playwright instalado; sem ele, aparece como pulado, e a suíte continua sem dependência (OPEN-29):
 
-## Restrição já definida
+```
+pip install playwright
+python -m playwright install chromium
+python3 -m unittest tests.ponta_a_ponta.test_navegador
+```
+
+## Restrição
 
 A aplicação e a suíte de testes devem rodar sem credencial de serviço externo, com o canal de notificação e o serviço de IA simulados (RNF-23).

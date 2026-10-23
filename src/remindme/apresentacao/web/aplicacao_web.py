@@ -259,7 +259,7 @@ class AplicacaoWeb:
                 return Resposta.redirecionar("/painel")
             except SessaoInvalida:
                 pass
-        protecao = secrets.token_urlsafe(24)
+        protecao = req.cookies.get(COOKIE_ENTRADA) or secrets.token_urlsafe(24)
         aviso = AVISOS.get(req.consulta.get("aviso", ""), ("", ""))[1]
         pagina = p.pagina_entrar(protecao, email=email, erro=erro, aviso="" if erro else aviso)
         return Resposta.pagina(pagina, status).cookie(COOKIE_ENTRADA, protecao, req.https)

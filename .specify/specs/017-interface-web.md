@@ -8,7 +8,7 @@
 | **Nome** | Interface web: acesso, clientes, títulos e auditoria |
 | **Objetivo** | Permitir que cada perfil use pelo navegador o que as Specs 002, 003, 006 e 013 já garantem, com os dados guardados entre execuções, na máquina de quem apresenta. |
 | **Valor entregue** | A Dona, o Operador Financeiro, a Contadora e o Administrador entram no RemindMe, veem no painel o que cabe a cada um e cadastram clientes e títulos, registram, estornam e cancelam, consultam a auditoria e administram usuários, sem tocar no código. |
-| **Situação** | **Aprovada** |
+| **Situação** | **Verificada** — todos os critérios de aceitação passaram (seção 8). |
 | **Aprovada por** | João Pedro Silva Guerra, em 2026-10-23, por autorização prévia dada ao agente antes da redação; a revisão do conteúdo fica no PR |
 
 ## 2. Rastreabilidade
@@ -135,4 +135,55 @@ Os testes automatizados levam no nome o identificador do critério, por exemplo 
 
 ## 8. Verificação
 
-A preencher depois da implementação.
+Verificada em 2026-10-23, com `python3 -m unittest discover -s tests -t .`: 331 testes, todos passando (7 pulados, dos quais 6 dependem de specs futuras e 1 é o teste de navegador, sem o Playwright). Com o Playwright instalado, o teste de navegador também passa (6 pulados). A suíte também passou com o ambiente vazio (`env -i`). Testes em [`tests/apresentacao/test_spec_017_web.py`](../../tests/apresentacao/test_spec_017_web.py), [`tests/infraestrutura/test_sqlite.py`](../../tests/infraestrutura/test_sqlite.py) e [`tests/ponta_a_ponta/test_navegador.py`](../../tests/ponta_a_ponta/test_navegador.py). Plano em [`plans/017-plano.md`](../plans/017-plano.md) e tarefas em [`tasks/017-tarefas.md`](../tasks/017-tarefas.md).
+
+### Critérios de aceitação
+
+| Critério | Teste | Resultado |
+|---|---|---|
+| CA-01 | `test_CA_01` (15 páginas e 9 envios, com sessão inventada) | Passou |
+| CA-02 | `test_CA_02` (Contador, Administrador e Operador) | Passou |
+| CA-03 | `test_CA_03` | Passou |
+| CA-04 | `test_CA_04` | Passou |
+| CA-05 | `test_CA_05` | Passou |
+| CA-06 | `test_CA_06` | Passou |
+| CA-07 | `test_CA_07` | Passou |
+| CA-08 | `test_CA_08` | Passou |
+| CA-09 | `test_CA_09` | Passou |
+| CA-10 | `test_CA_10` | Passou |
+| CA-11 | `test_CA_11` | Passou |
+| CA-12 | `test_CA_12` (pela interface) e `test_CA_12` de `tests/infraestrutura/test_sqlite.py` (pelos serviços) | Passou |
+| CA-13 | `test_CA_13` de `test_sqlite.py`; `test_RNF_06_perfil_nenhum_exclui_*` | Passou |
+| CA-14 | `test_CA_14` de `test_sqlite.py` | Passou |
+| CA-15 | `test_CA_15`; `test_OPEN_48_*` (agendador em segundo plano) | Passou |
+| CA-16 | `test_CA_16_OPEN_38_*`, `test_CA_16_RNF_05_com_https_*` e `test_CA_16_RNF_05_servidor_com_certificado_*` (servidor HTTPS real, com certificado gerado pelo `openssl`) | Passou |
+| CA-17 | `test_CA_17` | Passou |
+| CA-18 | `test_CA_18`; `test_usuario_inativado_pela_tela_*` | Passou |
+| CA-19 | `test_CA_19` | Passou |
+| CA-20 | `test_CA_20` | Passou |
+| CA-21 | `test_CA_21` | Passou |
+| CA-22 | `test_CA_22`; `test_metodo_errado_*` (405, 413 e arquivos estáticos) | Passou |
+| CA-23 | `test_CA_23` em `tests/ponta_a_ponta/test_navegador.py`, com Playwright 1.56 e Chromium; pulado onde o Playwright não está instalado | Passou |
+
+### Invariantes
+
+| Invariante | Como foi verificada | Resultado |
+|---|---|---|
+| INV-1 | `test_INV_1_a_apresentacao_nao_usa_regras_do_dominio_diretamente` e a regra de camadas de `tests/arquitetura/test_camadas.py` | Passou |
+| INV-2 | CA-01 e CA-18 | Passou |
+| INV-3 | CA-08 e CA-21 | Passou |
+| INV-4 | CA-09 | Passou |
+| INV-5 | CA-13 | Passou |
+| INV-6 | CA-14 | Passou |
+| INV-7 | Suíte com o ambiente vazio; o teste de navegador é pulado sem o Playwright | Passou |
+
+### Divergências e limitações
+
+| Item | Situação |
+|---|---|
+| Testes antigos ajustados | O teste de CA-13 da Spec 001 passou a procurar as formas de ler variável de ambiente (`os.environ`, `getenv`), porque o servidor WSGI tem o atributo `base_environ`, que é a requisição. O teste de RF-24 passou a aceitar um único ponto que lê o relógio da máquina, o adaptador `infraestrutura/relogio.py`. A pendência de RNF-06 no armazenamento real virou teste. |
+| Servidor de apresentação | O `wsgiref` atende uma requisição por vez. Basta para a execução local (OPEN-12); para hospedagem real, a aplicação WSGI roda em outro servidor WSGI sem mudança de código. |
+| Mensagens de recusa | Algumas ainda trazem o identificador da regra, como "(RB-23)", e o saldo em formato decimal, como "3800.00" (usabilidade, U-09). Ficam para revisão da equipe. |
+| Campo de data | O formato exibido segue o idioma do navegador; num navegador em português, dd/mm/aaaa. |
+| Backup (RNF-08) | Não automatizado; o arquivo SQLite se copia com a API de backup. Fica para a entrega. |
+| Painel | Só a parte de títulos de RNF-15 e RNF-17; obrigações e cobranças entram na Spec 016. |
