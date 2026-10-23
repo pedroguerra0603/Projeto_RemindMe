@@ -2,6 +2,7 @@
 
 import ast
 import dataclasses
+import re
 import unittest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -185,12 +186,15 @@ class Spec001(ComSessoes, unittest.TestCase):
                             self.assertIn(partes[1], PERMITIDAS[camada])
 
     def test_CA_13_codigo_nao_le_variavel_de_ambiente_nem_credencial(self):
-        """A suíte inteira também é executada sem nenhuma variável de credencial (seção 8 da spec)."""
+        """A suíte inteira também é executada sem nenhuma variável de credencial (seção 8 da spec).
+
+        Desde a Spec 017, o código tem o `base_environ` do servidor WSGI, que descreve a requisição, e não o
+        ambiente do processo; por isso a busca é pelas formas de ler variável de ambiente."""
+        leitura_do_ambiente = re.compile(r"\bos\.environ\b|\bgetenv\b|from os import[^\n]*\benviron\b")
         for arquivo in RAIZ.rglob("*.py"):
             texto = arquivo.read_text(encoding="utf-8")
             with self.subTest(arquivo=arquivo.name):
-                self.assertNotIn("environ", texto)
-                self.assertNotIn("getenv", texto)
+                self.assertIsNone(leitura_do_ambiente.search(texto))
         fluxos = Path(__file__).resolve().parents[2] / ".github" / "workflows"
         for fluxo in fluxos.glob("*.yml"):
             with self.subTest(fluxo=fluxo.name):

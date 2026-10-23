@@ -230,10 +230,36 @@ class Pendentes(unittest.TestCase):
     def test_RNF_22_payload_da_ia_nao_contem_dados_pessoais(self):
         pass
 
-    @unittest.skip("Pendente da Spec 013: consulta de auditoria por perfil (UC-12). A exclusão e a alteração "
-                   "pelo banco dependem de OPEN-02.")
+
+class AuditoriaNoArmazenamentoReal(unittest.TestCase):
+    """RNF-06 com o banco escolhido (OPEN-36, ADR-007) e a consulta da Spec 013: nenhum perfil altera nem exclui."""
+
     def test_RNF_06_perfil_nenhum_exclui_registro_de_auditoria_no_armazenamento_real(self):
-        pass
+        import sqlite3
+        import tempfile
+        from pathlib import Path
+
+        from remindme.aplicacao.servico_acesso import ServicoAcesso
+        from remindme.aplicacao.servico_auditoria import ServicoAuditoria
+        from remindme.aplicacao.servico_clientes import ServicoClientes
+        from remindme.infraestrutura.sqlite import UnidadeDeTrabalhoSQLite, preparar_banco
+
+        for servico in (ServicoAcesso, ServicoAuditoria, ServicoClientes, ServicoTitulos):
+            publicos = {n for n, _ in inspect.getmembers(servico, callable) if not n.startswith("_")}
+            with self.subTest(servico=servico.__name__):
+                self.assertFalse({n for n in publicos if "excluir" in n or "apagar" in n or "alterar_registro" in n})
+        with tempfile.TemporaryDirectory() as pasta:
+            caminho = str(Path(pasta).joinpath("remindme.db"))
+            preparar_banco(caminho)
+            with UnidadeDeTrabalhoSQLite(caminho) as uow:
+                uow.auditoria.registrar(RegistroAuditoria("u1", datetime(2026, 10, 3), "operação", "titulo t1"))
+            conexao = sqlite3.connect(caminho)
+            try:
+                for comando in ("UPDATE auditoria SET motivo = 'adulterado'", "DELETE FROM auditoria"):
+                    with self.subTest(comando=comando), self.assertRaises(sqlite3.DatabaseError):
+                        conexao.execute(comando)
+            finally:
+                conexao.close()
 
 
 if __name__ == "__main__":

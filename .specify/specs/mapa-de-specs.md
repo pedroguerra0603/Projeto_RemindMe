@@ -35,6 +35,7 @@ Lista ordenada das unidades implementáveis do sistema. O mapa não é implement
 | 014 | Configuração de regras | RF-03, RF-14, RF-23 | RB-07, RB-08, RB-16, RB-28 | RNF-18, RNF-20 | UC-13 | `AlcadaDesconto`, `CategoriaFinanceira` | DA-10 | 002; OPEN-37 | A escrever |
 | 015 | Importação e exportação em CSV | RF-83, RF-84, RF-85 | RB-19 | RNF-09 | UC-14 | `Cliente`, `Titulo`, `LancamentoFinanceiro` | DA-03 | 003, 006, 011, 012 | A escrever |
 | 016 | Painel por perfil | — | RB-13 | RNF-15, RNF-16, RNF-17 | UC-01 | — | — | 006, 010, 011 | A escrever |
+| [017](017-interface-web.md) | Interface web: acesso, clientes, títulos e auditoria | Telas de RF-01 a RF-03, RF-20 a RF-31, RF-64 a RF-67 | — | RNF-01, RNF-02, RNF-03, RNF-05, RNF-06, RNF-09, RNF-14, RNF-16, RNF-21 | UC-01, UC-02, UC-03, UC-06, UC-12 | — | DA-04, DA-05; ADR-006, ADR-007 | 002, 003, 006, 013; OPEN-12, OPEN-38 (decididas) | **Aprovada** |
 
 RNF-07 (disponibilidade) e RNF-08 (backup) são operacionais. Não pertencem a nenhuma spec de comportamento e serão tratados na entrega. As metas foram confirmadas em OPEN-09; a hospedagem ainda depende de OPEN-12.
 
@@ -48,6 +49,7 @@ RNF-07 (disponibilidade) e RNF-08 (backup) são operacionais. Não pertencem a n
 6. **010** é independente do núcleo de recebíveis e pode ser feita em paralelo depois de 002.
 7. **011 e 012** dependem dos pagamentos de 006.
 8. **013 a 016** consomem o que as anteriores produzem.
+9. **017** traz a primeira interface, sobre o que 001, 002, 003, 006 e 013 já verificam. As specs seguintes trazem as próprias telas.
 
 ## Primeira spec para implementação
 

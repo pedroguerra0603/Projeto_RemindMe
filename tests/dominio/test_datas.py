@@ -26,9 +26,13 @@ def titulo(vencimento):
 
 
 class DataDeReferenciaInjetavel(unittest.TestCase):
-    def test_RF_24_codigo_de_producao_nao_le_o_relogio_da_maquina(self):
+    def test_RF_24_so_o_adaptador_do_relogio_le_o_relogio_da_maquina(self):
+        """Desde a Spec 017, `infraestrutura/relogio.py` é o único ponto que lê o relógio da máquina, atrás da
+        porta `Relogio`; domínio e aplicação continuam recebendo a data de referência de fora."""
         achados = []
         for caminho in sorted(RAIZ_DO_CODIGO.rglob("*.py")):
+            if caminho.relative_to(RAIZ_DO_CODIGO).as_posix() == "infraestrutura/relogio.py":
+                continue
             for no in ast.walk(ast.parse(caminho.read_text(encoding="utf-8"))):
                 if isinstance(no, ast.Attribute) and no.attr in ("today", "now", "utcnow", "fromtimestamp"):
                     achados.append(f"{caminho.name}:{no.lineno} {no.attr}")

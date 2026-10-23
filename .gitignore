@@ -22,3 +22,8 @@ dist/
 build/
 target/
 coverage/
+
+# Bancos locais do RemindMe (Spec 017)
+*.db
+*.db-wal
+*.db-shm

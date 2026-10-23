@@ -89,6 +89,11 @@ class ServicoAcesso:
             operacoes = op.uow.permissoes.obter().operacoes(op.usuario.perfil)
         return SessaoAtiva(op.usuario, operacoes, encontrada[0].protecao, encontrada[0].expira_em)
 
+    def exigir(self, sessao: Optional[str], operacao: Operacao) -> None:
+        """RF-67: confere a permissão antes de a interface mostrar o formulário de uma operação."""
+        with self._execucao.operacao("conferir permissão", sessao, operacao):
+            pass
+
     # UC-02
 
     def cadastrar_usuario(
