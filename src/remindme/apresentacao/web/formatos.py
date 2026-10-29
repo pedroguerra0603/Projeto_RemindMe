@@ -65,6 +65,15 @@ def ler_valor(texto: str) -> Optional[Decimal]:
         return None
 
 
+MESES = ("janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro")
+DIAS_DA_SEMANA = ("segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado", "domingo")
+
+
+def data_por_extenso(dia: date) -> str:
+    """quarta-feira, 29 de outubro de 2026."""
+    return f"{DIAS_DA_SEMANA[dia.weekday()]}, {dia.day} de {MESES[dia.month - 1]} de {dia.year}"
+
+
 def data(dia: Optional[date]) -> str:
     return dia.strftime("%d/%m/%Y") if dia else ""
 

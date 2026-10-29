@@ -99,3 +99,51 @@ def anel(itens: List[Item], formatar: Formato, titulo: str) -> Html:
         '<ul class="legenda">{l}</ul></div>',
         t=titulo, f=juntar(fatias), l=legenda,
     )
+
+
+# Régua do caixa: os títulos numa linha do tempo, com o hoje no meio.
+
+DIAS_ANTES, DIAS_DEPOIS = 30, 15
+Marco = Tuple[str, int, Decimal, str, str]  # cliente, dias até o vencimento (negativo = vencido), saldo, cor, link
+
+
+def regua(marcos: List[Marco], formatar: Formato, hoje: str) -> Html:
+    """Vencidos à esquerda do hoje, a vencer à direita. Cada título é um alfinete clicável com o saldo.
+
+    Vencido há mais de 30 dias fica na ponta esquerda. Quando dois alfinetes ficam perto demais para os
+    valores caberem, o seguinte sobe uma linha (a primeira linha livre, da esquerda para a direita).
+    """
+    if not marcos:
+        return h('<p class="vazio">{t}</p>', t="Nenhum título vencido nem a vencer nos próximos 15 dias.")
+    largura, distancia_minima, altura_da_linha = 200, 24, 10
+    escala = Decimal(largura) / (DIAS_ANTES + DIAS_DEPOIS)
+    fim_das_linhas: List[Decimal] = []
+    posicoes = []
+    for cliente, dias, saldo, cor, link in sorted(marcos, key=lambda m: m[1]):
+        x = (max(-DIAS_ANTES, min(DIAS_DEPOIS, dias)) + DIAS_ANTES) * escala
+        linha = next((n for n, fim in enumerate(fim_das_linhas) if x - fim >= distancia_minima), len(fim_das_linhas))
+        if linha == len(fim_das_linhas):
+            fim_das_linhas.append(x)
+        fim_das_linhas[linha] = x
+        posicoes.append((x, linha, cliente, saldo, cor, link))
+    eixo = len(fim_das_linhas) * altura_da_linha + 8
+    pontos = [
+        h(
+            '<a href="{link}"><title>{c}: {v}</title><line class="haste" x1="{x}" y1="{eixo}" x2="{x}" y2="{y}"/>'
+            '<circle class="{cor}" cx="{x}" cy="{y}" r="2.4"/><text class="valor" x="{x}" y="{ty}">{curto}</text></a>',
+            link=link, c=cliente, v=formatar(saldo), cor=cor, x=_n(x), eixo=eixo,
+            y=eixo - 5 - linha * altura_da_linha, ty=eixo - 9 - linha * altura_da_linha, curto=formatar(saldo),
+        )
+        for x, linha, cliente, saldo, cor, link in posicoes
+    ]
+    zero = _n(DIAS_ANTES * escala)
+    return h(
+        '<svg class="regua" viewBox="-10 -2 220 {altura}" role="img" aria-label="Títulos vencidos e a vencer em torno de hoje">'
+        '<line class="eixo" x1="0" y1="{eixo}" x2="{l}" y2="{eixo}"/>'
+        '<line class="hoje" x1="{z}" y1="0" x2="{z}" y2="{fim_hoje}"/>'
+        '{p}'
+        '<text class="rotulo" x="0" y="{ry}">há 30 dias</text>'
+        '<text class="rotulo hoje-rotulo" x="{z}" y="{ry}">hoje, {hoje}</text>'
+        '<text class="rotulo" x="{l}" y="{ry}">em 15 dias</text></svg>',
+        altura=eixo + 10, eixo=eixo, l=largura, z=zero, fim_hoje=eixo + 2, ry=eixo + 7, hoje=hoje, p=juntar(pontos),
+    )
