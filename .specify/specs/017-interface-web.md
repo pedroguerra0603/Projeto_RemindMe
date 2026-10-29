@@ -71,7 +71,7 @@
 - **A5 — Verificação automática.** Na inicialização e a cada hora, os títulos Abertos com vencimento passado passam a Vencido, com registro de operação automática (OPEN-13, OPEN-48).
 - **A6 — Sair.** A sessão termina, e o navegador volta à tela de entrada.
 - **A7 — Reinício.** O que foi gravado continua lá depois de reiniciar a aplicação.
-- **A8 — Demonstração.** Um comando cria um banco novo com um usuário de cada perfil, exceto Cliente, clientes e títulos em todos os estados, e mostra a senha no terminal; ela não fica em arquivo.
+- **A8 — Demonstração.** Um comando cria um banco novo com um usuário de cada perfil, exceto Cliente, clientes e títulos em todos os estados, e mostra a senha no terminal; ela não fica em arquivo. Se a demonstração já existir, o mesmo comando a reaproveita sem apagar nada (e recusa, sem apagar, uma senha que não confere); `--substituir` recria tudo. Se a porta estiver ocupada, o servidor usa a seguinte livre e avisa. O endereço mostrado é `http://127.0.0.1:<porta>`, e o navegador abre sozinho. Guia em [`docs/apresentacao.md`](../../docs/apresentacao.md).
 
 ### Exceções
 
