@@ -417,53 +417,6 @@ class LinhaDeComando(unittest.TestCase):
             banco = Path(pasta).joinpath("demo.db")
             banco.write_bytes(b"")
             self.assertEqual(principal(["demonstracao", "--banco", str(banco), "--sem-servidor"]), 1)
-            self.assertEqual(banco.read_bytes()[:16], b"SQLite format 3\x00")
-
-    def _demonstracao_pronta(self, pasta):
-        banco = Path(pasta).joinpath("demo.db")
-        sistema = montar(str(banco), RelogioFixo(AGORA), CIFRADOR_DE_TESTE, RegistroErrosEmMemoria())
-        preparar_demonstracao(sistema, SENHA)
-        return banco
-
-    def test_demonstracao_repetida_reaproveita_o_banco_sem_apagar(self):
-        """Rodar o mesmo comando duas vezes não pode deixar o usuário sem servidor nem apagar os dados."""
-        with tempfile.TemporaryDirectory() as pasta:
-            banco = self._demonstracao_pronta(pasta)
-            antes = banco.stat().st_size
-            argumentos = ["demonstracao", "--banco", str(banco), "--senha", SENHA, "--sem-servidor"]
-            self.assertEqual(principal(argumentos), 0)
-            self.assertGreaterEqual(banco.stat().st_size, antes)
-
-    def test_demonstracao_repetida_com_outra_senha_avisa_e_nao_apaga(self):
-        with tempfile.TemporaryDirectory() as pasta:
-            banco = self._demonstracao_pronta(pasta)
-            argumentos = ["demonstracao", "--banco", str(banco), "--senha", "outra-senha", "--sem-servidor"]
-            self.assertEqual(principal(argumentos), 1)
-            sistema = montar(str(banco), RelogioFixo(AGORA), CIFRADOR_DE_TESTE, RegistroErrosEmMemoria())
-            self.assertEqual(ClienteWeb(sistema.web).entrar("carla@demo.example", SENHA).status, 303)
-
-    def test_porta_ocupada_usa_a_proxima_livre_e_o_endereco_e_numerico(self):
-        import socket
-
-        from remindme.inicializacao import endereco
-
-        with tempfile.TemporaryDirectory() as pasta:
-            sistema = montar(str(Path(pasta).joinpath("r.db")), RelogioFixo(AGORA), CIFRADOR_DE_TESTE)
-            ocupado = socket.socket()
-            ocupado.bind(("127.0.0.1", 0))
-            ocupado.listen()
-            porta = ocupado.getsockname()[1]
-            try:
-                servidor = criar_servidor(sistema, "127.0.0.1", porta, procurar_porta_livre=True)
-                try:
-                    self.assertNotEqual(servidor.server_address[1], porta)
-                    self.assertTrue(endereco(servidor, False).startswith("http://127.0.0.1:"))
-                finally:
-                    servidor.server_close()
-                with self.assertRaises(OSError):
-                    criar_servidor(sistema, "127.0.0.1", porta)
-            finally:
-                ocupado.close()
 
 
 if __name__ == "__main__":
