@@ -26,6 +26,23 @@ def valor_para_campo(valor: Optional[Decimal]) -> str:
     return "" if valor is None else f"{valor:.2f}".replace(".", ",")
 
 
+def numero(quantidade: Decimal) -> str:
+    """Quantidade sem zeros sobrando: 2, 1,5, 0,25."""
+    texto = f"{quantidade:f}"
+    if "." in texto:
+        texto = texto.rstrip("0").rstrip(".")
+    return texto.replace(".", ",")
+
+
+def numero_para_campo(quantidade: Decimal) -> str:
+    return numero(quantidade)
+
+
+def percentual(valor: Decimal) -> str:
+    """7,5%."""
+    return numero(valor) + "%"
+
+
 def ler_valor(texto: str) -> Optional[Decimal]:
     """Lê "1.234,56", "1234,56" ou "1234.56". Devolve None quando o texto não é um valor."""
     limpo = texto.replace("R$", "").replace(" ", "").strip()

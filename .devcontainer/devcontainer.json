@@ -1,0 +1,9 @@
+{
+  "name": "RemindMe",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": { "label": "RemindMe", "onAutoForward": "openBrowser" }
+  },
+  "postAttachCommand": "echo 'Para abrir a demonstração: python3 iniciar.py demonstracao'"
+}

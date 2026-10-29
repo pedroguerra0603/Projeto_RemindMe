@@ -6,6 +6,7 @@ from typing import List, Optional, Protocol
 
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.cliente import Cliente
+from remindme.dominio.orcamento import Orcamento
 from remindme.dominio.permissoes import MatrizPermissoes
 from remindme.dominio.titulo import Titulo
 from remindme.dominio.usuario import Usuario
@@ -15,6 +16,12 @@ class RepositorioTitulos(Protocol):
     def obter(self, titulo_id: str) -> Optional[Titulo]: ...
     def salvar(self, titulo: Titulo) -> None: ...
     def listar(self) -> List[Titulo]: ...
+
+
+class RepositorioOrcamentos(Protocol):
+    def obter(self, orcamento_id: str) -> Optional[Orcamento]: ...
+    def salvar(self, orcamento: Orcamento) -> None: ...
+    def listar(self) -> List[Orcamento]: ...
 
 
 class RepositorioClientes(Protocol):
@@ -98,6 +105,7 @@ class UnidadeDeTrabalho(Protocol):
 
     titulos: RepositorioTitulos
     clientes: RepositorioClientes
+    orcamentos: RepositorioOrcamentos
     auditoria: RepositorioAuditoria
     usuarios: RepositorioUsuarios
     sessoes: RepositorioSessoes

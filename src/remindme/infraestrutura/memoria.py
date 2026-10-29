@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Set
 from remindme.aplicacao.portas import RegistroErro, Sessao
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.cliente import Cliente
+from remindme.dominio.orcamento import Orcamento
 from remindme.dominio.permissoes import MatrizPermissoes
 from remindme.dominio.titulo import Titulo
 from remindme.dominio.usuario import Usuario
@@ -25,6 +26,27 @@ class RepositorioTitulosEmMemoria:
 
     def listar(self) -> List[Titulo]:
         return [copy.deepcopy(t) for t in self.dados.values()]
+
+    def _estado(self):
+        return copy.deepcopy(self.dados)
+
+    def _restaurar(self, estado) -> None:
+        self.dados = estado
+
+
+class RepositorioOrcamentosEmMemoria:
+    def __init__(self):
+        self.dados: Dict[str, Orcamento] = {}
+
+    def obter(self, orcamento_id: str) -> Optional[Orcamento]:
+        orcamento = self.dados.get(orcamento_id)
+        return copy.deepcopy(orcamento) if orcamento else None
+
+    def salvar(self, orcamento: Orcamento) -> None:
+        self.dados[orcamento.id] = copy.deepcopy(orcamento)
+
+    def listar(self) -> List[Orcamento]:
+        return [copy.deepcopy(o) for o in self.dados.values()]
 
     def _estado(self):
         return copy.deepcopy(self.dados)
@@ -184,9 +206,11 @@ class UnidadeDeTrabalhoEmMemoria:
         sessoes: Optional[RepositorioSessoesEmMemoria] = None,
         permissoes: Optional[RepositorioPermissoesEmMemoria] = None,
         clientes: Optional[RepositorioClientesEmMemoria] = None,
+        orcamentos: Optional[RepositorioOrcamentosEmMemoria] = None,
     ):
         self.titulos = titulos if titulos is not None else RepositorioTitulosEmMemoria()
         self.clientes = clientes if clientes is not None else RepositorioClientesEmMemoria()
+        self.orcamentos = orcamentos if orcamentos is not None else RepositorioOrcamentosEmMemoria()
         self.auditoria = auditoria if auditoria is not None else AuditoriaEmMemoria()
         self.usuarios = usuarios if usuarios is not None else RepositorioUsuariosEmMemoria()
         self.sessoes = sessoes if sessoes is not None else RepositorioSessoesEmMemoria()
@@ -195,7 +219,9 @@ class UnidadeDeTrabalhoEmMemoria:
         self._profundidade = 0
 
     def _repositorios(self):
-        return (self.titulos, self.clientes, self.auditoria, self.usuarios, self.sessoes, self.permissoes)
+        return (
+            self.titulos, self.clientes, self.orcamentos, self.auditoria, self.usuarios, self.sessoes, self.permissoes
+        )
 
     def __enter__(self):
         if self._profundidade == 0:

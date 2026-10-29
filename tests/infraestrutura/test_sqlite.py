@@ -20,8 +20,10 @@ from remindme.dominio.titulo import EstadoTitulo, Titulo
 from remindme.dominio.usuario import Perfil, Usuario
 from remindme.infraestrutura.memoria import RelogioFixo
 from remindme.infraestrutura.sqlite import (
+    MIGRACOES,
     RepositorioTitulosSQLite,
     UnidadeDeTrabalhoSQLite,
+    _comandos,
     preparar_banco,
 )
 from tests.apoio import CIFRADOR_DE_TESTE
@@ -75,7 +77,23 @@ class RepositorioSQLiteCumpreOContrato(ContratoRepositorioTitulos, ComBanco):
 class Esquema(ComBanco):
     def test_ADR_007_migracao_e_idempotente_e_numerada(self):
         preparar_banco(self.caminho)
-        self.assertEqual(self.sql("PRAGMA user_version"), [(1,)])
+        self.assertEqual(self.sql("PRAGMA user_version"), [(len(MIGRACOES),)])
+
+    def test_ADR_007_banco_da_versao_1_e_atualizado_sem_perder_dados(self):
+        """Um banco criado antes da Spec 004 (por exemplo, uma demonstração) ganha as tabelas de orçamento."""
+        antigo = str(Path(self._pasta.name) / "antigo.db")
+        conexao = sqlite3.connect(antigo, isolation_level=None)
+        try:
+            for comando in _comandos(MIGRACOES[0]):
+                conexao.execute(comando)
+            conexao.execute("INSERT INTO clientes VALUES ('c9', 'Cliente Antigo', '52998224725', 'a@b.com')")
+            conexao.execute("PRAGMA user_version = 1")
+        finally:
+            conexao.close()
+        preparar_banco(antigo)
+        with UnidadeDeTrabalhoSQLite(antigo) as uow:
+            self.assertEqual(uow.clientes.obter("c9").nome, "Cliente Antigo")
+            self.assertEqual(uow.orcamentos.listar(), [])
 
     def test_OPEN_32_a_matriz_inicial_e_gravada_na_criacao(self):
         with self.uow as uow:

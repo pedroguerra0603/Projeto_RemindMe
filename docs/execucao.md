@@ -10,7 +10,7 @@ Na raiz do repositório:
 python3 iniciar.py demonstracao
 ```
 
-O comando cria o banco `remindme-demonstracao.db` com dados de exemplo, mostra no terminal os usuários e a senha gerada, e inicia o servidor. Abra **http://localhost:8000** no navegador e entre com um dos usuários:
+O comando cria o banco `remindme-demonstracao.db` com dados de exemplo, mostra no terminal os usuários e a senha gerada, inicia o servidor e abre o navegador em **http://127.0.0.1:8000**. Rodar o mesmo comando de novo reaproveita a demonstração. No Windows, dá para usar o atalho `RemindMe-demonstracao.bat`; sem Python, use o GitHub Codespaces. Os três caminhos e a solução de problemas estão em [`apresentacao.md`](apresentacao.md). Entre com um dos usuários:
 
 | Perfil | E-mail |
 |---|---|
@@ -27,7 +27,7 @@ A demonstração tem clientes e títulos em todos os estados: Aberto, Vencido (p
 
 ```
 python3 iniciar.py criar-administrador      # pergunta nome, e-mail e senha (OPEN-39)
-python3 iniciar.py                          # servidor em http://localhost:8000, banco remindme.db
+python3 iniciar.py                          # servidor em http://127.0.0.1:8000, banco remindme.db
 ```
 
 O Administrador cadastra os demais usuários pela tela **Usuários**, com senha provisória (OPEN-35), e ajusta a tela **Permissões**. As permissões fixadas por regra de negócio aparecem com cadeado e não mudam.

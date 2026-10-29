@@ -125,7 +125,7 @@ a:hover { color: var(--marca-forte); }
 .menu a[aria-current="page"] { background: var(--marca-suave); color: var(--marca); font-weight: 600; }
 .menu .icone { width: 18px; text-align: center; opacity: 0.85; }
 
-main { padding: 28px 32px 48px; max-width: 1180px; width: 100%; }
+main { padding: 28px 32px 48px; max-width: 1180px; width: 100%; min-width: 0; }
 
 .cabecalho { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
 .cabecalho h1 { margin: 0; font-size: 1.6rem; letter-spacing: -0.02em; }
@@ -299,7 +299,8 @@ button.discreto:hover { background: var(--superficie-2); color: var(--texto); }
 /* Telas pequenas */
 
 @media (max-width: 860px) {
-  .corpo { grid-template-columns: 1fr; }
+  .corpo { grid-template-columns: minmax(0, 1fr); }
+  .menu { min-width: 0; }
   .menu { border-right: 0; border-bottom: 1px solid var(--borda); padding: 8px 12px; overflow-x: auto; }
   .menu ul { grid-auto-flow: column; grid-auto-columns: max-content; }
   main { padding: 20px 16px 40px; }
@@ -310,3 +311,8 @@ button.discreto:hover { background: var(--superficie-2); color: var(--texto); }
   .indicadores { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .indicador .numero { font-size: 1.3rem; }
 }
+
+/* Orçamentos (Spec 004) */
+.cartao.destaque-alerta { border-left: 4px solid var(--alerta); }
+form.em-linha { display: inline; margin: 0; }
+td.numero form.em-linha button { margin-left: 4px; }
