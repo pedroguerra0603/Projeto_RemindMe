@@ -324,7 +324,7 @@ def pagina_painel(
         )
     if registros is not None:
         operacoes = [r for r in registros if r.campo != "sessão"]
-        itens = [_item_do_historico(r) for r in operacoes[-6:][::-1]]
+        itens = [_item_do_historico(r) for r in operacoes[-3:][::-1]]
         partes.append(
             h(
                 '<section class="cartao sem-borda-interna"><h2>Últimas operações</h2>{lista}<p class="secundario rodape-cartao"><a href="/auditoria">Ver toda a auditoria</a></p></section>',

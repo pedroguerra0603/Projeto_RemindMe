@@ -27,7 +27,8 @@ def _porcentagem(valor: Decimal, maximo: Decimal) -> Decimal:
 
 
 def colunas(itens: List[Item], formatar: Formato, titulo: str) -> Html:
-    """Colunas verticais lado a lado, com o valor em cima e o rótulo embaixo (ex.: recebido por mês)."""
+    """Colunas verticais lado a lado, com o valor em cima e o rótulo embaixo (ex.: recebido por mês).
+    Coluna com valor zero mostra só o rótulo, para o gráfico ficar limpo."""
     maximo = max((valor for _, valor, _ in itens), default=Decimal(0))
     if maximo <= 0:
         return h('<p class="vazio">{t}</p>', t=SEM_DADOS)
@@ -39,9 +40,9 @@ def colunas(itens: List[Item], formatar: Formato, titulo: str) -> Html:
         partes.append(
             h(
                 '<rect class="{cor}" x="{x}" y="{y}" width="{l}" height="{a}" rx="1"><title>{r}: {v}</title></rect>'
-                '<text class="valor" x="{m}" y="{ty}">{v}</text><text class="rotulo" x="{m}" y="57">{r}</text>',
+                '<text class="valor" x="{m}" y="{ty}">{escrito}</text><text class="rotulo" x="{m}" y="57">{r}</text>',
                 cor=cor, x=_n(meio - passo * Decimal("0.3")), y=_n(50 - altura), l=_n(passo * Decimal("0.6")),
-                a=_n(altura), r=rotulo, v=formatar(valor), m=_n(meio), ty=_n(48 - altura),
+                a=_n(altura), r=rotulo, v=formatar(valor), escrito=formatar(valor) if valor > 0 else "", m=_n(meio), ty=_n(48 - altura),
             )
         )
     return h(

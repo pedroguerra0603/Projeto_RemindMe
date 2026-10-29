@@ -19,6 +19,12 @@ class Desenho(unittest.TestCase):
         self.assertIn(">50<", svg)
         self.assertIn('aria-label="Recebido"', svg)
 
+    def test_coluna_com_valor_zero_mostra_so_o_rotulo(self):
+        svg = g.colunas([("jan", Decimal(0), "azul"), ("fev", Decimal(100), "azul")], texto, "Recebido")
+        self.assertIn('<text class="valor" x="25.00" y="48.00"></text>', svg)
+        self.assertIn(">jan<", svg)
+        self.assertIn(">100<", svg)
+
     def test_anel_divide_o_circulo_pela_parte_de_cada_item(self):
         svg = g.anel([("A", Decimal(3), "azul"), ("B", Decimal(1), "vermelho")], texto, "Carteira")
         self.assertIn('stroke-dasharray="75.00 25.00"', svg)
