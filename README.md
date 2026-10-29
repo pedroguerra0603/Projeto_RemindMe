@@ -25,7 +25,7 @@ Detalhes em [visão do produto](docs/visao.md).
 | 1. Problema e contexto | [Visão](docs/visao.md), [benchmark](docs/benchmark.md), [personas](docs/personas.md) | Escrito |
 | 2. Requisitos e modelagem | [Requisitos](docs/requisitos.md), [glossário](docs/glossario.md), [modelo de domínio](docs/modelo-dominio.md), [casos de uso](docs/casos-de-uso/README.md) | Escrito |
 | 3. Arquitetura e decisões | [Arquitetura](docs/arquitetura.md), [ADRs](docs/adr/README.md), [constituição](SPECS.md), [segurança](docs/seguranca.md) | Tecnologias decididas: Python 3.11 com a biblioteca padrão, interface WSGI (ADR-006) e SQLite (ADR-007) |
-| 4. Implementação e validação | [Mapa de specs](.specify/specs/mapa-de-specs.md), [specs](.specify/specs/), [qualidade](docs/qualidade/README.md), [rastreabilidade](docs/rastreabilidade.md) | Specs 001, 002, 003, 006, 013 e 017 verificadas: auditoria, acesso por perfil, clientes, títulos e pagamentos, consulta de auditoria e a interface web |
+| 4. Implementação e validação | [Mapa de specs](.specify/specs/mapa-de-specs.md), [specs](.specify/specs/), [qualidade](docs/qualidade/README.md), [rastreabilidade](docs/rastreabilidade.md) | Specs 001, 002, 003, 006, 013 e 017 verificadas: auditoria, acesso por perfil, clientes, títulos e pagamentos, consulta de auditoria e a interface web. Spec 004 (orçamentos e alçada de desconto) implementada e verificada, aguardando aprovação |
 
 As decisões que ainda dependem da equipe estão em [questões em aberto](.specify/open.md).
 

@@ -74,6 +74,29 @@ def preparar_demonstracao(sistema, senha: str) -> List[Tuple[str, str, str]]:
     pagar(titulo(mercadinho, "1890.00", -20, "Pix"), "1890.00", 18)
 
     titulos.verificar_vencimentos_automaticamente(hoje)
+
+    # Orçamentos (Spec 004): todos os estados desta spec, com um desconto aguardando a Dona.
+    orcamentos = servicos.orcamentos
+
+    def orcamento(cliente, condicao: str, itens, desconto: str = ""):
+        o = orcamentos.criar_orcamento(operador, cliente.id, condicao)
+        for descricao, quantidade, unitario in itens:
+            orcamentos.incluir_item(operador, o.id, descricao, Decimal(quantidade), Decimal(unitario))
+        if desconto:
+            o = orcamentos.informar_desconto(operador, o.id, Decimal(desconto))
+        return o
+
+    orcamento(
+        studio, "50% na aprovação e 50% na entrega",
+        [("Manutenção dos aparelhos de musculação", "1", "1800.00"), ("Visita técnica extra", "2", "150.00")], "5",
+    )
+    orcamento(padaria, "Boleto, 28 dias", [("Forno industrial, revisão completa", "1", "2600.00"), ("Peças de reposição", "4", "185.50")], "15")
+    aprovado = orcamento(oficina, "Pix à vista", [("Consultoria financeira, horas", "12", "220.00")], "18")
+    orcamentos.decidir_desconto(dona, aprovado.id, True, Decimal("12"))
+    cancelado_o = orcamento(mercadinho, "Boleto", [("Sistema de etiquetas", "1", "980.00")])
+    orcamentos.cancelar_orcamento(operador, cancelado_o.id, "Cliente desistiu da compra")
+    orcamentos.criar_orcamento(operador, sergio.id, "A combinar")
+
     for sessao in (admin, dona, operador):
         acesso.sair(sessao)
     pessoas = [(ADMINISTRADOR[0], ADMINISTRADOR[1], Perfil.ADMINISTRADOR.value)]

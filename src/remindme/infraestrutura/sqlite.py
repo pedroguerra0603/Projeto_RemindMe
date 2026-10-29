@@ -14,6 +14,7 @@ from typing import List, Optional
 from remindme.aplicacao.portas import Sessao
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.cliente import Cliente
+from remindme.dominio.orcamento import AprovacaoDesconto, EstadoOrcamento, ItemOrcamento, Orcamento, PendenciaDesconto
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.permissoes import MatrizPermissoes
 from remindme.dominio.titulo import EstadoTitulo, Pagamento, Titulo
@@ -88,7 +89,44 @@ CREATE TRIGGER auditoria_nao_se_exclui BEFORE DELETE ON auditoria
 BEGIN SELECT RAISE(ABORT, 'Registros de auditoria não são excluídos (RB-30).'); END;
 """
 
-MIGRACOES = [_ESQUEMA_1]
+# Spec 004: orçamentos, itens e decisões de desconto.
+_ESQUEMA_2 = """
+CREATE TABLE orcamentos (
+    id TEXT PRIMARY KEY,
+    cliente_id TEXT NOT NULL REFERENCES clientes (id),
+    elaborado_por TEXT NOT NULL REFERENCES usuarios (id),
+    criado_em TEXT NOT NULL,
+    estado TEXT NOT NULL,
+    condicao_pagamento TEXT,
+    percentual_desconto TEXT NOT NULL,
+    pendente_percentual TEXT,
+    pendente_solicitado_por TEXT,
+    pendente_alcada TEXT,
+    motivo_cancelamento TEXT
+);
+CREATE INDEX orcamentos_do_cliente ON orcamentos (cliente_id);
+CREATE TABLE itens_orcamento (
+    id TEXT PRIMARY KEY,
+    orcamento_id TEXT NOT NULL REFERENCES orcamentos (id),
+    ordem INTEGER NOT NULL,
+    descricao TEXT NOT NULL,
+    quantidade TEXT NOT NULL,
+    valor_unitario TEXT NOT NULL
+);
+CREATE INDEX itens_do_orcamento ON itens_orcamento (orcamento_id, ordem);
+CREATE TABLE decisoes_desconto (
+    orcamento_id TEXT NOT NULL REFERENCES orcamentos (id),
+    ordem INTEGER NOT NULL,
+    aprovado INTEGER NOT NULL,
+    percentual_solicitado TEXT NOT NULL,
+    percentual_aprovado TEXT,
+    decidido_por TEXT NOT NULL REFERENCES usuarios (id),
+    data TEXT NOT NULL,
+    PRIMARY KEY (orcamento_id, ordem)
+);
+"""
+
+MIGRACOES = [_ESQUEMA_1, _ESQUEMA_2]
 
 
 def preparar_banco(caminho: str) -> None:
@@ -141,6 +179,7 @@ class UnidadeDeTrabalhoSQLite:
         self._local = threading.local()
         self.titulos = RepositorioTitulosSQLite(self)
         self.clientes = RepositorioClientesSQLite(self)
+        self.orcamentos = RepositorioOrcamentosSQLite(self)
         self.auditoria = AuditoriaSQLite(self)
         self.usuarios = RepositorioUsuariosSQLite(self)
         self.sessoes = RepositorioSessoesSQLite(self)
@@ -296,6 +335,114 @@ class RepositorioClientesSQLite(_Repositorio):
     def _um(self, comando: str, chave: str) -> Optional[Cliente]:
         linha = self._executar(comando, (chave,)).fetchone()
         return Cliente(*linha) if linha else None
+
+
+class RepositorioOrcamentosSQLite(_Repositorio):
+    def obter(self, orcamento_id: str) -> Optional[Orcamento]:
+        linha = self._executar("SELECT * FROM orcamentos WHERE id = ?", (orcamento_id,)).fetchone()
+        return self._montar(linha, *self._filhos(orcamento_id)) if linha else None
+
+    def listar(self) -> List[Orcamento]:
+        linhas = self._executar("SELECT * FROM orcamentos ORDER BY criado_em DESC, id").fetchall()
+        itens, decisoes = self._filhos(None)
+        return [self._montar(l, itens.get(l["id"], []), decisoes.get(l["id"], [])) for l in linhas]
+
+    def salvar(self, orcamento: Orcamento) -> None:
+        pendencia = orcamento.pendencia
+        self._executar(
+            """INSERT INTO orcamentos (id, cliente_id, elaborado_por, criado_em, estado, condicao_pagamento,
+                   percentual_desconto, pendente_percentual, pendente_solicitado_por, pendente_alcada, motivo_cancelamento)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT (id) DO UPDATE SET estado = excluded.estado,
+                   condicao_pagamento = excluded.condicao_pagamento,
+                   percentual_desconto = excluded.percentual_desconto,
+                   pendente_percentual = excluded.pendente_percentual,
+                   pendente_solicitado_por = excluded.pendente_solicitado_por,
+                   pendente_alcada = excluded.pendente_alcada,
+                   motivo_cancelamento = excluded.motivo_cancelamento""",
+            (
+                orcamento.id,
+                orcamento.cliente_id,
+                orcamento.elaborado_por,
+                orcamento.criado_em.isoformat(),
+                orcamento.estado.name,
+                orcamento.condicao_pagamento,
+                str(orcamento.percentual_desconto),
+                str(pendencia.percentual_solicitado) if pendencia else None,
+                pendencia.solicitado_por if pendencia else None,
+                str(pendencia.alcada) if pendencia else None,
+                orcamento.motivo_cancelamento,
+            ),
+        )
+        self._executar("DELETE FROM itens_orcamento WHERE orcamento_id = ?", (orcamento.id,))
+        for ordem, item in enumerate(orcamento.itens):
+            self._executar(
+                """INSERT INTO itens_orcamento (id, orcamento_id, ordem, descricao, quantidade, valor_unitario)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (item.id, orcamento.id, ordem, item.descricao, str(item.quantidade), str(item.valor_unitario)),
+            )
+        # As decisões só se acrescentam: a já gravada não muda.
+        for ordem, d in enumerate(orcamento.decisoes):
+            self._executar(
+                """INSERT OR IGNORE INTO decisoes_desconto (orcamento_id, ordem, aprovado, percentual_solicitado,
+                       percentual_aprovado, decidido_por, data) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    orcamento.id,
+                    ordem,
+                    int(d.aprovado),
+                    str(d.percentual_solicitado),
+                    None if d.percentual_aprovado is None else str(d.percentual_aprovado),
+                    d.decidido_por,
+                    d.data.isoformat(),
+                ),
+            )
+
+    def _filhos(self, orcamento_id: Optional[str]):
+        onde, parametros = ("WHERE orcamento_id = ?", (orcamento_id,)) if orcamento_id else ("", ())
+        itens, decisoes = {}, {}
+        for l in self._executar(f"SELECT * FROM itens_orcamento {onde} ORDER BY orcamento_id, ordem", parametros):
+            itens.setdefault(l["orcamento_id"], []).append(
+                ItemOrcamento(l["id"], l["descricao"], Decimal(l["quantidade"]), Decimal(l["valor_unitario"]))
+            )
+        for l in self._executar(f"SELECT * FROM decisoes_desconto {onde} ORDER BY orcamento_id, ordem", parametros):
+            decisoes.setdefault(l["orcamento_id"], []).append(
+                AprovacaoDesconto(
+                    aprovado=bool(l["aprovado"]),
+                    percentual_solicitado=Decimal(l["percentual_solicitado"]),
+                    percentual_aprovado=None if l["percentual_aprovado"] is None else Decimal(l["percentual_aprovado"]),
+                    decidido_por=l["decidido_por"],
+                    data=date.fromisoformat(l["data"]),
+                )
+            )
+        if orcamento_id:
+            return itens.get(orcamento_id, []), decisoes.get(orcamento_id, [])
+        return itens, decisoes
+
+    @staticmethod
+    def _montar(linha, itens, decisoes) -> Orcamento:
+        pendencia = None
+        if linha["pendente_percentual"] is not None:
+            pendencia = PendenciaDesconto(
+                Decimal(linha["pendente_percentual"]), linha["pendente_solicitado_por"], Decimal(linha["pendente_alcada"])
+            )
+        return Orcamento(
+            id=linha["id"],
+            cliente_id=linha["cliente_id"],
+            elaborado_por=linha["elaborado_por"],
+            criado_em=date.fromisoformat(linha["criado_em"]),
+            estado=EstadoOrcamento[linha["estado"]],
+            condicao_pagamento=linha["condicao_pagamento"],
+            percentual_desconto=Decimal(linha["percentual_desconto"]),
+            itens=list(itens),
+            pendencia=pendencia,
+            decisoes=list(decisoes),
+            motivo_cancelamento=linha["motivo_cancelamento"],
+        )
+
+    def _executar(self, comando: str, parametros=()):
+        cursor = super()._executar(comando, parametros)
+        cursor.row_factory = sqlite3.Row
+        return cursor
 
 
 class AuditoriaSQLite(_Repositorio):

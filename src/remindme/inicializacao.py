@@ -25,6 +25,7 @@ from remindme.aplicacao.senhas import CifradorScrypt
 from remindme.aplicacao.servico_acesso import ServicoAcesso
 from remindme.aplicacao.servico_auditoria import ServicoAuditoria
 from remindme.aplicacao.servico_clientes import ServicoClientes
+from remindme.aplicacao.servico_orcamentos import ServicoOrcamentos
 from remindme.aplicacao.servico_titulos import ServicoTitulos
 from remindme.apresentacao.web.aplicacao_web import AplicacaoWeb, Servicos
 from remindme.dominio.erros import OperacaoRecusada
@@ -68,6 +69,7 @@ def montar(
         clientes=ServicoClientes(uow, relogio, erros, autorizacao),
         titulos=ServicoTitulos(uow, uow.clientes, relogio, erros, autorizacao),
         auditoria=ServicoAuditoria(uow, relogio, erros, autorizacao),
+        orcamentos=ServicoOrcamentos(uow, relogio, erros, autorizacao),
     )
     agendador = AgendadorDeVencimentos(servicos.titulos, relogio)
     return Sistema(servicos, AplicacaoWeb(servicos, relogio, erros), agendador, uow, relogio)

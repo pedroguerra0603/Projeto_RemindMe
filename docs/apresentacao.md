@@ -41,6 +41,15 @@ Serve para computador de laboratório sem Python ou sem permissão para instalar
 
 Por padrão, só você, logado no GitHub, abre esse endereço. Para o professor abrir no computador dele, na aba **Ports**, clique com o botão direito na porta 8000 → **Port Visibility → Public** e envie o endereço. Volte para **Private** ao terminar. O Codespaces desliga sozinho depois de 30 minutos parado; a conta pessoal gratuita tem uma cota mensal de horas.
 
+## Roteiro sugerido (cerca de 5 minutos)
+
+1. **Diego (Operador Financeiro):** abra **Orçamentos → Novo orçamento**, escolha um cliente, inclua dois itens e veja os valores recalculados. Informe 8% de desconto (dentro da alçada de 10%) e depois 20%: o orçamento passa a **Pendente de Alçada**.
+2. **Carla (Dona):** o painel mostra **Descontos aguardando sua decisão**. Abra o orçamento e aprove um percentual menor, por exemplo 15%. O orçamento volta a Rascunho com o desconto aprovado.
+3. **Carla:** em **Títulos**, registre um pagamento parcial num título Vencido e estorne um pagamento: só a Dona estorna.
+4. **Helena (Contadora):** ela consulta títulos e auditoria, mas não vê Orçamentos e não altera nada.
+5. **Admin:** em **Permissões**, mostre que as regras fixas (como "só a Dona estorna") têm cadeado e não mudam.
+6. **Auditoria:** cada passo acima aparece com quem fez, quando, o valor anterior e o novo.
+
 ## "Não é possível acessar esse site"
 
 Esse erro do navegador quer dizer que nada respondeu no endereço. As causas mais comuns:

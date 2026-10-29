@@ -21,6 +21,7 @@ from remindme.aplicacao.portas import RegistroErro, RegistroErros, Relogio
 from remindme.aplicacao.servico_acesso import ServicoAcesso
 from remindme.aplicacao.servico_auditoria import FiltroAuditoria, ServicoAuditoria
 from remindme.aplicacao.servico_clientes import ServicoClientes
+from remindme.aplicacao.servico_orcamentos import FiltroOrcamentos, ServicoOrcamentos
 from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroTitulos, ServicoTitulos
 from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
@@ -28,6 +29,7 @@ from remindme.apresentacao.web import paginas as p
 from remindme.apresentacao.web.html import Html
 from remindme.dominio.erros import OperacaoNegada, OperacaoRecusada
 from remindme.dominio.operacoes import Operacao
+from remindme.dominio.orcamento import EstadoOrcamento
 from remindme.dominio.titulo import EstadoTitulo
 from remindme.dominio.usuario import Perfil
 
@@ -55,6 +57,15 @@ AVISOS = {
     "perfil": ("sucesso", "Perfil alterado. Vale na próxima operação do usuário."),
     "inativacao": ("sucesso", "Usuário inativado. As sessões dele foram encerradas."),
     "permissao": ("sucesso", "Permissão atualizada. Vale na próxima operação dos usuários do perfil."),
+    "orcamento": ("sucesso", "Orçamento criado em Rascunho. Inclua os itens."),
+    "item": ("sucesso", "Item incluído. Os valores foram recalculados."),
+    "item-alterado": ("sucesso", "Item alterado. Os valores foram recalculados."),
+    "item-removido": ("sucesso", "Item removido. Os valores foram recalculados."),
+    "desconto": ("sucesso", "Desconto aplicado. Os valores foram recalculados."),
+    "desconto-pendente": ("info", "O desconto passa da sua alçada: o orçamento aguarda a decisão do Dono."),
+    "condicao": ("sucesso", "Condição de pagamento atualizada."),
+    "decisao": ("sucesso", "Decisão registrada. O orçamento voltou a Rascunho."),
+    "orcamento-cancelado": ("sucesso", "Orçamento cancelado."),
 }
 
 _CORRELACAO = re.compile(r"Identificador de correlação: ([0-9a-f]+)")
@@ -66,6 +77,7 @@ class Servicos:
     clientes: ServicoClientes
     titulos: ServicoTitulos
     auditoria: ServicoAuditoria
+    orcamentos: Optional[ServicoOrcamentos] = None
 
 
 class CorpoGrandeDemais(Exception):
@@ -159,6 +171,19 @@ class AplicacaoWeb:
         r.append(("POST", f"/titulos/(?P<titulo_id>{ID})/pagamentos/(?P<pagamento_id>{ID})/estorno", self._estorno, protegida))
         r.append(("GET", f"/titulos/(?P<titulo_id>{ID})/cancelamento", self._cancelamento_pagina, protegida))
         r.append(("POST", f"/titulos/(?P<titulo_id>{ID})/cancelamento", self._cancelamento, protegida))
+        r.append(("GET", "/orcamentos", self._orcamentos, protegida))
+        r.append(("GET", "/orcamentos/novo", self._orcamento_novo_pagina, protegida))
+        r.append(("POST", "/orcamentos/novo", self._orcamento_novo, protegida))
+        r.append(("GET", f"/orcamentos/(?P<orcamento_id>{ID})", self._orcamento, protegida))
+        r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/itens", self._item_novo, protegida))
+        r.append(("GET", f"/orcamentos/(?P<orcamento_id>{ID})/itens/(?P<item_id>{ID})", self._item_pagina, protegida))
+        r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/itens/(?P<item_id>{ID})", self._item_alterar, protegida))
+        r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/itens/(?P<item_id>{ID})/remocao", self._item_remover, protegida))
+        r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/desconto", self._desconto, protegida))
+        r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/condicao", self._condicao, protegida))
+        r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/decisao", self._decisao, protegida))
+        r.append(("GET", f"/orcamentos/(?P<orcamento_id>{ID})/cancelamento", self._orcamento_cancelamento_pagina, protegida))
+        r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/cancelamento", self._orcamento_cancelamento, protegida))
         r.append(("GET", "/auditoria", self._auditoria, protegida))
         r.append(("GET", "/usuarios", self._usuarios, protegida))
         r.append(("GET", "/usuarios/novo", self._usuario_novo_pagina, protegida))
@@ -291,7 +316,14 @@ class AplicacaoWeb:
             self._s.auditoria.consultar(sessao, FiltroAuditoria()) if ctx.pode(Operacao.CONSULTAR_AUDITORIA) else None
         )
         usuarios = self._s.acesso.listar_usuarios(sessao) if ctx.pode(Operacao.ADMINISTRAR_USUARIOS) else None
-        pagina = p.pagina_painel(ctx, visoes, self._nomes_clientes(sessao, ctx), registros, usuarios, _aviso(req))
+        pendentes = (
+            self._s.orcamentos.pendentes_de_decisao(sessao)
+            if self._s.orcamentos and ctx.pode(Operacao.APROVAR_DESCONTO)
+            else None
+        )
+        pagina = p.pagina_painel(
+            ctx, visoes, self._nomes_clientes(sessao, ctx), registros, usuarios, _aviso(req), pendentes
+        )
         return Resposta.pagina(pagina)
 
     # Clientes (Spec 003)
@@ -477,6 +509,179 @@ class AplicacaoWeb:
         vencidos = self._s.titulos.verificar_vencimentos(sessao, ctx.hoje)
         return Resposta.redirecionar("/titulos?" + urlencode({"aviso": "vencimentos", "quantidade": len(vencidos)}))
 
+    # Orçamentos (Spec 004)
+
+    def _orcamentos(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        valores = {chave: req.consulta.get(chave, "").strip() for chave in ("cliente", "estado", "de", "ate")}
+        erros: Dict[str, str] = {}
+        de = _data_do_filtro(valores, "de", erros)
+        ate = _data_do_filtro(valores, "ate", erros)
+        estado = EstadoOrcamento[valores["estado"]] if valores["estado"] in EstadoOrcamento.__members__ else None
+        filtro = FiltroOrcamentos(cliente_id=valores["cliente"] or None, estado=estado, criado_de=de, criado_ate=ate)
+        orcamentos = self._s.orcamentos.consultar_orcamentos(sessao, filtro)
+        pagina = p.pagina_orcamentos(ctx, orcamentos, self._nomes_clientes(sessao, ctx), valores, erros, _aviso(req))
+        return Resposta.pagina(pagina)
+
+    def _orcamento_novo_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        self._s.acesso.exigir(sessao, Operacao.CONDUZIR_ORCAMENTO)
+        valores = {"cliente": req.consulta.get("cliente", "")}
+        return Resposta.pagina(p.pagina_orcamento_formulario(ctx, self._nomes_clientes(sessao, ctx), valores, {}))
+
+    def _orcamento_novo(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        valores = _valores(req, "cliente", "condicao")
+        try:
+            orcamento = self._s.orcamentos.criar_orcamento(sessao, valores["cliente"], valores["condicao"])
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            pagina = p.pagina_orcamento_formulario(ctx, self._nomes_clientes(sessao, ctx), valores, _erros(recusa))
+            return Resposta.pagina(pagina, 400)
+        return Resposta.redirecionar(f"/orcamentos/{orcamento.id}?aviso=orcamento")
+
+    def _orcamento(
+        self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str,
+        formulario: str = "", valores: Optional[Dict[str, str]] = None, erros: Optional[Dict[str, str]] = None,
+    ) -> Resposta:
+        orcamento = self._s.orcamentos.obter_orcamento(sessao, orcamento_id)
+        nomes = self._nomes_clientes(sessao, ctx)
+        pagina = p.pagina_orcamento(
+            ctx,
+            orcamento,
+            nomes.get(orcamento.cliente_id, "Cliente"),
+            self._nomes_usuarios(sessao, ctx),
+            formulario,
+            valores or {},
+            erros or {},
+            self._historico(sessao, ctx, f"orcamento {orcamento.id}"),
+            None if erros else _aviso(req),
+        )
+        return Resposta.pagina(pagina, 400 if erros else 200)
+
+    def _item_novo(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str) -> Resposta:
+        valores = _valores(req, "descricao", "quantidade", "valor_unitario")
+        erros: Dict[str, str] = {}
+        quantidade = _numero_do_formulario(valores, "quantidade", "Informe a quantidade, por exemplo 2 ou 1,5.", erros)
+        valor = _numero_do_formulario(valores, "valor_unitario", "Informe um valor em reais, por exemplo 1.234,56.", erros)
+        try:
+            # Mesmo com número ilegível, o domínio confere os demais campos: a recusa mostra todos (RNF-14).
+            self._s.orcamentos.incluir_item(sessao, orcamento_id, valores["descricao"], quantidade, valor)
+            return Resposta.redirecionar(f"/orcamentos/{orcamento_id}?aviso=item")
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            erros = {**_erros(recusa), **erros}
+        return self._orcamento(req, sessao, ctx, orcamento_id, "item", valores, erros)
+
+    def _item_pagina(
+        self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str, item_id: str,
+        valores: Optional[Dict[str, str]] = None, erros: Optional[Dict[str, str]] = None,
+    ) -> Resposta:
+        self._s.acesso.exigir(sessao, Operacao.CONDUZIR_ORCAMENTO)
+        orcamento = self._s.orcamentos.obter_orcamento(sessao, orcamento_id)
+        item = next((i for i in orcamento.itens if i.id == item_id), None)
+        if item is None:
+            return self._erro(404, "Item não encontrado", "O item não existe neste orçamento.")
+        if valores is None:
+            valores = {
+                "descricao": item.descricao,
+                "quantidade": f.numero_para_campo(item.quantidade),
+                "valor_unitario": f.valor_para_campo(item.valor_unitario),
+            }
+        return Resposta.pagina(p.pagina_item_formulario(ctx, orcamento, item, valores, erros or {}), 400 if erros else 200)
+
+    def _item_alterar(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str, item_id: str) -> Resposta:
+        valores = _valores(req, "descricao", "quantidade", "valor_unitario")
+        erros: Dict[str, str] = {}
+        quantidade = _numero_do_formulario(valores, "quantidade", "Informe a quantidade, por exemplo 2 ou 1,5.", erros)
+        valor = _numero_do_formulario(valores, "valor_unitario", "Informe um valor em reais, por exemplo 1.234,56.", erros)
+        try:
+            self._s.orcamentos.alterar_item(sessao, orcamento_id, item_id, valores["descricao"], quantidade, valor)
+            return Resposta.redirecionar(f"/orcamentos/{orcamento_id}?aviso=item-alterado")
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            erros = {**_erros(recusa), **erros}
+        return self._item_pagina(req, sessao, ctx, orcamento_id, item_id, valores, erros)
+
+    def _item_remover(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str, item_id: str) -> Resposta:
+        try:
+            self._s.orcamentos.remover_item(sessao, orcamento_id, item_id)
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return self._orcamento(req, sessao, ctx, orcamento_id, "item", {}, _erros(recusa))
+        return Resposta.redirecionar(f"/orcamentos/{orcamento_id}?aviso=item-removido")
+
+    def _desconto(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str) -> Resposta:
+        valores = _valores(req, "percentual")
+        erros: Dict[str, str] = {}
+        percentual = _numero_do_formulario(valores, "percentual", "Informe o desconto em percentual, por exemplo 5 ou 7,5.", erros)
+        if not erros:
+            try:
+                orcamento = self._s.orcamentos.informar_desconto(sessao, orcamento_id, percentual)
+                aviso = "desconto-pendente" if orcamento.estado is EstadoOrcamento.PENDENTE_DE_ALCADA else "desconto"
+                return Resposta.redirecionar(f"/orcamentos/{orcamento_id}?aviso={aviso}")
+            except OperacaoNegada:
+                raise
+            except OperacaoRecusada as recusa:
+                erros = _erros(recusa)
+        return self._orcamento(req, sessao, ctx, orcamento_id, "desconto", valores, erros)
+
+    def _condicao(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str) -> Resposta:
+        valores = _valores(req, "condicao")
+        try:
+            self._s.orcamentos.alterar_condicao(sessao, orcamento_id, valores["condicao"])
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return self._orcamento(req, sessao, ctx, orcamento_id, "condicao", valores, _erros(recusa))
+        return Resposta.redirecionar(f"/orcamentos/{orcamento_id}?aviso=condicao")
+
+    def _decisao(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str) -> Resposta:
+        valores = _valores(req, "acao", "percentual")
+        erros: Dict[str, str] = {}
+        percentual = None
+        if valores["percentual"]:
+            percentual = _numero_do_formulario(valores, "percentual", "Informe o desconto em percentual, por exemplo 5 ou 7,5.", erros)
+        if not erros:
+            try:
+                self._s.orcamentos.decidir_desconto(sessao, orcamento_id, valores["acao"] == "aprovar", percentual)
+                return Resposta.redirecionar(f"/orcamentos/{orcamento_id}?aviso=decisao")
+            except OperacaoNegada:
+                raise
+            except OperacaoRecusada as recusa:
+                erros = _erros(recusa)
+        return self._orcamento(req, sessao, ctx, orcamento_id, "decisao", valores, erros)
+
+    def _orcamento_cancelamento_pagina(
+        self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str,
+        valores: Optional[Dict[str, str]] = None, erros: Optional[Dict[str, str]] = None,
+    ) -> Resposta:
+        self._s.acesso.exigir(sessao, Operacao.CONDUZIR_ORCAMENTO)
+        orcamento = self._s.orcamentos.obter_orcamento(sessao, orcamento_id)
+        pagina = p.pagina_motivo(
+            ctx,
+            "Cancelar orçamento",
+            f"Orçamento de {f.moeda(orcamento.valor_liquido)}, criado em {f.data(orcamento.criado_em)}. O cancelamento é definitivo.",
+            f"/orcamentos/{orcamento_id}/cancelamento",
+            f"/orcamentos/{orcamento_id}",
+            "Cancelar orçamento",
+            valores or {},
+            erros or {},
+            "orcamentos",
+        )
+        return Resposta.pagina(pagina, 400 if erros else 200)
+
+    def _orcamento_cancelamento(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str) -> Resposta:
+        valores = _valores(req, "motivo")
+        try:
+            self._s.orcamentos.cancelar_orcamento(sessao, orcamento_id, valores["motivo"])
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return self._orcamento_cancelamento_pagina(req, sessao, ctx, orcamento_id, valores, _erros(recusa))
+        return Resposta.redirecionar(f"/orcamentos/{orcamento_id}?aviso=orcamento-cancelado")
+
     # Auditoria (Spec 013)
 
     def _auditoria(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
@@ -570,6 +775,12 @@ class AplicacaoWeb:
             return {}
         return {c.id: c.nome for c in self._s.clientes.consultar_clientes(sessao)}
 
+    def _nomes_usuarios(self, sessao: str, ctx: p.Contexto) -> Dict[str, str]:
+        """Quem elaborou e quem decidiu. Os nomes vêm dos responsáveis da auditoria, quando o perfil a consulta."""
+        if not ctx.pode(Operacao.CONSULTAR_AUDITORIA):
+            return {ctx.usuario.id: ctx.usuario.nome}
+        return dict(self._s.auditoria.opcoes_de_filtro(sessao).responsaveis)
+
     def _historico(self, sessao: str, ctx: p.Contexto, registro: str):
         if not ctx.pode(Operacao.CONSULTAR_AUDITORIA):
             return None
@@ -622,6 +833,16 @@ def _valor_do_formulario(valores: Dict[str, str], erros: Dict[str, str]):
     if valor is None:
         erros["valor"] = "Informe um valor em reais, por exemplo 1.234,56."
     return valor
+
+
+def _numero_do_formulario(valores: Dict[str, str], chave: str, mensagem: str, erros: Dict[str, str]):
+    """Quantidade, valor unitário ou percentual no formato brasileiro (1.234,56). A regra fica no domínio."""
+    if not valores[chave]:
+        return None
+    numero = f.ler_valor(valores[chave].replace("%", ""))
+    if numero is None:
+        erros[chave] = mensagem
+    return numero
 
 
 def _data_do_filtro(valores: Dict[str, str], chave: str, erros: Dict[str, str]):
