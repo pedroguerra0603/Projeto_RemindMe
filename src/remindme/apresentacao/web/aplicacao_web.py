@@ -37,11 +37,15 @@ COOKIE_SESSAO = "remindme_sessao"
 COOKIE_ENTRADA = "remindme_entrada"
 LIMITE_DO_CORPO = 64 * 1024
 ESTATICO = Path(__file__).resolve().parent.joinpath("estatico")
-ARQUIVOS_ESTATICOS = {"estilo.css": "text/css; charset=utf-8", "icone.svg": "image/svg+xml"}
+ARQUIVOS_ESTATICOS = {
+    "estilo.css": "text/css; charset=utf-8",
+    "icone.svg": "image/svg+xml",
+    "tema.js": "text/javascript; charset=utf-8",
+}
 ID = "[0-9a-f]{32}"
 
 POLITICA_DE_CONTEUDO = (
-    "default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self'; "
+    "default-src 'none'; style-src 'self'; img-src 'self'; script-src 'self'; form-action 'self'; "
     "frame-ancestors 'none'; base-uri 'none'"
 )
 
@@ -321,8 +325,15 @@ class AplicacaoWeb:
             if self._s.orcamentos and ctx.pode(Operacao.APROVAR_DESCONTO)
             else None
         )
+        # Dados só dos gráficos (o resto o painel já busca acima).
+        pagamentos = self._s.titulos.pagamentos_recebidos(sessao) if ctx.usuario.perfil is Perfil.DONO else None
+        orcamentos = (
+            self._s.orcamentos.consultar_orcamentos(sessao)
+            if self._s.orcamentos and ctx.usuario.perfil is Perfil.OPERADOR_FINANCEIRO
+            else None
+        )
         pagina = p.pagina_painel(
-            ctx, visoes, self._nomes_clientes(sessao, ctx), registros, usuarios, _aviso(req), pendentes
+            ctx, visoes, self._nomes_clientes(sessao, ctx), registros, usuarios, _aviso(req), pendentes, pagamentos, orcamentos
         )
         return Resposta.pagina(pagina)
 

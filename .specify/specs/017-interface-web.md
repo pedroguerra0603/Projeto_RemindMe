@@ -27,7 +27,7 @@
 
 ### Incluído
 
-- Servidor web local, iniciado com `python3 -m remindme`, com páginas HTML e sem JavaScript (ADR-006).
+- Servidor web local, iniciado com `python3 -m remindme`, com páginas HTML e sem JavaScript (ADR-006). Exceção, de 2026-10-29: um script do próprio site, `tema.js`, só para o botão de tema claro/escuro; o resto funciona sem JavaScript.
 - Persistência em SQLite, com transação real e auditoria que o banco não deixa alterar nem excluir (ADR-007).
 - Relógio do sistema, com a data de referência de America/Sao_Paulo e os horários em UTC (OPEN-26).
 - Verificação automática de vencimento na inicialização e a cada hora, no próprio processo (OPEN-13, OPEN-48).

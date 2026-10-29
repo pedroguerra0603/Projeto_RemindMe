@@ -1,11 +1,13 @@
 """Páginas HTML da interface web (Spec 017). Só montam o que os serviços devolvem; nenhuma regra aqui (INV-1)."""
 
 from dataclasses import dataclass
-from datetime import date
+from collections import Counter
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Dict, FrozenSet, Iterable, List, Optional, Sequence, Tuple
 
 from remindme.apresentacao.web import formatos as f
+from remindme.apresentacao.web import graficos as g
 from remindme.apresentacao.web.html import Html, e, h, juntar
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.orcamento import EstadoOrcamento
@@ -72,6 +74,7 @@ def _documento_html(titulo: str, corpo: Html) -> Html:
 <title>{titulo} · RemindMe</title>
 <link rel="icon" href="/estatico/icone.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/estatico/estilo.css">
+<script src="/estatico/tema.js"></script>
 </head>
 <body>
 {corpo}
@@ -102,6 +105,7 @@ def layout(titulo: str, conteudo: Html, ctx: Contexto, secao: str = "", aviso: O
   <div class="quem">
     <span class="nome-completo"><strong>{nome}</strong></span>
     <span class="perfil">{perfil}</span>
+    <button id="trocar-tema" class="discreto botao-tema" type="button" hidden aria-label="Trocar entre tema claro e escuro" title="Tema claro/escuro">Tema</button>
     <form method="post" action="/sair">{protecao}<button class="discreto" type="submit">Sair</button></form>
   </div>
 </header>
@@ -287,6 +291,8 @@ def pagina_painel(
     usuarios: Optional[List[Usuario]],
     aviso: Optional[Tuple[str, str]] = None,
     pendentes: Optional[list] = None,
+    pagamentos: Optional[list] = None,
+    orcamentos: Optional[list] = None,
 ) -> Html:
     partes: List[Html] = []
     acoes = []
@@ -301,6 +307,7 @@ def pagina_painel(
 
     if pendentes:
         partes.append(_cartao_pendentes(pendentes, nomes_clientes))
+    partes.append(_graficos_do_perfil(ctx, visoes or [], registros or [], pagamentos or [], orcamentos or []))
     if visoes is not None:
         partes.append(_resumo_financeiro(visoes, nomes_clientes, ctx))
     if usuarios is not None:
@@ -317,7 +324,7 @@ def pagina_painel(
         )
     if registros is not None:
         operacoes = [r for r in registros if r.campo != "sessão"]
-        itens = [_item_do_historico(r) for r in operacoes[-6:][::-1]]
+        itens = [_item_do_historico(r) for r in operacoes[-3:][::-1]]
         partes.append(
             h(
                 '<section class="cartao sem-borda-interna"><h2>Últimas operações</h2>{lista}<p class="secundario rodape-cartao"><a href="/auditoria">Ver toda a auditoria</a></p></section>',
@@ -327,6 +334,111 @@ def pagina_painel(
     if visoes is None and usuarios is None and registros is None:
         partes.append(caixa_de_aviso("info", "O seu perfil ainda não tem funcionalidades nesta versão."))
     return layout("Painel", juntar(partes), ctx, "painel", aviso)
+
+
+# Gráficos do painel: um conjunto por perfil, com os dados que o painel já tem.
+
+MESES = ("jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez")
+
+
+def _cartao_grafico(titulo: str, grafico: Html) -> Html:
+    return h('<section class="cartao cartao-grafico"><h2>{t}</h2>{g}</section>', t=titulo, g=grafico)
+
+
+def _graficos_do_perfil(ctx: Contexto, visoes: list, registros: list, pagamentos: list, orcamentos: list) -> Html:
+    perfil = ctx.usuario.perfil
+    if perfil is Perfil.DONO:
+        cartoes = [
+            _cartao_grafico("Recebido nos últimos 6 meses", g.colunas(_recebido_por_mes(pagamentos, ctx.hoje), f.moeda_curta, "Recebido por mês")),
+            _cartao_grafico("Carteira de títulos", g.anel(_carteira(visoes), f.moeda, "Carteira de títulos por situação")),
+        ]
+    elif perfil is Perfil.ADMINISTRADOR:
+        acoes = _acoes_dos_ultimos_30_dias(registros, ctx.hoje)
+        cartoes = [
+            _cartao_grafico("Ações por usuário (30 dias)", g.barras(_contar(acoes, lambda r: r.responsavel, "azul"), _vezes, "Ações por usuário")),
+            _cartao_grafico("Ações mais comuns (30 dias)", g.barras(_contar(acoes, lambda r: r.operacao, "laranja")[:5], _vezes, "Ações mais comuns")),
+        ]
+    elif perfil is Perfil.OPERADOR_FINANCEIRO:
+        cartoes = [
+            _cartao_grafico("Meus orçamentos por estado", g.barras(_orcamentos_por_estado(orcamentos), _vezes, "Orçamentos por estado")),
+            _cartao_grafico("A receber nos próximos 7 dias", g.colunas(_proximos_7_dias(visoes, ctx.hoje), f.moeda_curta, "A receber por dia")),
+        ]
+    elif perfil is Perfil.CONTADOR:
+        cartoes = [_cartao_grafico("Carteira por atraso", g.barras(_faixas_de_atraso(visoes, ctx.hoje), f.moeda, "Saldo por faixa de atraso"))]
+    else:
+        return Html("")
+    return h('<div class="grade-2">{c}</div>', c=juntar(cartoes))
+
+
+def _vezes(quantidade: Decimal) -> str:
+    return f"{quantidade:.0f}"
+
+
+def _recebido_por_mes(pagamentos: list, hoje: date) -> list:
+    """Os 6 meses até o atual, do mais antigo ao mais recente."""
+    meses = []
+    ano, mes = hoje.year, hoje.month
+    for _ in range(6):
+        meses.insert(0, (ano, mes))
+        ano, mes = (ano, mes - 1) if mes > 1 else (ano - 1, 12)
+    return [
+        (MESES[m - 1], sum((p.valor for p in pagamentos if (p.data.year, p.data.month) == (a, m)), Decimal("0.00")), "azul")
+        for a, m in meses
+    ]
+
+
+def _carteira(visoes: list) -> list:
+    def soma(estado, campo):
+        return sum((getattr(v, campo) for v in visoes if v.estado is estado), Decimal("0.00"))
+
+    return [
+        ("A receber em dia", soma(EstadoTitulo.ABERTO, "saldo"), "azul"),
+        ("Vencido", soma(EstadoTitulo.VENCIDO, "saldo"), "vermelho"),
+        ("Recebido (baixado)", soma(EstadoTitulo.BAIXADO, "valor"), "verde"),
+    ]
+
+
+def _acoes_dos_ultimos_30_dias(registros: list, hoje: date) -> list:
+    """Ações de pessoas (sem entradas e saídas do sistema e sem rotinas automáticas)."""
+    inicio = hoje - timedelta(days=30)
+    return [r for r in registros if not r.automatica and r.campo != "sessão" and r.data_hora.date() >= inicio]
+
+
+def _contar(registros: list, chave, cor: str) -> list:
+    return [(nome, Decimal(total), cor) for nome, total in Counter(chave(r) for r in registros).most_common()]
+
+
+def _orcamentos_por_estado(orcamentos: list) -> list:
+    cores = {
+        EstadoOrcamento.RASCUNHO: "azul",
+        EstadoOrcamento.PENDENTE_DE_ALCADA: "laranja",
+        EstadoOrcamento.CANCELADO: "cinza",
+    }
+    return [(estado.value, Decimal(sum(1 for o in orcamentos if o.estado is estado)), cor) for estado, cor in cores.items()]
+
+
+def _proximos_7_dias(visoes: list, hoje: date) -> list:
+    dias = [hoje + timedelta(days=n) for n in range(7)]
+    return [
+        (dia.strftime("%d/%m"), sum((v.saldo for v in visoes if v.estado is EstadoTitulo.ABERTO and v.vencimento == dia), Decimal("0.00")), "azul")
+        for dia in dias
+    ]
+
+
+def _faixas_de_atraso(visoes: list, hoje: date) -> list:
+    def soma(minimo, maximo):
+        return sum(
+            (v.saldo for v in visoes if v.estado is EstadoTitulo.VENCIDO and minimo <= (hoje - v.vencimento).days <= maximo),
+            Decimal("0.00"),
+        )
+
+    em_dia = sum((v.saldo for v in visoes if v.estado is EstadoTitulo.ABERTO), Decimal("0.00"))
+    return [
+        ("Em dia", em_dia, "azul"),
+        ("Até 30 dias", soma(1, 30), "laranja"),
+        ("31 a 60 dias", soma(31, 60), "vermelho"),
+        ("Mais de 60 dias", soma(61, 100000), "vermelho"),
+    ]
 
 
 def _resumo_financeiro(visoes: list, nomes_clientes: Dict[str, str], ctx: Contexto) -> Html:

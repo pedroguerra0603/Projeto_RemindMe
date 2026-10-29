@@ -16,7 +16,7 @@ from remindme.aplicacao.portas import ConsultaClientes, RegistroErros, Relogio, 
 from remindme.aplicacao.tempo import data_local
 from remindme.dominio.erros import OperacaoRecusada
 from remindme.dominio.operacoes import Operacao
-from remindme.dominio.titulo import EstadoTitulo, PedidoDePagamentoRepetido, Titulo
+from remindme.dominio.titulo import EstadoTitulo, Pagamento, PedidoDePagamentoRepetido, Titulo
 
 # OPEN-37, decidida em 2026-10-23: até a Spec 014, a antecedência de próximo do vencimento é de 5 dias.
 ANTECEDENCIA_PADRAO_DIAS = 5
@@ -162,6 +162,11 @@ class ServicoTitulos:
             for t in sorted(titulos, key=lambda t: (t.vencimento, t.id))
             if _atende(t, filtro)
         ]
+
+    def pagamentos_recebidos(self, sessao: Optional[str]) -> List[Pagamento]:
+        """Os pagamentos não estornados de todos os títulos, para o gráfico de recebimento do painel."""
+        with self._execucao.operacao("consultar títulos", sessao, Operacao.CONSULTAR_TITULOS) as op:
+            return [p for t in op.uow.titulos.listar() for p in t.pagamentos if not p.estornado]
 
     def obter_titulo(self, sessao: Optional[str], titulo_id: str) -> Titulo:
         """O título com seus pagamentos, para a tela do título (RNF-16)."""
