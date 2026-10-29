@@ -17,6 +17,7 @@ from remindme.infraestrutura.memoria import (
     RepositorioTitulosEmMemoria,
     UnidadeDeTrabalhoEmMemoria,
 )
+from tests.apoio import ComSessoes
 
 HOJE = date(2026, 10, 3)
 ONTEM = HOJE - timedelta(days=1)
@@ -40,18 +41,19 @@ class RepositorioQueFalha(RepositorioTitulosEmMemoria):
         super().salvar(titulo)
 
 
-class Confiabilidade(unittest.TestCase):
+class Confiabilidade(ComSessoes, unittest.TestCase):
     def setUp(self):
         self.titulos = RepositorioQueFalha()
         self.auditoria = AuditoriaEmMemoria()
+        self.uow = UnidadeDeTrabalhoEmMemoria(self.titulos, self.auditoria)
         self.servico = ServicoTitulos(
-            UnidadeDeTrabalhoEmMemoria(self.titulos, self.auditoria),
+            self.uow,
             ClientesEmMemoria({"c1"}),
             RelogioFixo(datetime(2026, 10, 3, 10, 0)),
         )
 
     def novo_titulo(self, vencimento=FUTURO):
-        return self.servico.cadastrar_titulo(OPERADOR, "c1", Decimal("1000.00"), vencimento)
+        return self.servico.cadastrar_titulo(self.sessao(OPERADOR), "c1", Decimal("1000.00"), vencimento)
 
     def fotografia(self):
         """Estado completo armazenado: títulos e auditoria."""
@@ -76,13 +78,13 @@ class Confiabilidade(unittest.TestCase):
         operacoes = {
             "cadastrar": lambda: self.novo_titulo(),
             "registrar pagamento": lambda: self.servico.registrar_pagamento(
-                OPERADOR, self.aberto.id, Decimal("1000.00"), HOJE
+                self.sessao(OPERADOR), self.aberto.id, Decimal("1000.00"), HOJE
             ),
             "estornar": lambda: self.servico.estornar_pagamento(
-                DONO, self.baixado.id, self.baixado.pagamentos[0].id, "cheque devolvido", HOJE
+                self.sessao(DONO), self.baixado.id, self.baixado.pagamentos[0].id, "cheque devolvido", HOJE
             ),
-            "cancelar": lambda: self.servico.cancelar_titulo(DONO, self.aberto.id, "desistência"),
-            "verificar vencimentos": lambda: self.servico.verificar_vencimentos(OPERADOR, HOJE),
+            "cancelar": lambda: self.servico.cancelar_titulo(self.sessao(DONO), self.aberto.id, "desistência"),
+            "verificar vencimentos": lambda: self.servico.verificar_vencimentos(self.sessao(OPERADOR), HOJE),
         }
         for falha in (self.falhar_auditoria, self.falhar_gravacao):
             for nome, operacao in operacoes.items():
@@ -91,7 +93,7 @@ class Confiabilidade(unittest.TestCase):
                     self.aberto = self.novo_titulo(vencimento=ONTEM)
                     self.baixado = self.novo_titulo()
                     self.baixado = self.servico.registrar_pagamento(
-                        OPERADOR, self.baixado.id, Decimal("1000.00"), HOJE
+                        self.sessao(OPERADOR), self.baixado.id, Decimal("1000.00"), HOJE
                     )
                     antes = self.fotografia()
                     falha()
@@ -104,7 +106,7 @@ class Confiabilidade(unittest.TestCase):
         segundo = self.novo_titulo(vencimento=ONTEM)
         self.titulos.falhar_a_partir_de = self.titulos.gravacoes + 2
         with self.assertRaises(RuntimeError):
-            self.servico.verificar_vencimentos(OPERADOR, HOJE)
+            self.servico.verificar_vencimentos(self.sessao(OPERADOR), HOJE)
         for t in (primeiro, segundo):
             self.assertIs(self.titulos.obter(t.id).estado, EstadoTitulo.ABERTO)
 
@@ -114,9 +116,9 @@ class Confiabilidade(unittest.TestCase):
         t = self.novo_titulo()
         self.falhar_auditoria()
         with self.assertRaises(RuntimeError):
-            self.servico.registrar_pagamento(OPERADOR, t.id, Decimal("400.00"), HOJE)
+            self.servico.registrar_pagamento(self.sessao(OPERADOR), t.id, Decimal("400.00"), HOJE)
         self.restabelecer()
-        self.servico.registrar_pagamento(OPERADOR, t.id, Decimal("400.00"), HOJE)
+        self.servico.registrar_pagamento(self.sessao(OPERADOR), t.id, Decimal("400.00"), HOJE)
         salvo = self.titulos.obter(t.id)
         self.assertEqual(len(salvo.pagamentos), 1)
         self.assertEqual(salvo.saldo, Decimal("600.00"))
@@ -125,8 +127,8 @@ class Confiabilidade(unittest.TestCase):
         t = self.novo_titulo()
         self.falhar_gravacao()
         with self.assertRaises(RuntimeError):
-            self.servico.registrar_pagamento(OPERADOR, t.id, Decimal("400.00"), HOJE)
-        [visao] = self.servico.consultar_titulos(FiltroTitulos(), HOJE, 5)
+            self.servico.registrar_pagamento(self.sessao(OPERADOR), t.id, Decimal("400.00"), HOJE)
+        [visao] = self.servico.consultar_titulos(self.sessao(OPERADOR), FiltroTitulos(), HOJE, 5)
         self.assertEqual(visao.saldo, Decimal("1000.00"))
 
     # F-04: a unidade de trabalho volta a ficar pronta para a próxima transação.

@@ -83,7 +83,7 @@ Nenhum valor financeiro é produzido pela IA, e nenhum texto gerado pela IA cheg
 | Folha de pagamento e RH | É um domínio inteiro e independente. |
 | Recomendação de investimento ou de corte de gastos | Seria opinião, e não regra. |
 | Canal real de WhatsApp | O canal de notificação é uma peça substituível. O MVP usa o canal simulado, o que permite rodar toda a suíte de testes sem credencial externa. |
-| Contas a pagar | O núcleo do MVP é o recebível. A forma de registrar despesas para a apuração está em aberto (OPEN-07). |
+| Contas a pagar | O núcleo do MVP é o recebível. As despesas entram na apuração por cadastro manual de lançamento de despesa e por importação CSV (RF-86, RF-83; OPEN-07). |
 
 ## 7. Critérios de sucesso
 

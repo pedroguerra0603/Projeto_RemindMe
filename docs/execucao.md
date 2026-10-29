@@ -1,11 +1,52 @@
 # Como executar — RemindMe
 
-O RemindMe é uma aplicação web que roda com Python e nada mais: servidor WSGI e banco SQLite da biblioteca padrão ([Spec 017](../.specify/specs/017-interface-web.md)).
+O RemindMe roda como aplicação web local, com Python 3.11 ou mais recente e **sem instalar nada**: servidor, banco (SQLite) e testes usam só a biblioteca padrão (OPEN-01, ADR-006, ADR-007). A primeira interface é a da [Spec 017](../.specify/specs/017-interface-web.md).
+
+## Ver a aplicação em 1 minuto (demonstração)
+
+Na raiz do repositório:
+
+```
+python3 iniciar.py demonstracao
+```
+
+O comando cria o banco `remindme-demonstracao.db` com dados de exemplo, mostra no terminal os usuários e a senha gerada, e inicia o servidor. Abra **http://localhost:8000** no navegador e entre com um dos usuários:
+
+| Perfil | E-mail |
+|---|---|
+| Dono | `carla@demo.example` |
+| Operador Financeiro | `diego@demo.example` |
+| Contador | `helena@demo.example` |
+| Administrador | `admin@demo.example` |
+
+A senha é a mesma para todos e aparece no terminal. Para escolher a senha, use `--senha` (pelo menos 8 caracteres): `python3 iniciar.py demonstracao --senha minha-senha-de-apresentacao`. Para recomeçar do zero, acrescente `--substituir`. `Ctrl+C` encerra o servidor; para voltar depois ao mesmo banco, `python3 iniciar.py --banco remindme-demonstracao.db`.
+
+A demonstração tem clientes e títulos em todos os estados: Aberto, Vencido (pela verificação automática), Baixado, Cancelado, com pagamento parcial e com estorno, além da trilha de auditoria de cada operação.
+
+## Uso com dados reais
+
+```
+python3 iniciar.py criar-administrador      # pergunta nome, e-mail e senha (OPEN-39)
+python3 iniciar.py                          # servidor em http://localhost:8000, banco remindme.db
+```
+
+O Administrador cadastra os demais usuários pela tela **Usuários**, com senha provisória (OPEN-35), e ajusta a tela **Permissões**. As permissões fixadas por regra de negócio aparecem com cadeado e não mudam.
+
+| Opção | Uso |
+|---|---|
+| `--banco arquivo.db` | Arquivo SQLite (padrão: `remindme.db`). Bancos `*.db` não vão para o Git. |
+| `--porta 8000` | Porta do servidor |
+| `--host 127.0.0.1` | Endereço de escuta. Sem certificado, só a própria máquina (OPEN-38) |
+| `--certificado cert.pem --chave chave.pem` | Liga o HTTPS (RNF-05); com eles, o servidor pode atender pela rede (`--host 0.0.0.0`) |
+
+`python3 -m remindme` também funciona, com a pasta `src` no caminho de importação (por exemplo, `PYTHONPATH=src python3 -m remindme`). O comando `iniciar.py` faz isso sozinho.
+
+**Verificação automática de vencimento.** Com o servidor no ar, os títulos Abertos com vencimento passado passam a Vencido na inicialização e a cada hora, com registro de operação automática na auditoria (OPEN-13, OPEN-48). O "hoje" é o de America/Sao_Paulo (OPEN-26).
 
 ## Pré-requisitos
 
 - Python 3.11 ou mais recente.
-- Nenhuma dependência externa: o código e os testes usam apenas a biblioteca padrão.
+- Nenhuma dependência externa para usar ou testar. O Playwright é opcional, só para o teste de navegador.
 
 ## Executar os testes
 
@@ -17,7 +58,7 @@ python3 -m unittest discover -s tests -t .
 
 ## Integração contínua
 
-A suíte roda sozinha a cada PR e a cada push na `main`, pelo fluxo [`.github/workflows/testes.yml`](../.github/workflows/testes.yml). A ferramenta (GitHub Actions) é provisória, até a decisão da equipe em OPEN-28. O fluxo não usa segredo nem instala dependência (RNF-23).
+A suíte roda sozinha a cada PR e a cada push na `main`, pelo fluxo [`.github/workflows/testes.yml`](../.github/workflows/testes.yml). A ferramenta é o GitHub Actions (OPEN-28, decidida em 2026-10-23). O fluxo não usa segredo nem instala dependência (RNF-23).
 
 | Item | Valor |
 |---|---|
@@ -31,49 +72,16 @@ A suíte roda sozinha a cada PR e a cada push na `main`, pelo fluxo [`.github/wo
 
 **Proteção da `main` (configuração do repositório, feita por quem o administra).** Para o merge exigir a suíte aprovada: *Settings → Branches → Branch protection rule* (ou *Rulesets*) para `main` → marcar *Require status checks to pass before merging* → selecionar as verificações `testes / suíte (...)`. Isso não pode ser feito por código do repositório; **está pendente** e é o último critério da issue #82. Os resultados das combinações de Windows e macOS são os primeiros para essa suíte (a portabilidade nesses sistemas ainda não foi verificada, em [`qualidade/portabilidade.md`](qualidade/portabilidade.md)): se alguma falhar na primeira execução, é um achado de portabilidade, e não um erro do fluxo.
 
-## Executar a aplicação
+## Teste de navegador (opcional)
 
-Todos os comandos rodam na raiz do repositório. `executar.py` só acrescenta `src/` ao caminho do Python; com `src/` no `PYTHONPATH`, `python3 -m remindme` faz o mesmo.
+O teste de ponta a ponta (`tests/ponta_a_ponta/`) só roda com o Playwright instalado; sem ele, aparece como pulado, e a suíte continua sem dependência (OPEN-29):
 
-### Demonstração
-
-```bash
-python3 executar.py demo --senha demo12345
-python3 executar.py servir
+```
+pip install playwright
+python -m playwright install chromium
+python3 -m unittest tests.ponta_a_ponta.test_navegador
 ```
 
-`demo` cria, num banco vazio, um usuário de cada perfil (`admin@`, `dona@`, `operador@` e `contador@remindme.local`), quatro clientes e sete títulos em estados variados. Sem `--senha`, a senha é gerada e mostrada na tela. Abra <http://127.0.0.1:8000>.
-
-### Instalação real
-
-```bash
-python3 executar.py --banco /caminho/remindme.db criar-admin --nome "Ana" --email ana@empresa.com.br
-python3 executar.py --banco /caminho/remindme.db servir --host 0.0.0.0 --porta 8000 --https
-```
-
-O Administrador cadastra os demais usuários pela tela **Usuários**. A senha do `criar-admin` é digitada sem aparecer na tela; numa instalação automatizada, pode ser passada pela entrada padrão (`echo "$SENHA" | python3 executar.py criar-admin ...`).
-
-### Opções
-
-| Opção | Padrão | Uso |
-|---|---|---|
-| `--banco` (antes do comando) | `remindme.db` | Arquivo SQLite. É criado na primeira execução |
-| `servir --host` | `127.0.0.1` | `0.0.0.0` para aceitar conexões de outras máquinas ou de um contêiner |
-| `servir --porta` | `8000` | Porta HTTP |
-| `servir --https` | desligado | Marca os cookies como `Secure`. Use quando houver HTTPS na frente (RNF-05) |
-| `servir --antecedencia-dias` | `5` | Dias para sinalizar "próximo do vencimento" (RF-23, OPEN-21) |
-| `servir --intervalo-agendador` | `60` | Minutos entre as verificações automáticas de vencimento (OPEN-13) |
-
-O sistema não lê variáveis de ambiente (Spec 001, CA-13). A chave que assina os formulários é gerada na primeira execução e guardada no próprio banco.
-
-### Publicação
-
-A hospedagem continua em aberto (OPEN-12). Qualquer serviço que rode um processo Python serve: o comando de início é `python3 executar.py --banco <disco persistente>/remindme.db servir --host 0.0.0.0 --porta <porta do serviço> --https`. O TLS (RNF-05) fica no proxy do serviço. `GET /saude` responde `ok`, para verificação de saúde. O arquivo do banco precisa ficar num disco persistente, com cópia de segurança (RNF-08, OPEN-09).
-
-### Agendador
-
-O servidor verifica os vencimentos ao iniciar e depois a cada intervalo, numa thread separada, fora do caminho das requisições (DT-07). Cada mudança aparece na auditoria como operação automática da rotina "verificação de vencimento" (OPEN-30). Usuários com permissão também podem disparar a verificação pela tela de títulos.
-
-## Restrição já definida
+## Restrição
 
 A aplicação e a suíte de testes devem rodar sem credencial de serviço externo, com o canal de notificação e o serviço de IA simulados (RNF-23).

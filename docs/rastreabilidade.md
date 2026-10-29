@@ -77,7 +77,7 @@ Todo requisito ativo aparece em ao menos uma spec do mapa. A conferência foi fe
 | 007, 008 | RF-32 a RF-39, RF-70, RF-71; RB-10, RB-11; RNF-12, RNF-13, RNF-18, RNF-20 | A escrever |
 | 009 | RF-28, RF-29, RF-69, RF-72 a RF-76; RB-17, RB-20, RB-26, RB-27, RB-28; RNF-22, RNF-24, RNF-25 | A escrever |
 | 010 | RF-40 a RF-50, RF-77; RB-04, RB-07, RB-13, RB-16, RB-29; RNF-15 | A escrever |
-| 011, 012 | RF-51 a RF-59, RF-78 a RF-82; RB-06, RB-08, RB-09, RB-12, RB-14; RNF-26 | A escrever |
+| 011, 012 | RF-51 a RF-59, RF-78 a RF-82, RF-86; RB-06, RB-08, RB-09, RB-12, RB-14; RNF-26 | A escrever |
 | 013 a 016 | RF-64, RF-83 a RF-85; RB-19; RNF-16, RNF-17 | A escrever |
 | Operacionais | RNF-07, RNF-08 | Na entrega, depois de OPEN-09 e OPEN-12 |
 

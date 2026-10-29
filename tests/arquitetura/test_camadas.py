@@ -12,8 +12,10 @@ PERMITIDAS = {
     "dominio": {"dominio"},
     "aplicacao": {"dominio", "aplicacao"},
     "infraestrutura": {"dominio", "aplicacao", "infraestrutura"},
-    # Apresentação (web e linha de comando) é a entrada; `montagem.py` liga a aplicação à infraestrutura.
-    "apresentacao": {"dominio", "aplicacao", "infraestrutura", "apresentacao"},
+    # Spec 017: a apresentação e as entradas automáticas chamam a aplicação e usam o vocabulário do domínio
+    # (estados, perfis, operações e a recusa), mas não conhecem a infraestrutura (ADR-001).
+    "apresentacao": {"dominio", "aplicacao", "apresentacao"},
+    "entradas": {"dominio", "aplicacao", "entradas"},
 }
 
 
@@ -51,6 +53,13 @@ class Camadas(unittest.TestCase):
                 with self.subTest(arquivo=arquivo.name):
                     self.assertNotIn("(RB-21)", texto)
                     self.assertNotIn("(RB-23)", texto)
+
+    def test_INV_1_a_apresentacao_nao_usa_regras_do_dominio_diretamente(self):
+        """Spec 017, INV-1: a matriz de permissões e as regras ficam atrás dos serviços."""
+        for arquivo in (RAIZ / "apresentacao").rglob("*.py"):
+            for modulo in importacoes(arquivo):
+                with self.subTest(arquivo=arquivo.name, importa=modulo):
+                    self.assertNotIn(modulo, ("remindme.dominio.regras", "remindme.dominio.permissoes"))
 
 
 if __name__ == "__main__":

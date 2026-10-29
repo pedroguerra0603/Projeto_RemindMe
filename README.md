@@ -24,8 +24,8 @@ Detalhes em [visão do produto](docs/visao.md).
 |---|---|---|
 | 1. Problema e contexto | [Visão](docs/visao.md), [benchmark](docs/benchmark.md), [personas](docs/personas.md) | Escrito |
 | 2. Requisitos e modelagem | [Requisitos](docs/requisitos.md), [glossário](docs/glossario.md), [modelo de domínio](docs/modelo-dominio.md), [casos de uso](docs/casos-de-uso/README.md) | Escrito |
-| 3. Arquitetura e decisões | [Arquitetura](docs/arquitetura.md), [ADRs](docs/adr/README.md), [constituição](SPECS.md), [segurança](docs/seguranca.md) | Proposto; Python 3.11 só com a biblioteca padrão, WSGI e SQLite (OPEN-01, OPEN-02) |
-| 4. Implementação e validação | [Mapa de specs](.specify/specs/mapa-de-specs.md), [Spec 006](.specify/specs/006-titulo-pagamento-baixa-e-estorno.md), [qualidade](docs/qualidade/README.md), [rastreabilidade](docs/rastreabilidade.md) | Specs 001, 002 e 006 verificadas; Specs 003 e 017 (interface web) implementadas, aguardando aprovação |
+| 3. Arquitetura e decisões | [Arquitetura](docs/arquitetura.md), [ADRs](docs/adr/README.md), [constituição](SPECS.md), [segurança](docs/seguranca.md) | Tecnologias decididas: Python 3.11 com a biblioteca padrão, interface WSGI (ADR-006) e SQLite (ADR-007) |
+| 4. Implementação e validação | [Mapa de specs](.specify/specs/mapa-de-specs.md), [specs](.specify/specs/), [qualidade](docs/qualidade/README.md), [rastreabilidade](docs/rastreabilidade.md) | Specs 001, 002, 003, 006, 013 e 017 verificadas: auditoria, acesso por perfil, clientes, títulos e pagamentos, consulta de auditoria e a interface web |
 
 As decisões que ainda dependem da equipe estão em [questões em aberto](.specify/open.md).
 
@@ -35,49 +35,21 @@ Toda a documentação está em [`/docs`](docs/README.md). O índice indica a ord
 
 ## Como executar
 
-Requer só Python 3.11 ou mais recente. Não há nada para instalar: o sistema usa apenas a biblioteca padrão (servidor WSGI e banco SQLite).
+Com Python 3.11 ou mais recente, sem instalar nada, na raiz do repositório:
 
-Para ver o sistema funcionando com dados de exemplo:
-
-```bash
-python3 executar.py demo --senha demo12345
+```
+python3 iniciar.py demonstracao
 ```
 
-```bash
-python3 executar.py servir
-```
-
-Abra <http://127.0.0.1:8000> e entre com um dos usuários abaixo (senha `demo12345`):
-
-| Perfil | E-mail |
-|---|---|
-| Administrador | `admin@remindme.local` |
-| Dono | `dona@remindme.local` |
-| Operador Financeiro | `operador@remindme.local` |
-| Contador | `contador@remindme.local` |
-
-Para começar do zero, sem dados de exemplo, crie o primeiro Administrador e depois inicie o servidor:
-
-```bash
-python3 executar.py criar-admin --nome "Seu Nome" --email voce@empresa.com.br
-```
+Abra **http://localhost:8000** e entre com `carla@demo.example` (Dono), `diego@demo.example` (Operador Financeiro), `helena@demo.example` (Contador) ou `admin@demo.example` (Administrador). A senha aparece no terminal.
 
 Testes:
 
-```bash
+```
 python3 -m unittest discover -s tests -t .
 ```
 
-Detalhes, opções e publicação em [`docs/execucao.md`](docs/execucao.md).
-
-### O que a aplicação faz hoje
-
-- Login com sessão no servidor, senha com `scrypt` e permissões por perfil, negadas por padrão (Spec 002).
-- Painel com valores a receber, títulos vencidos e próximos do vencimento.
-- Clientes com CPF ou CNPJ validado (Spec 003).
-- Títulos: cadastro, filtros, pagamento parcial ou integral, baixa automática, estorno (só o Dono), cancelamento (só o Dono) e verificação automática de vencimentos (Spec 006).
-- Auditoria imutável de toda operação, com consulta e filtros (Spec 001).
-- Administração de usuários e da matriz de permissões.
+Uso com dados reais, HTTPS e demais opções em [`docs/execucao.md`](docs/execucao.md).
 
 ## Estrutura do repositório
 
@@ -86,8 +58,8 @@ Detalhes, opções e publicação em [`docs/execucao.md`](docs/execucao.md).
 | [`docs/`](docs/README.md) | Visão, requisitos, modelagem, arquitetura e combinados |
 | [`.specify/`](.specify/README.md) | Mapa de specs, specs, planos, tarefas e questões em aberto |
 | [`SPECS.md`](SPECS.md) | Constituição: regras para agentes de codificação |
-| [`executar.py`](executar.py) | Atalho para rodar a aplicação sem instalar nada |
 | [`src/`](src/README.md) | Código |
+| [`iniciar.py`](iniciar.py) | Atalho para iniciar a aplicação |
 | [`tests/`](tests/README.md) | Testes |
 
 ## Como contribuir

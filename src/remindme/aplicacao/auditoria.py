@@ -1,18 +1,15 @@
-"""Ponto único de gravação da auditoria e do registro de erro (Spec 001; ADR-004, decisão 3; INV-5)."""
+"""Ponto único de gravação da auditoria (Spec 001; ADR-004, decisão 3; INV-5) e registro de erro no log."""
 
 import logging
-import uuid
-from contextlib import contextmanager
-from typing import Iterator, Optional
+from typing import Optional
 
-from remindme.aplicacao.portas import RegistroErro, RegistroErros, Relogio, UnidadeDeTrabalho
+from remindme.aplicacao.portas import RegistroErro, Relogio, UnidadeDeTrabalho
 from remindme.dominio.auditoria import RegistroAuditoria
-from remindme.dominio.erros import OperacaoRecusada
 from remindme.dominio.usuario import Usuario
 
 
 class RegistroErrosNoLog:
-    """Registro de erro padrão, no log da aplicação, até a escolha do armazenamento (OPEN-02)."""
+    """Registro de erro no log da aplicação (RNF-21, verificado por inspeção de log)."""
 
     def registrar(self, registro: RegistroErro) -> None:
         logging.getLogger("remindme").error(
@@ -41,6 +38,11 @@ class OperacaoAuditada:
         self._usuario = usuario
         self._rotina = rotina
 
+    @property
+    def usuario(self) -> Optional[Usuario]:
+        """Quem executa a operação; vazio quando ela é automática."""
+        return self._usuario
+
     def registrar(
         self,
         registro_afetado: str,
@@ -65,40 +67,3 @@ class OperacaoAuditada:
                 rotina=self._rotina if self._usuario is None else None,
             )
         )
-
-
-class Auditoria:
-    def __init__(self, uow: UnidadeDeTrabalho, relogio: Relogio, erros: RegistroErros):
-        self._uow = uow
-        self._relogio = relogio
-        self._erros = erros
-
-    @contextmanager
-    def operacao(
-        self, nome: str, usuario: Optional[Usuario], rotina: Optional[str] = None
-    ) -> Iterator[OperacaoAuditada]:
-        """Abre a transação. Sem usuário, a operação é automática e exige a rotina (A4).
-
-        Recusa por regra de negócio desfaz a transação e não deixa registro (E1). Qualquer outro erro
-        desfaz a transação, gera um registro de erro e chega a quem chamou (E2, E3, E5).
-        """
-        if usuario is None and not rotina:
-            raise ValueError("Operação sem usuário exige o nome da rotina.")
-        try:
-            with self._uow as uow:
-                yield OperacaoAuditada(uow, self._relogio, nome, usuario, rotina)
-        except OperacaoRecusada:
-            raise
-        except Exception as erro:
-            correlacao = uuid.uuid4().hex
-            self._erros.registrar(
-                RegistroErro(
-                    data_hora=self._relogio.agora(),
-                    operacao=nome,
-                    usuario_id=usuario.id if usuario else None,
-                    correlacao=correlacao,
-                    erro=f"{type(erro).__name__}: {erro}",
-                )
-            )
-            erro.add_note(f"Identificador de correlação: {correlacao}")
-            raise

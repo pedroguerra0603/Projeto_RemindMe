@@ -1,5 +1,7 @@
+"""`python3 -m remindme`: inicia o RemindMe (Spec 017)."""
+
 import sys
 
-from remindme.apresentacao.cli import main
+from remindme.inicializacao import principal
 
-sys.exit(main())
+sys.exit(principal())

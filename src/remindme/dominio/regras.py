@@ -1,16 +1,52 @@
-"""Regras de perfil usadas pela camada de aplicação antes de chamar o domínio."""
+"""Permissões fixadas por regra de negócio: não mudam por configuração (Spec 002, INV-4).
 
-from remindme.dominio.erros import OperacaoRecusada
-from remindme.dominio.usuario import Perfil, Usuario
+Cada regra de perfil fica só aqui (RNF-19): RB-02, RB-03, RB-15, RB-26 e OPEN-16.
+"""
+
+from dataclasses import dataclass
+from typing import Optional
+
+from remindme.dominio.operacoes import Operacao
+from remindme.dominio.usuario import Perfil
 
 
-def exigir_permissao_de_estorno(usuario: Usuario) -> None:
-    """RB-02: somente o Dono estorna um pagamento."""
-    if usuario.perfil is not Perfil.DONO:
-        raise OperacaoRecusada("Somente o Dono estorna um pagamento (RB-02).")
+@dataclass(frozen=True)
+class PermissaoFixada:
+    permitido: bool
+    regra: str
+    motivo: str
 
 
-def exigir_permissao_de_cancelamento(usuario: Usuario) -> None:
-    """OPEN-16, decidida em 2026-10-03: somente o Dono cancela um título."""
-    if usuario.perfil is not Perfil.DONO:
-        raise OperacaoRecusada("Somente o Dono cancela um título (OPEN-16).")
+_SOMENTE_O_DONO = {
+    Operacao.ESTORNAR_PAGAMENTO: ("RB-02", "Somente o Dono estorna um pagamento (RB-02)."),
+    Operacao.CANCELAR_TITULO: ("OPEN-16", "Somente o Dono cancela um título (OPEN-16)."),
+    Operacao.APROVAR_DESCONTO: ("RB-15", "Somente o Dono aprova desconto fora da alçada (RB-15)."),
+}
+
+# RB-03: o Contador consulta e exporta, mas não cria nem altera registros.
+_CONTADOR_NAO_ALTERA = {
+    Operacao.CADASTRAR_TITULO,
+    Operacao.REGISTRAR_PAGAMENTO,
+    Operacao.VERIFICAR_VENCIMENTOS,
+    Operacao.MANTER_CLIENTES,
+    Operacao.CONDUZIR_ORCAMENTO,
+    Operacao.GERENCIAR_OBRIGACOES,
+    Operacao.CLASSIFICAR_LANCAMENTO,
+    Operacao.IMPORTAR_CSV,
+}
+
+
+def permissao_fixada(operacao: Operacao, perfil: Perfil) -> Optional[PermissaoFixada]:
+    """A célula da matriz fixada por regra, ou None quando o Administrador pode alterá-la."""
+    if operacao in _SOMENTE_O_DONO:
+        regra, motivo = _SOMENTE_O_DONO[operacao]
+        return PermissaoFixada(perfil is Perfil.DONO, regra, motivo)
+    if perfil is Perfil.CONTADOR and operacao in _CONTADOR_NAO_ALTERA:
+        return PermissaoFixada(
+            False, "RB-03", "O Contador consulta e exporta, mas não cria nem altera registros (RB-03)."
+        )
+    if perfil is Perfil.CLIENTE and operacao is Operacao.CONSULTAR_TITULOS:
+        return PermissaoFixada(
+            False, "RB-26", "O Cliente só consulta os próprios títulos, pelo acesso da Spec 009 (RB-26)."
+        )
+    return None

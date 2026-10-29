@@ -1,151 +1,203 @@
-"""Persistência em SQLite, da biblioteca padrão (OPEN-02).
+"""Persistência em SQLite, pelo módulo `sqlite3` da biblioteca padrão (ADR-005, ADR-007, Spec 017).
 
-Uma conexão por banco, protegida por trava: cada unidade de trabalho é uma transação `BEGIN IMMEDIATE`, e
-blocos aninhados na mesma thread participam da transação de fora (RNF-09). A auditoria é somente inclusão,
-garantida também por gatilhos no próprio banco (RB-30, RNF-06).
+Cada transação abre uma conexão com `BEGIN IMMEDIATE` (RNF-09). Valores monetários são texto decimal, datas
+são texto ISO 8601 e estados, perfis e operações são guardados pelo nome do enum.
 """
 
-import secrets
 import sqlite3
 import threading
 from datetime import date, datetime
 from decimal import Decimal
-from typing import FrozenSet, List, Optional
+from pathlib import Path
+from typing import List, Optional
 
-from remindme.aplicacao.portas import FiltroAuditoria
-from remindme.dominio.acesso import MATRIZ_INICIAL, Operacao
+from remindme.aplicacao.portas import Sessao
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.cliente import Cliente
+from remindme.dominio.operacoes import Operacao
+from remindme.dominio.permissoes import MatrizPermissoes
 from remindme.dominio.titulo import EstadoTitulo, Pagamento, Titulo
 from remindme.dominio.usuario import Perfil, Usuario
 
-ESQUEMA = """
-CREATE TABLE IF NOT EXISTS configuracao (
-    chave TEXT PRIMARY KEY,
-    valor TEXT NOT NULL
+_ESQUEMA_1 = """
+CREATE TABLE usuarios (
+    id TEXT PRIMARY KEY,
+    nome TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    perfil TEXT NOT NULL,
+    ativo INTEGER NOT NULL,
+    hash_da_senha TEXT
 );
-CREATE TABLE IF NOT EXISTS clientes (
+CREATE TABLE sessoes (
+    chave TEXT PRIMARY KEY,
+    usuario_id TEXT NOT NULL REFERENCES usuarios (id),
+    aberta_em TEXT NOT NULL,
+    expira_em TEXT NOT NULL,
+    protecao TEXT NOT NULL
+);
+CREATE TABLE permissoes (
+    operacao TEXT NOT NULL,
+    perfil TEXT NOT NULL,
+    PRIMARY KEY (operacao, perfil)
+);
+CREATE TABLE clientes (
     id TEXT PRIMARY KEY,
     nome TEXT NOT NULL,
     documento TEXT NOT NULL UNIQUE,
-    email TEXT NOT NULL DEFAULT '',
-    telefone TEXT NOT NULL DEFAULT ''
+    contato TEXT NOT NULL
 );
-CREATE TABLE IF NOT EXISTS titulos (
+CREATE TABLE titulos (
     id TEXT PRIMARY KEY,
-    cliente_id TEXT NOT NULL,
+    cliente_id TEXT NOT NULL REFERENCES clientes (id),
     valor TEXT NOT NULL,
     vencimento TEXT NOT NULL,
     origem TEXT NOT NULL,
     condicao_pagamento TEXT,
     estado TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS titulos_por_cliente ON titulos (cliente_id);
-CREATE TABLE IF NOT EXISTS pagamentos (
+CREATE TABLE pagamentos (
     id TEXT PRIMARY KEY,
     titulo_id TEXT NOT NULL REFERENCES titulos (id),
     ordem INTEGER NOT NULL,
     valor TEXT NOT NULL,
     data TEXT NOT NULL,
     estornado INTEGER NOT NULL,
-    motivo_estorno TEXT
+    motivo_estorno TEXT,
+    pedido_id TEXT,
+    UNIQUE (titulo_id, pedido_id)
 );
-CREATE INDEX IF NOT EXISTS pagamentos_por_titulo ON pagamentos (titulo_id);
-CREATE TABLE IF NOT EXISTS auditoria (
+CREATE INDEX pagamentos_do_titulo ON pagamentos (titulo_id, ordem);
+CREATE TABLE auditoria (
     sequencia INTEGER PRIMARY KEY AUTOINCREMENT,
     usuario_id TEXT,
     data_hora TEXT NOT NULL,
     operacao TEXT NOT NULL,
     registro_afetado TEXT NOT NULL,
+    campo TEXT,
     valor_anterior TEXT,
     valor_novo TEXT,
     motivo TEXT,
-    campo TEXT,
     automatica INTEGER NOT NULL,
     rotina TEXT
 );
-CREATE TRIGGER IF NOT EXISTS auditoria_nao_altera BEFORE UPDATE ON auditoria
+-- RB-30 e RNF-06 no próprio armazenamento: o banco recusa alterar e excluir registros de auditoria.
+-- A regra continua no domínio e na porta, que só oferecem incluir e ler (ADR-004); o gatilho só recusa.
+CREATE TRIGGER auditoria_nao_se_altera BEFORE UPDATE ON auditoria
 BEGIN SELECT RAISE(ABORT, 'Registros de auditoria não são alterados (RB-30).'); END;
-CREATE TRIGGER IF NOT EXISTS auditoria_nao_exclui BEFORE DELETE ON auditoria
+CREATE TRIGGER auditoria_nao_se_exclui BEFORE DELETE ON auditoria
 BEGIN SELECT RAISE(ABORT, 'Registros de auditoria não são excluídos (RB-30).'); END;
-CREATE TABLE IF NOT EXISTS usuarios (
-    id TEXT PRIMARY KEY,
-    nome TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    perfil TEXT NOT NULL,
-    ativo INTEGER NOT NULL,
-    hash_senha TEXT
-);
-CREATE TABLE IF NOT EXISTS sessoes (
-    chave TEXT PRIMARY KEY,
-    usuario_id TEXT NOT NULL REFERENCES usuarios (id),
-    criada_em TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS permissoes (
-    perfil TEXT NOT NULL,
-    operacao TEXT NOT NULL,
-    PRIMARY KEY (perfil, operacao)
-);
 """
 
+MIGRACOES = [_ESQUEMA_1]
 
-class BancoSQLite:
-    def __init__(self, caminho: str = ":memory:"):
-        self.conexao = sqlite3.connect(caminho, check_same_thread=False, isolation_level=None)
-        self.conexao.execute("PRAGMA foreign_keys = ON")
-        if caminho != ":memory:":
-            self.conexao.execute("PRAGMA journal_mode = WAL")
-        self.trava = threading.RLock()
-        with self.trava:
-            self.conexao.executescript(ESQUEMA)
-            self._semear_permissoes()
 
-    def _semear_permissoes(self) -> None:
-        """Matriz inicial (OPEN-32), gravada uma única vez; depois vale o que o Administrador configurar."""
-        if self.conexao.execute("SELECT 1 FROM configuracao WHERE chave = 'permissoes'").fetchone():
-            return
-        self.conexao.execute("BEGIN IMMEDIATE")
-        self.conexao.executemany(
-            "INSERT OR IGNORE INTO permissoes (perfil, operacao) VALUES (?, ?)",
-            [(perfil.name, operacao.name) for perfil, ops in MATRIZ_INICIAL.items() for operacao in ops],
-        )
-        self.conexao.execute("INSERT INTO configuracao (chave, valor) VALUES ('permissoes', 'iniciadas')")
-        self.conexao.execute("COMMIT")
+def preparar_banco(caminho: str) -> None:
+    """Cria o arquivo, se preciso, e aplica as migrações que faltam (`PRAGMA user_version`)."""
+    if caminho != ":memory:":
+        Path(caminho).parent.mkdir(parents=True, exist_ok=True)
+    conexao = sqlite3.connect(caminho, isolation_level=None)
+    try:
+        conexao.execute("PRAGMA journal_mode = WAL")
+        versao = conexao.execute("PRAGMA user_version").fetchone()[0]
+        for numero, script in enumerate(MIGRACOES[versao:], start=versao + 1):
+            conexao.execute("BEGIN IMMEDIATE")
+            try:
+                for comando in _comandos(script):
+                    conexao.execute(comando)
+                if numero == 1:
+                    conexao.executemany(
+                        "INSERT INTO permissoes (operacao, perfil) VALUES (?, ?)",
+                        [(o.name, p.name) for o, p in MatrizPermissoes.inicial().concedidas],
+                    )
+                conexao.execute(f"PRAGMA user_version = {numero}")
+                conexao.execute("COMMIT")
+            except Exception:
+                conexao.execute("ROLLBACK")
+                raise
+    finally:
+        conexao.close()
 
-    def segredo(self) -> bytes:
-        """Chave que assina formulários e avisos da interface. Gerada na primeira execução e guardada no banco."""
-        with self.trava:
-            linha = self.conexao.execute("SELECT valor FROM configuracao WHERE chave = 'segredo'").fetchone()
-            if linha is None:
-                valor = secrets.token_hex(32)
-                self.conexao.execute("INSERT INTO configuracao (chave, valor) VALUES ('segredo', ?)", (valor,))
-                return bytes.fromhex(valor)
-            return bytes.fromhex(linha[0])
 
-    def fechar(self) -> None:
-        self.conexao.close()
+def _comandos(script: str) -> List[str]:
+    """Separa os comandos do script, respeitando os gatilhos, que têm ponto e vírgula dentro."""
+    comandos, atual = [], []
+    for linha in script.splitlines():
+        if linha.strip().startswith("--") or not linha.strip():
+            continue
+        atual.append(linha)
+        texto = "\n".join(atual)
+        if sqlite3.complete_statement(texto):
+            comandos.append(texto)
+            atual = []
+    return comandos
+
+
+class UnidadeDeTrabalhoSQLite:
+    """Transação real (RNF-09). Cada linha de execução tem a sua conexão; um bloco aberto dentro de outro
+    participa da mesma transação, e só o mais externo confirma ou desfaz."""
+
+    def __init__(self, caminho: str):
+        self.caminho = caminho
+        self._local = threading.local()
+        self.titulos = RepositorioTitulosSQLite(self)
+        self.clientes = RepositorioClientesSQLite(self)
+        self.auditoria = AuditoriaSQLite(self)
+        self.usuarios = RepositorioUsuariosSQLite(self)
+        self.sessoes = RepositorioSessoesSQLite(self)
+        self.permissoes = RepositorioPermissoesSQLite(self)
+
+    def conexao(self) -> sqlite3.Connection:
+        conexao = getattr(self._local, "conexao", None)
+        if conexao is None:
+            raise RuntimeError("Acesso ao banco fora de uma unidade de trabalho.")
+        return conexao
+
+    def __enter__(self):
+        profundidade = getattr(self._local, "profundidade", 0)
+        if profundidade == 0:
+            conexao = sqlite3.connect(self.caminho, timeout=10, isolation_level=None)
+            try:
+                conexao.execute("PRAGMA foreign_keys = ON")
+                conexao.execute("BEGIN IMMEDIATE")
+            except Exception:
+                conexao.close()
+                raise
+            self._local.conexao = conexao
+        self._local.profundidade = profundidade + 1
+        return self
+
+    def __exit__(self, tipo, valor, rastro):
+        self._local.profundidade -= 1
+        if self._local.profundidade == 0:
+            conexao = self._local.conexao
+            self._local.conexao = None
+            try:
+                conexao.execute("COMMIT" if tipo is None else "ROLLBACK")
+            finally:
+                conexao.close()
 
 
 class _Repositorio:
-    def __init__(self, banco: BancoSQLite):
-        self._banco = banco
+    def __init__(self, uow: UnidadeDeTrabalhoSQLite):
+        self._uow = uow
 
-    def _executar(self, sql: str, parametros=()):
-        return self._banco.conexao.execute(sql, parametros)
+    def _executar(self, comando: str, parametros=()):
+        return self._uow.conexao().execute(comando, parametros)
 
 
 class RepositorioTitulosSQLite(_Repositorio):
     def obter(self, titulo_id: str) -> Optional[Titulo]:
         linha = self._executar("SELECT * FROM titulos WHERE id = ?", (titulo_id,)).fetchone()
-        return self._montar(linha) if linha else None
+        if linha is None:
+            return None
+        return self._montar(linha, self._pagamentos([titulo_id]).get(titulo_id, []))
 
     def salvar(self, titulo: Titulo) -> None:
         self._executar(
             """INSERT INTO titulos (id, cliente_id, valor, vencimento, origem, condicao_pagamento, estado)
                VALUES (?, ?, ?, ?, ?, ?, ?)
-               ON CONFLICT (id) DO UPDATE SET cliente_id = excluded.cliente_id, valor = excluded.valor,
-                 vencimento = excluded.vencimento, origem = excluded.origem,
-                 condicao_pagamento = excluded.condicao_pagamento, estado = excluded.estado""",
+               ON CONFLICT (id) DO UPDATE SET estado = excluded.estado,
+                   condicao_pagamento = excluded.condicao_pagamento""",
             (
                 titulo.id,
                 titulo.cliente_id,
@@ -156,62 +208,104 @@ class RepositorioTitulosSQLite(_Repositorio):
                 titulo.estado.name,
             ),
         )
-        self._executar("DELETE FROM pagamentos WHERE titulo_id = ?", (titulo.id,))
-        self._banco.conexao.executemany(
-            """INSERT INTO pagamentos (id, titulo_id, ordem, valor, data, estornado, motivo_estorno)
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            [
-                (p.id, titulo.id, ordem, str(p.valor), p.data.isoformat(), int(p.estornado), p.motivo_estorno)
-                for ordem, p in enumerate(titulo.pagamentos)
-            ],
-        )
+        for ordem, pagamento in enumerate(titulo.pagamentos):
+            self._executar(
+                """INSERT INTO pagamentos (id, titulo_id, ordem, valor, data, estornado, motivo_estorno, pedido_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                   ON CONFLICT (id) DO UPDATE SET estornado = excluded.estornado,
+                       motivo_estorno = excluded.motivo_estorno""",
+                (
+                    pagamento.id,
+                    titulo.id,
+                    ordem,
+                    str(pagamento.valor),
+                    pagamento.data.isoformat(),
+                    int(pagamento.estornado),
+                    pagamento.motivo_estorno,
+                    pagamento.pedido_id,
+                ),
+            )
 
     def listar(self) -> List[Titulo]:
         linhas = self._executar("SELECT * FROM titulos ORDER BY vencimento, id").fetchall()
-        pagamentos = {}
-        for p in self._executar("SELECT * FROM pagamentos ORDER BY titulo_id, ordem"):
-            pagamentos.setdefault(p[1], []).append(p)
-        return [self._montar(linha, pagamentos.get(linha[0], [])) for linha in linhas]
+        pagamentos = self._pagamentos(None)
+        return [self._montar(linha, pagamentos.get(linha["id"], [])) for linha in linhas]
 
-    def _montar(self, linha, pagamentos=None) -> Titulo:
-        id, cliente_id, valor, vencimento, origem, condicao, estado = linha
-        if pagamentos is None:
-            pagamentos = self._executar(
-                "SELECT * FROM pagamentos WHERE titulo_id = ? ORDER BY ordem", (id,)
+    def _pagamentos(self, ids):
+        if ids is None:
+            linhas = self._executar("SELECT * FROM pagamentos ORDER BY titulo_id, ordem").fetchall()
+        else:
+            linhas = self._executar(
+                "SELECT * FROM pagamentos WHERE titulo_id = ? ORDER BY ordem", (ids[0],)
             ).fetchall()
-        return Titulo(
-            id=id,
-            cliente_id=cliente_id,
-            valor=Decimal(valor),
-            vencimento=date.fromisoformat(vencimento),
-            origem=origem,
-            condicao_pagamento=condicao,
-            estado=EstadoTitulo[estado],
-            pagamentos=[
+        por_titulo = {}
+        for linha in linhas:
+            por_titulo.setdefault(linha["titulo_id"], []).append(
                 Pagamento(
-                    id=p[0],
-                    valor=Decimal(p[3]),
-                    data=date.fromisoformat(p[4]),
-                    estornado=bool(p[5]),
-                    motivo_estorno=p[6],
+                    id=linha["id"],
+                    valor=Decimal(linha["valor"]),
+                    data=date.fromisoformat(linha["data"]),
+                    estornado=bool(linha["estornado"]),
+                    motivo_estorno=linha["motivo_estorno"],
+                    pedido_id=linha["pedido_id"],
                 )
-                for p in pagamentos
-            ],
+            )
+        return por_titulo
+
+    @staticmethod
+    def _montar(linha, pagamentos) -> Titulo:
+        return Titulo(
+            id=linha["id"],
+            cliente_id=linha["cliente_id"],
+            valor=Decimal(linha["valor"]),
+            vencimento=date.fromisoformat(linha["vencimento"]),
+            origem=linha["origem"],
+            condicao_pagamento=linha["condicao_pagamento"],
+            estado=EstadoTitulo[linha["estado"]],
+            pagamentos=pagamentos,
         )
 
+    def _executar(self, comando: str, parametros=()):
+        cursor = super()._executar(comando, parametros)
+        cursor.row_factory = sqlite3.Row
+        return cursor
 
-_CAMPOS_AUDITORIA = (
-    "usuario_id, data_hora, operacao, registro_afetado, valor_anterior, valor_novo, motivo, campo, "
-    "automatica, rotina"
-)
+
+class RepositorioClientesSQLite(_Repositorio):
+    def obter(self, cliente_id: str) -> Optional[Cliente]:
+        return self._um("SELECT id, nome, documento, contato FROM clientes WHERE id = ?", cliente_id)
+
+    def obter_por_documento(self, documento: str) -> Optional[Cliente]:
+        return self._um("SELECT id, nome, documento, contato FROM clientes WHERE documento = ?", documento)
+
+    def salvar(self, cliente: Cliente) -> None:
+        self._executar(
+            """INSERT INTO clientes (id, nome, documento, contato) VALUES (?, ?, ?, ?)
+               ON CONFLICT (id) DO UPDATE SET nome = excluded.nome, documento = excluded.documento,
+                   contato = excluded.contato""",
+            (cliente.id, cliente.nome, cliente.documento, cliente.contato),
+        )
+
+    def listar(self) -> List[Cliente]:
+        linhas = self._executar("SELECT id, nome, documento, contato FROM clientes").fetchall()
+        return [Cliente(*linha) for linha in linhas]
+
+    def existe(self, cliente_id: str) -> bool:
+        return self._executar("SELECT 1 FROM clientes WHERE id = ?", (cliente_id,)).fetchone() is not None
+
+    def _um(self, comando: str, chave: str) -> Optional[Cliente]:
+        linha = self._executar(comando, (chave,)).fetchone()
+        return Cliente(*linha) if linha else None
 
 
 class AuditoriaSQLite(_Repositorio):
-    """Somente inclusão (ADR-004)."""
+    """Somente inclusão e leitura (ADR-004); o banco recusa alteração e exclusão (CA-13)."""
+
+    _COLUNAS = "usuario_id, data_hora, operacao, registro_afetado, valor_anterior, valor_novo, motivo, campo, automatica, rotina"
 
     def registrar(self, registro: RegistroAuditoria) -> None:
         self._executar(
-            f"INSERT INTO auditoria ({_CAMPOS_AUDITORIA}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            f"INSERT INTO auditoria ({self._COLUNAS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 registro.usuario_id,
                 registro.data_hora.isoformat(),
@@ -226,36 +320,8 @@ class AuditoriaSQLite(_Repositorio):
             ),
         )
 
-    @property
-    def registros(self) -> List[RegistroAuditoria]:
-        """Na ordem de gravação, como `AuditoriaEmMemoria.registros`."""
-        return list(reversed(ConsultaAuditoriaSQLite(self._banco).consultar(FiltroAuditoria(), limite=-1)))
-
-
-class ConsultaAuditoriaSQLite(_Repositorio):
-    def consultar(self, filtro: FiltroAuditoria, limite: int = 500) -> List[RegistroAuditoria]:
-        """RF-64. Os mais recentes primeiro."""
-        condicoes, parametros = [], []
-        if filtro.usuario_id is not None:
-            condicoes.append("usuario_id = ?")
-            parametros.append(filtro.usuario_id)
-        if filtro.de is not None:
-            condicoes.append("substr(data_hora, 1, 10) >= ?")
-            parametros.append(filtro.de.isoformat())
-        if filtro.ate is not None:
-            condicoes.append("substr(data_hora, 1, 10) <= ?")
-            parametros.append(filtro.ate.isoformat())
-        if filtro.operacao is not None:
-            condicoes.append("operacao = ?")
-            parametros.append(filtro.operacao)
-        if filtro.registro_afetado is not None:
-            condicoes.append("instr(registro_afetado, ?) > 0")
-            parametros.append(filtro.registro_afetado)
-        onde = f"WHERE {' AND '.join(condicoes)}" if condicoes else ""
-        linhas = self._executar(
-            f"SELECT {_CAMPOS_AUDITORIA} FROM auditoria {onde} ORDER BY sequencia DESC LIMIT ?",
-            (*parametros, limite),
-        )
+    def listar(self) -> List[RegistroAuditoria]:
+        linhas = self._executar(f"SELECT {self._COLUNAS} FROM auditoria ORDER BY sequencia").fetchall()
         return [
             RegistroAuditoria(
                 usuario_id=l[0],
@@ -274,136 +340,77 @@ class ConsultaAuditoriaSQLite(_Repositorio):
 
 
 class RepositorioUsuariosSQLite(_Repositorio):
+    _COLUNAS = "id, nome, perfil, email, ativo"
+
     def obter(self, usuario_id: str) -> Optional[Usuario]:
-        linha = self._executar(
-            "SELECT id, nome, perfil, email, ativo FROM usuarios WHERE id = ?", (usuario_id,)
-        ).fetchone()
-        return _usuario(linha) if linha else None
+        return self._um(f"SELECT {self._COLUNAS} FROM usuarios WHERE id = ?", usuario_id)
 
     def obter_por_email(self, email: str) -> Optional[Usuario]:
-        linha = self._executar(
-            "SELECT id, nome, perfil, email, ativo FROM usuarios WHERE email = ?", (email,)
-        ).fetchone()
-        return _usuario(linha) if linha else None
+        return self._um(f"SELECT {self._COLUNAS} FROM usuarios WHERE email = ?", email)
 
     def salvar(self, usuario: Usuario) -> None:
         self._executar(
-            """INSERT INTO usuarios (id, nome, email, perfil, ativo) VALUES (?, ?, ?, ?, ?)
-               ON CONFLICT (id) DO UPDATE SET nome = excluded.nome, email = excluded.email,
-                 perfil = excluded.perfil, ativo = excluded.ativo""",
-            (usuario.id, usuario.nome, usuario.email, usuario.perfil.name, int(usuario.ativo)),
+            """INSERT INTO usuarios (id, nome, perfil, email, ativo) VALUES (?, ?, ?, ?, ?)
+               ON CONFLICT (id) DO UPDATE SET nome = excluded.nome, perfil = excluded.perfil,
+                   email = excluded.email, ativo = excluded.ativo""",
+            (usuario.id, usuario.nome, usuario.perfil.name, usuario.email, int(usuario.ativo)),
         )
 
     def listar(self) -> List[Usuario]:
-        return [_usuario(l) for l in self._executar("SELECT id, nome, perfil, email, ativo FROM usuarios")]
+        return [self._montar(l) for l in self._executar(f"SELECT {self._COLUNAS} FROM usuarios").fetchall()]
 
-    def hash_senha(self, usuario_id: str) -> Optional[str]:
-        linha = self._executar("SELECT hash_senha FROM usuarios WHERE id = ?", (usuario_id,)).fetchone()
+    def guardar_hash(self, usuario_id: str, hash_da_senha: str) -> None:
+        self._executar("UPDATE usuarios SET hash_da_senha = ? WHERE id = ?", (hash_da_senha, usuario_id))
+
+    def hash_de(self, usuario_id: str) -> Optional[str]:
+        linha = self._executar("SELECT hash_da_senha FROM usuarios WHERE id = ?", (usuario_id,)).fetchone()
         return linha[0] if linha else None
 
-    def definir_hash_senha(self, usuario_id: str, hash_senha: str) -> None:
-        self._executar("UPDATE usuarios SET hash_senha = ? WHERE id = ?", (hash_senha, usuario_id))
+    def _um(self, comando: str, chave: str) -> Optional[Usuario]:
+        linha = self._executar(comando, (chave,)).fetchone()
+        return self._montar(linha) if linha else None
+
+    @staticmethod
+    def _montar(linha) -> Usuario:
+        return Usuario(id=linha[0], nome=linha[1], perfil=Perfil[linha[2]], email=linha[3], ativo=bool(linha[4]))
 
 
 class RepositorioSessoesSQLite(_Repositorio):
-    def criar(self, chave: str, usuario_id: str, criada_em: datetime) -> None:
-        self._executar(
-            "INSERT INTO sessoes (chave, usuario_id, criada_em) VALUES (?, ?, ?)",
-            (chave, usuario_id, criada_em.isoformat()),
+    def obter(self, chave: str) -> Optional[Sessao]:
+        linha = self._executar(
+            "SELECT chave, usuario_id, aberta_em, expira_em, protecao FROM sessoes WHERE chave = ?", (chave,)
+        ).fetchone()
+        if linha is None:
+            return None
+        return Sessao(
+            chave=linha[0],
+            usuario_id=linha[1],
+            aberta_em=datetime.fromisoformat(linha[2]),
+            expira_em=datetime.fromisoformat(linha[3]),
+            protecao=linha[4],
         )
 
-    def usuario_id(self, chave: str) -> Optional[str]:
-        linha = self._executar("SELECT usuario_id FROM sessoes WHERE chave = ?", (chave,)).fetchone()
-        return linha[0] if linha else None
+    def salvar(self, sessao: Sessao) -> None:
+        self._executar(
+            "INSERT OR REPLACE INTO sessoes (chave, usuario_id, aberta_em, expira_em, protecao) VALUES (?, ?, ?, ?, ?)",
+            (sessao.chave, sessao.usuario_id, sessao.aberta_em.isoformat(), sessao.expira_em.isoformat(), sessao.protecao),
+        )
 
-    def encerrar(self, chave: str) -> None:
+    def remover(self, chave: str) -> None:
         self._executar("DELETE FROM sessoes WHERE chave = ?", (chave,))
 
-    def encerrar_do_usuario(self, usuario_id: str) -> None:
+    def remover_do_usuario(self, usuario_id: str) -> None:
         self._executar("DELETE FROM sessoes WHERE usuario_id = ?", (usuario_id,))
 
 
 class RepositorioPermissoesSQLite(_Repositorio):
-    def configuradas(self, perfil: Perfil) -> FrozenSet[Operacao]:
-        linhas = self._executar("SELECT operacao FROM permissoes WHERE perfil = ?", (perfil.name,))
-        return frozenset(Operacao[l[0]] for l in linhas if l[0] in Operacao.__members__)
+    def obter(self) -> MatrizPermissoes:
+        linhas = self._executar("SELECT operacao, perfil FROM permissoes").fetchall()
+        return MatrizPermissoes(frozenset((Operacao[o], Perfil[p]) for o, p in linhas))
 
-    def definir(self, perfil: Perfil, operacoes: FrozenSet[Operacao]) -> None:
-        self._executar("DELETE FROM permissoes WHERE perfil = ?", (perfil.name,))
-        self._banco.conexao.executemany(
-            "INSERT INTO permissoes (perfil, operacao) VALUES (?, ?)",
-            [(perfil.name, operacao.name) for operacao in operacoes],
+    def salvar(self, matriz: MatrizPermissoes) -> None:
+        self._executar("DELETE FROM permissoes")
+        self._uow.conexao().executemany(
+            "INSERT INTO permissoes (operacao, perfil) VALUES (?, ?)",
+            [(o.name, p.name) for o, p in matriz.concedidas],
         )
-
-
-class RepositorioClientesSQLite(_Repositorio):
-    def obter(self, cliente_id: str) -> Optional[Cliente]:
-        linha = self._executar("SELECT * FROM clientes WHERE id = ?", (cliente_id,)).fetchone()
-        return Cliente(*linha) if linha else None
-
-    def obter_por_documento(self, documento: str) -> Optional[Cliente]:
-        linha = self._executar("SELECT * FROM clientes WHERE documento = ?", (documento,)).fetchone()
-        return Cliente(*linha) if linha else None
-
-    def salvar(self, cliente: Cliente) -> None:
-        self._executar(
-            """INSERT INTO clientes (id, nome, documento, email, telefone) VALUES (?, ?, ?, ?, ?)
-               ON CONFLICT (id) DO UPDATE SET nome = excluded.nome, documento = excluded.documento,
-                 email = excluded.email, telefone = excluded.telefone""",
-            (cliente.id, cliente.nome, cliente.documento, cliente.email, cliente.telefone),
-        )
-
-    def listar(self, busca: Optional[str] = None) -> List[Cliente]:
-        if not busca:
-            linhas = self._executar("SELECT * FROM clientes ORDER BY nome COLLATE NOCASE")
-        else:
-            digitos = "".join(c for c in busca if c.isdigit())
-            linhas = self._executar(
-                """SELECT * FROM clientes WHERE instr(lower(nome), lower(?)) > 0
-                   OR (? <> '' AND instr(documento, ?) > 0) ORDER BY nome COLLATE NOCASE""",
-                (busca, digitos, digitos),
-            )
-        return [Cliente(*l) for l in linhas]
-
-    def existe(self, cliente_id: str) -> bool:
-        return self._executar("SELECT 1 FROM clientes WHERE id = ?", (cliente_id,)).fetchone() is not None
-
-
-class UnidadeDeTrabalhoSQLite:
-    """Transação sobre o banco (RNF-09). Desfaz tudo se o bloco terminar com exceção."""
-
-    def __init__(self, banco: BancoSQLite):
-        self._banco = banco
-        self._local = threading.local()
-        self.titulos = RepositorioTitulosSQLite(banco)
-        self.auditoria = AuditoriaSQLite(banco)
-        self.usuarios = RepositorioUsuariosSQLite(banco)
-        self.sessoes = RepositorioSessoesSQLite(banco)
-        self.permissoes = RepositorioPermissoesSQLite(banco)
-        self.clientes = RepositorioClientesSQLite(banco)
-        self.consulta_auditoria = ConsultaAuditoriaSQLite(banco)
-
-    def __enter__(self):
-        self._banco.trava.acquire()
-        profundidade = getattr(self._local, "profundidade", 0)
-        if profundidade == 0:
-            try:
-                self._banco.conexao.execute("BEGIN IMMEDIATE")
-            except BaseException:
-                self._banco.trava.release()
-                raise
-        self._local.profundidade = profundidade + 1
-        return self
-
-    def __exit__(self, tipo, valor, rastro):
-        self._local.profundidade -= 1
-        try:
-            if self._local.profundidade == 0:
-                self._banco.conexao.execute("ROLLBACK" if tipo is not None else "COMMIT")
-        finally:
-            self._banco.trava.release()
-
-
-def _usuario(linha) -> Usuario:
-    id, nome, perfil, email, ativo = linha
-    return Usuario(id=id, nome=nome, perfil=Perfil[perfil], email=email, ativo=bool(ativo))

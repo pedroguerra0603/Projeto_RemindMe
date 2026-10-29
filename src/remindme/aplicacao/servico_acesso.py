@@ -1,260 +1,232 @@
-"""Casos de uso da Spec 002: login, sessão, autorização por perfil e administração de usuários.
+"""Casos de uso da Spec 002: entrar, sair, administrar usuários e permissões (UC-01, UC-02)."""
 
-`autorizar` é o único ponto em que a permissão é verificada (INV-5, DT-06).
-"""
-
-import hashlib
-import re
 import secrets
 import uuid
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Dict, FrozenSet, List, Optional
 
-from remindme.aplicacao import senhas
-from remindme.aplicacao.auditoria import Auditoria, RegistroErrosNoLog
-from remindme.aplicacao.portas import RegistroErros, Relogio, UnidadeDeTrabalhoCompleta
-from remindme.dominio.acesso import Operacao, exigir_permissao_alteravel, permissoes_efetivas
-from remindme.dominio.erros import AcessoNegado, EntradaInvalida, OperacaoRecusada
-from remindme.dominio.usuario import Perfil, Usuario
+from remindme.aplicacao.acesso import Autorizacao, chave_da_sessao, nova_sessao
+from remindme.aplicacao.auditoria import OperacaoAuditada, RegistroErrosNoLog
+from remindme.aplicacao.execucao import Execucao
+from remindme.aplicacao.portas import CifradorDeSenha, RegistroErros, Relogio, Sessao, UnidadeDeTrabalho
+from remindme.aplicacao.senhas import CifradorScrypt, motivo_da_senha
+from remindme.dominio.erros import OperacaoRecusada, recusar_campos
+from remindme.dominio.operacoes import Operacao
+from remindme.dominio.permissoes import Celula
+from remindme.dominio.usuario import Perfil, Usuario, normalizar_email
 
-CREDENCIAIS_INVALIDAS = "E-mail ou senha inválidos."
-USUARIO_INATIVO = "Usuário inativo. Procure o Administrador do sistema."
-SEM_SESSAO = "Sessão ausente ou encerrada. Entre novamente."
-TAMANHO_MINIMO_SENHA = 8
-_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+CREDENCIAIS_INVALIDAS = "E-mail ou senha incorretos."
+USUARIO_INATIVO = "Usuário inativo. Procure o Administrador."
+ROTINA_DE_INSTALACAO = "instalação"
 
 
 @dataclass(frozen=True)
-class Sessao:
-    token: str
+class SessaoAberta:
+    """RF-65: a sessão criada e as operações que o perfil pode executar."""
+
+    identificador: str
+    protecao: str
     usuario: Usuario
     operacoes: FrozenSet[Operacao]
 
 
+@dataclass(frozen=True)
+class SessaoAtiva:
+    usuario: Usuario
+    operacoes: FrozenSet[Operacao]
+    protecao: str
+    expira_em: datetime
+
+
+@dataclass(frozen=True)
+class LinhaDaMatriz:
+    operacao: Operacao
+    celulas: Dict[Perfil, Celula]
+
+
 class ServicoAcesso:
     def __init__(
-        self, uow: UnidadeDeTrabalhoCompleta, relogio: Relogio, erros: Optional[RegistroErros] = None
+        self,
+        uow: UnidadeDeTrabalho,
+        relogio: Relogio,
+        erros: Optional[RegistroErros] = None,
+        cifrador: Optional[CifradorDeSenha] = None,
+        autorizacao: Optional[Autorizacao] = None,
     ):
-        self._uow = uow
         self._relogio = relogio
-        self._auditoria = Auditoria(uow, relogio, erros or RegistroErrosNoLog())
+        self._cifrador = cifrador or CifradorScrypt()
+        self._autorizacao = autorizacao or Autorizacao(relogio)
+        self._execucao = Execucao(uow, relogio, erros or RegistroErrosNoLog(), self._autorizacao)
+        self._hash_ficticio: Optional[str] = None
 
-    # Sessão
+    # UC-01
 
-    def entrar(self, email: Optional[str], senha: Optional[str]) -> Sessao:
-        """Fluxo principal, E1 e E2. A mensagem não revela qual campo está errado (RF-66)."""
-        email = _normalizar_email(email)
-        with self._uow as uow:
-            usuario = uow.usuarios.obter_por_email(email) if email else None
-            hash_guardado = uow.usuarios.hash_senha(usuario.id) if usuario else None
-        if not senhas.conferir(senha or "", hash_guardado or senhas.HASH_FICTICIO) or usuario is None:
-            raise AcessoNegado(CREDENCIAIS_INVALIDAS)
-        if not usuario.ativo:
-            raise AcessoNegado(USUARIO_INATIVO)
-        token = secrets.token_urlsafe(32)
-        with self._uow as uow:
-            uow.sessoes.criar(_chave(token), usuario.id, self._relogio.agora())
-        return Sessao(token, usuario, self.operacoes_permitidas(usuario.perfil))
+    def entrar(self, email: object, senha: object) -> SessaoAberta:
+        """RF-65. E1 e E2. Entrar é auditado, sem a senha e sem o identificador da sessão (OPEN-47)."""
+        with self._execucao.do_usuario("entrar no sistema", lambda uow: self._autenticar(uow, email, senha)) as op:
+            identificador, sessao = nova_sessao(op.usuario.id, self._relogio.agora())
+            op.uow.sessoes.salvar(sessao)
+            op.registrar(_ref(op.usuario), "sessão", None, "aberta")
+            operacoes = op.uow.permissoes.obter().operacoes(op.usuario.perfil)
+        return SessaoAberta(identificador, sessao.protecao, op.usuario, operacoes)
 
-    def sair(self, token: Optional[str]) -> None:
-        if token:
-            with self._uow as uow:
-                uow.sessoes.encerrar(_chave(token))
+    def sair(self, sessao: Optional[str]) -> None:
+        with self._execucao.do_usuario("sair do sistema", lambda uow: self._autorizacao.sessao(uow, sessao)[1]) as op:
+            op.uow.sessoes.remover(chave_da_sessao(sessao))
+            op.registrar(_ref(op.usuario), "sessão", "aberta", "encerrada")
 
-    def usuario_da_sessao(self, token: Optional[str]) -> Usuario:
-        """E3: sem sessão, sessão desconhecida ou usuário inativo."""
-        if not token:
-            raise AcessoNegado(SEM_SESSAO)
-        with self._uow as uow:
-            usuario_id = uow.sessoes.usuario_id(_chave(token))
-            usuario = uow.usuarios.obter(usuario_id) if usuario_id else None
-        if usuario is None or not usuario.ativo:
-            raise AcessoNegado(SEM_SESSAO)
-        return usuario
+    def sessao_ativa(self, sessao: Optional[str]) -> SessaoAtiva:
+        """A sessão vale para o usuário ativo, com as permissões atuais do perfil (A2, A4)."""
+        encontrada: List[Sessao] = []
 
-    def operacoes_permitidas(self, perfil: Perfil) -> FrozenSet[Operacao]:
-        """RF-65. Lido a cada chamada: a alteração vale na operação seguinte (RF-03, A4)."""
-        with self._uow as uow:
-            return permissoes_efetivas(perfil, uow.permissoes.configuradas(perfil))
+        def identificar(uow: UnidadeDeTrabalho) -> Usuario:
+            dados, usuario = self._autorizacao.sessao(uow, sessao)
+            encontrada.append(dados)
+            return usuario
 
-    def autorizar(self, token: Optional[str], *operacoes: Operacao) -> Usuario:
-        """INV-2: sessão válida de usuário ativo e permissão explícita de ao menos uma das operações."""
-        usuario = self.usuario_da_sessao(token)
-        permitidas = self.operacoes_permitidas(usuario.perfil)
-        if not any(operacao in permitidas for operacao in operacoes):
-            nomes = " ou ".join(f"“{operacao.value}”" for operacao in operacoes)
-            raise AcessoNegado(f"O perfil {usuario.perfil.value} não tem permissão para {nomes} (RF-67).")
-        return usuario
+        with self._execucao.do_usuario("consultar sessão", identificar) as op:
+            operacoes = op.uow.permissoes.obter().operacoes(op.usuario.perfil)
+        return SessaoAtiva(op.usuario, operacoes, encontrada[0].protecao, encontrada[0].expira_em)
 
-    # Administração (UC-02)
+    def exigir(self, sessao: Optional[str], operacao: Operacao) -> None:
+        """RF-67: confere a permissão antes de a interface mostrar o formulário de uma operação."""
+        with self._execucao.operacao("conferir permissão", sessao, operacao):
+            pass
 
-    def instalar_administrador(self, nome: str, email: str, senha: str) -> Usuario:
-        """Pré-condição da Spec 002: o primeiro Administrador é criado na instalação, sem usuário."""
-        with self._uow as uow:
-            if any(u.perfil is Perfil.ADMINISTRADOR and u.ativo for u in uow.usuarios.listar()):
-                raise OperacaoRecusada("Já existe um Administrador ativo.")
-        return self._criar_usuario(None, nome, email, senha, Perfil.ADMINISTRADOR.value)
+    # UC-02
 
     def cadastrar_usuario(
-        self,
-        token: Optional[str],
-        nome: Optional[str],
-        email: Optional[str],
-        senha: Optional[str],
-        perfil: Optional[str],
+        self, sessao: Optional[str], nome: object, email: object, perfil: object, senha_provisoria: object
     ) -> Usuario:
-        """A1, E6, E7. A senha inicial é informada pelo Administrador (OPEN-35)."""
-        administrador = self.autorizar(token, Operacao.ADMINISTRAR_USUARIOS)
-        return self._criar_usuario(administrador, nome, email, senha, perfil)
+        """A1, RF-02. E6, E7. A senha provisória (OPEN-35) fica só como hash (RNF-04, INV-3)."""
+        with self._execucao.operacao("cadastrar usuário", sessao, Operacao.ADMINISTRAR_USUARIOS) as op:
+            return self._cadastrar(op, nome, email, perfil, senha_provisoria)
 
-    def alterar_perfil(self, token: Optional[str], usuario_id: str, perfil: Optional[str]) -> Usuario:
-        """A2. A auditoria guarda o perfil anterior e o novo (CA-15)."""
-        administrador = self.autorizar(token, Operacao.ADMINISTRAR_USUARIOS)
-        novo = _perfil(perfil)
-        if novo is None:
-            raise EntradaInvalida({"perfil": "obrigatório"})
-        with self._auditoria.operacao("alterar perfil", administrador) as op:
-            usuario = self._obter(op.uow, usuario_id)
-            if usuario.id == administrador.id:
-                raise OperacaoRecusada("O Administrador não altera o próprio perfil (OPEN-36).")
-            if usuario.perfil is novo:
-                return usuario
-            alterado = _copiar(usuario, perfil=novo)
+    def criar_primeiro_administrador(self, nome: object, email: object, senha: object) -> Usuario:
+        """OPEN-39: na instalação, só quando ainda não há Administrador ativo."""
+        with self._execucao.automatica("cadastrar usuário", ROTINA_DE_INSTALACAO) as op:
+            if any(u.ativo and u.perfil is Perfil.ADMINISTRADOR for u in op.uow.usuarios.listar()):
+                raise OperacaoRecusada("Já existe um Administrador ativo. Os demais usuários são cadastrados por ele.")
+            return self._cadastrar(op, nome, email, Perfil.ADMINISTRADOR, senha)
+
+    def alterar_perfil(self, sessao: Optional[str], usuario_id: str, perfil: object) -> Usuario:
+        """A2: a operação seguinte do usuário já usa o novo perfil. RF-05: auditoria do anterior e do novo."""
+        with self._execucao.operacao("alterar perfil", sessao, Operacao.ADMINISTRAR_USUARIOS) as op:
+            usuario = self._usuario(op.uow, usuario_id)
+            alterado = usuario.com_perfil(perfil)
+            if usuario.perfil is Perfil.ADMINISTRADOR:
+                _exigir_outro_administrador(op.uow, usuario)
             op.uow.usuarios.salvar(alterado)
-            op.registrar(_ref(usuario), "perfil", usuario.perfil.value, novo.value)
+            op.registrar(_ref(usuario), "perfil", usuario.perfil.value, alterado.perfil.value)
         return alterado
 
-    def inativar_usuario(self, token: Optional[str], usuario_id: str) -> Usuario:
-        """A3. As sessões do usuário deixam de valer; o histórico é preservado (CA-14)."""
-        return self._mudar_atividade(token, usuario_id, False)
+    def inativar_usuario(self, sessao: Optional[str], usuario_id: str) -> Usuario:
+        """A3: as sessões do usuário deixam de valer, e o histórico é preservado."""
+        with self._execucao.operacao("inativar usuário", sessao, Operacao.ADMINISTRAR_USUARIOS) as op:
+            usuario = self._usuario(op.uow, usuario_id)
+            inativo = usuario.inativado()
+            if usuario.perfil is Perfil.ADMINISTRADOR:
+                _exigir_outro_administrador(op.uow, usuario)
+            op.uow.usuarios.salvar(inativo)
+            op.uow.sessoes.remover_do_usuario(usuario.id)
+            op.registrar(_ref(usuario), "ativo", "sim", "não")
+        return inativo
 
-    def reativar_usuario(self, token: Optional[str], usuario_id: str) -> Usuario:
-        return self._mudar_atividade(token, usuario_id, True)
+    def listar_usuarios(self, sessao: Optional[str]) -> List[Usuario]:
+        with self._execucao.operacao("consultar usuários", sessao, Operacao.ADMINISTRAR_USUARIOS) as op:
+            return sorted(op.uow.usuarios.listar(), key=lambda u: (u.nome.casefold(), u.email))
 
-    def alterar_permissao(
-        self, token: Optional[str], perfil: Perfil, operacao: Operacao, permitida: bool
-    ) -> None:
-        """A4, E5."""
-        administrador = self.autorizar(token, Operacao.ADMINISTRAR_USUARIOS)
-        exigir_permissao_alteravel(perfil, operacao)
-        with self._auditoria.operacao("alterar permissão", administrador) as op:
-            atuais = op.uow.permissoes.configuradas(perfil)
-            if (operacao in atuais) == permitida:
-                return
-            novas = atuais | {operacao} if permitida else atuais - {operacao}
-            op.uow.permissoes.definir(perfil, frozenset(novas))
-            op.registrar(
-                f"perfil {perfil.value}",
-                operacao.value,
-                _sim_nao(not permitida),
-                _sim_nao(permitida),
-            )
+    def obter_usuario(self, sessao: Optional[str], usuario_id: str) -> Usuario:
+        with self._execucao.operacao("consultar usuários", sessao, Operacao.ADMINISTRAR_USUARIOS) as op:
+            return self._usuario(op.uow, usuario_id)
 
-    def listar_usuarios(self, token: Optional[str]) -> List[Usuario]:
-        self.autorizar(token, Operacao.ADMINISTRAR_USUARIOS)
-        with self._uow as uow:
-            return sorted(uow.usuarios.listar(), key=lambda u: u.nome.lower())
+    def matriz(self, sessao: Optional[str]) -> List[LinhaDaMatriz]:
+        with self._execucao.operacao("consultar permissões", sessao, Operacao.ADMINISTRAR_USUARIOS) as op:
+            matriz = op.uow.permissoes.obter()
+        return [LinhaDaMatriz(o, {p: matriz.celula(o, p) for p in Perfil}) for o in Operacao]
 
-    def obter_usuario(self, token: Optional[str], usuario_id: str) -> Usuario:
-        self.autorizar(token, Operacao.ADMINISTRAR_USUARIOS)
-        with self._uow as uow:
-            return self._obter(uow, usuario_id)
+    def conceder_permissao(self, sessao: Optional[str], perfil: object, operacao: object) -> None:
+        """A4, RF-03: vale na operação seguinte, inclusive com a sessão já aberta. E5: célula fixada não muda."""
+        with self._execucao.operacao("conceder permissão", sessao, Operacao.ADMINISTRAR_USUARIOS) as op:
+            perfil, operacao = _celula(perfil, operacao)
+            op.uow.permissoes.salvar(op.uow.permissoes.obter().conceder(perfil, operacao))
+            op.registrar("permissões", f"{perfil.value}: {operacao.value}", "não", "sim")
 
-    def matriz(self, token: Optional[str]) -> Dict[Perfil, FrozenSet[Operacao]]:
-        self.autorizar(token, Operacao.ADMINISTRAR_USUARIOS)
-        return {perfil: self.operacoes_permitidas(perfil) for perfil in Perfil}
+    def retirar_permissao(self, sessao: Optional[str], perfil: object, operacao: object) -> None:
+        with self._execucao.operacao("retirar permissão", sessao, Operacao.ADMINISTRAR_USUARIOS) as op:
+            perfil, operacao = _celula(perfil, operacao)
+            op.uow.permissoes.salvar(op.uow.permissoes.obter().retirar(perfil, operacao))
+            op.registrar("permissões", f"{perfil.value}: {operacao.value}", "sim", "não")
 
-    def nomes_dos_usuarios(self) -> Dict[str, str]:
-        """Para apresentar quem fez cada operação na auditoria. Chamado depois de `autorizar`."""
-        with self._uow as uow:
-            return {u.id: u.nome for u in uow.usuarios.listar()}
-
-    def _criar_usuario(
-        self,
-        administrador: Optional[Usuario],
-        nome: Optional[str],
-        email: Optional[str],
-        senha: Optional[str],
-        perfil: Optional[str],
+    def _cadastrar(
+        self, op: OperacaoAuditada, nome: object, email: object, perfil: object, senha: object
     ) -> Usuario:
-        nome = (nome or "").strip()
-        email = _normalizar_email(email)
-        perfil_escolhido = _perfil(perfil)
-        erros = {}
-        if not nome:
-            erros["nome"] = "obrigatório"
-        if not email:
-            erros["e-mail"] = "obrigatório"
-        elif not _EMAIL.match(email):
-            erros["e-mail"] = "formato inválido"
-        if not senha:
-            erros["senha"] = "obrigatória"
-        elif len(senha) < TAMANHO_MINIMO_SENHA:
-            erros["senha"] = f"deve ter ao menos {TAMANHO_MINIMO_SENHA} caracteres"
-        if perfil_escolhido is None:
-            erros["perfil"] = "obrigatório" if not perfil else "perfil inexistente"
-        if erros:
-            raise EntradaInvalida(erros)
-        with self._auditoria.operacao("cadastrar usuário", administrador, rotina="instalação") as op:
-            if op.uow.usuarios.obter_por_email(email) is not None:
-                raise EntradaInvalida({"e-mail": "já cadastrado"})
-            usuario = Usuario(uuid.uuid4().hex, nome, perfil_escolhido, email, True)
-            op.uow.usuarios.salvar(usuario)
-            op.uow.usuarios.definir_hash_senha(usuario.id, senhas.gerar_hash(senha))
-            # INV-3: a auditoria registra o perfil, nunca a senha.
-            op.registrar(_ref(usuario), "perfil", None, perfil_escolhido.value)
+        campos: Dict[str, str] = {}
+        usuario: Optional[Usuario] = None
+        try:
+            usuario = Usuario.cadastrar(uuid.uuid4().hex, nome, email, perfil)
+        except OperacaoRecusada as recusa:
+            campos.update(recusa.campos)
+        email_normalizado = normalizar_email(email)
+        if "email" not in campos and op.uow.usuarios.obter_por_email(email_normalizado) is not None:
+            campos["email"] = "Já existe um usuário com este e-mail."
+        motivo = motivo_da_senha(senha)
+        if motivo:
+            campos["senha"] = motivo
+        recusar_campos(campos)
+        op.uow.usuarios.salvar(usuario)
+        op.uow.usuarios.guardar_hash(usuario.id, self._cifrador.gerar(senha))
+        for campo, valor in (
+            ("nome", usuario.nome),
+            ("email", usuario.email),
+            ("perfil", usuario.perfil.value),
+            ("ativo", "sim"),
+        ):
+            op.registrar(_ref(usuario), campo, None, valor)
         return usuario
 
-    def _mudar_atividade(self, token: Optional[str], usuario_id: str, ativo: bool) -> Usuario:
-        administrador = self.autorizar(token, Operacao.ADMINISTRAR_USUARIOS)
-        nome = "reativar usuário" if ativo else "inativar usuário"
-        with self._auditoria.operacao(nome, administrador) as op:
-            usuario = self._obter(op.uow, usuario_id)
-            if usuario.id == administrador.id:
-                raise OperacaoRecusada("O Administrador não inativa o próprio usuário (OPEN-36).")
-            if usuario.ativo is ativo:
-                return usuario
-            alterado = _copiar(usuario, ativo=ativo)
-            op.uow.usuarios.salvar(alterado)
-            if not ativo:
-                op.uow.sessoes.encerrar_do_usuario(usuario.id)
-            op.registrar(_ref(usuario), "ativo", _sim_nao(not ativo), _sim_nao(ativo))
-        return alterado
+    def _autenticar(self, uow: UnidadeDeTrabalho, email: object, senha: object) -> Usuario:
+        """E1 (RF-66): a mesma mensagem para e-mail inexistente e senha errada, com o mesmo trabalho de
+        conferência nos dois casos. E2: o usuário inativo só é revelado a quem acerta a senha."""
+        usuario = uow.usuarios.obter_por_email(normalizar_email(email))
+        guardado = uow.usuarios.hash_de(usuario.id) if usuario else None
+        confere = self._cifrador.conferir(senha if isinstance(senha, str) else "", guardado or self._ficticio())
+        if usuario is None or guardado is None or not confere:
+            raise OperacaoRecusada(CREDENCIAIS_INVALIDAS)
+        if not usuario.ativo:
+            raise OperacaoRecusada(USUARIO_INATIVO)
+        return usuario
+
+    def _ficticio(self) -> str:
+        if self._hash_ficticio is None:
+            self._hash_ficticio = self._cifrador.gerar(secrets.token_urlsafe(16))
+        return self._hash_ficticio
 
     @staticmethod
-    def _obter(uow, usuario_id: str) -> Usuario:
-        usuario = uow.usuarios.obter(usuario_id)
+    def _usuario(uow: UnidadeDeTrabalho, usuario_id: str) -> Usuario:
+        usuario = uow.usuarios.obter(usuario_id) if isinstance(usuario_id, str) else None
         if usuario is None:
             raise OperacaoRecusada("Usuário não encontrado.")
         return usuario
 
 
-def _chave(token: str) -> str:
-    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+def _exigir_outro_administrador(uow: UnidadeDeTrabalho, usuario: Usuario) -> None:
+    """OPEN-45, decidida em 2026-10-23: o sistema não fica sem Administrador ativo."""
+    outros = [
+        u for u in uow.usuarios.listar() if u.ativo and u.perfil is Perfil.ADMINISTRADOR and u.id != usuario.id
+    ]
+    if usuario.ativo and not outros:
+        raise OperacaoRecusada(
+            "Este é o último Administrador ativo: cadastre outro antes de inativá-lo ou de mudar seu perfil (OPEN-45)."
+        )
 
 
-def _normalizar_email(email: Optional[str]) -> str:
-    return (email or "").strip().lower()
-
-
-def _perfil(nome: Optional[str]) -> Optional[Perfil]:
-    for perfil in Perfil:
-        if nome in (perfil.value, perfil.name):
-            return perfil
-    return None
-
-
-def _copiar(usuario: Usuario, **alteracoes) -> Usuario:
-    dados = dict(
-        id=usuario.id, nome=usuario.nome, perfil=usuario.perfil, email=usuario.email, ativo=usuario.ativo
-    )
-    dados.update(alteracoes)
-    return Usuario(**dados)
+def _celula(perfil: object, operacao: object):
+    if not isinstance(perfil, Perfil) or not isinstance(operacao, Operacao):
+        raise OperacaoRecusada("Escolha um perfil e uma operação da matriz.")
+    return perfil, operacao
 
 
 def _ref(usuario: Usuario) -> str:
     return f"usuario {usuario.id}"
-
-
-def _sim_nao(verdadeiro: bool) -> str:
-    return "sim" if verdadeiro else "não"
