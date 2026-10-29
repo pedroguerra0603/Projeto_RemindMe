@@ -41,7 +41,7 @@ Com Python 3.11 ou mais recente, sem instalar nada, na raiz do repositório:
 python3 iniciar.py demonstracao
 ```
 
-O navegador abre sozinho em **http://127.0.0.1:8000**. Entre com `carla@demo.example` (Dono), `diego@demo.example` (Operador Financeiro), `helena@demo.example` (Contador) ou `admin@demo.example` (Administrador). A senha aparece no terminal. No Windows, também dá para usar o atalho `RemindMe-demonstracao.bat`; sem Python instalado, use o GitHub Codespaces. Veja [como apresentar](docs/apresentacao.md).
+Abra **http://localhost:8000** e entre com `carla@demo.example` (Dono), `diego@demo.example` (Operador Financeiro), `helena@demo.example` (Contador) ou `admin@demo.example` (Administrador). A senha aparece no terminal.
 
 Testes:
 
