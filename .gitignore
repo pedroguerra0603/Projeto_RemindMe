@@ -22,3 +22,8 @@ dist/
 build/
 target/
 coverage/
+
+# Banco local do RemindMe
+*.db
+*.db-wal
+*.db-shm

@@ -12,6 +12,8 @@ PERMITIDAS = {
     "dominio": {"dominio"},
     "aplicacao": {"dominio", "aplicacao"},
     "infraestrutura": {"dominio", "aplicacao", "infraestrutura"},
+    # Apresentação (web e linha de comando) é a entrada; `montagem.py` liga a aplicação à infraestrutura.
+    "apresentacao": {"dominio", "aplicacao", "infraestrutura", "apresentacao"},
 }
 
 
