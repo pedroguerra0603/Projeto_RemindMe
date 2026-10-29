@@ -8,7 +8,7 @@
 | **Nome** | Autenticação e autorização por perfil |
 | **Objetivo** | Garantir que só usuários ativos e autenticados operem o sistema e que cada um execute apenas o que seu perfil permite, com tudo negado por padrão. |
 | **Valor entregue** | A Dona sabe que o Contador não altera dados, que só ela estorna e cancela e que um usuário inativado perde o acesso na hora. O Administrador mantém usuários e permissões sem mexer no código. |
-| **Situação** | Proposta |
+| **Situação** | **Verificada** — todos os critérios de aceitação passaram (seção 8). |
 | **Aprovada por** | *João Pedro Silva Guerra - 22/10/26* |
 
 ## 2. Rastreabilidade
@@ -157,4 +157,42 @@ Os testes automatizados levam no nome o identificador do critério ou da regra, 
 
 ## 8. Verificação
 
-A preencher depois da implementação.
+Implementada e verificada em 2026-10-29, junto com a interface web ([Spec 017](017-interface-web.md)). Testes em [`tests/aplicacao/test_spec_002_aceite.py`](../../tests/aplicacao/test_spec_002_aceite.py), executados sobre SQLite em memória.
+
+| Critério | Teste | Resultado |
+|---|---|---|
+| CA-01 | `test_CA_01_cadastro_de_usuario_auditado_sem_a_senha` | Passou |
+| CA-02 | `test_CA_02_email_ja_cadastrado_e_recusado` | Passou |
+| CA-03 | `test_CA_03_campos_obrigatorios_ausentes` | Passou |
+| CA-04 | `test_CA_04_operador_nao_cadastra_usuario` | Passou |
+| CA-05 | `test_CA_05_senha_guardada_so_como_hash_scrypt_com_salt_proprio` | Passou |
+| CA-06 | `test_CA_06_login_devolve_exatamente_as_operacoes_do_contador` | Passou |
+| CA-07 | `test_CA_07_mesma_mensagem_para_email_inexistente_e_senha_errada` | Passou |
+| CA-08 | `test_CA_08_usuario_inativo_nao_entra` | Passou |
+| CA-09 | `test_CA_09_sem_sessao_ou_sessao_desconhecida` | Passou |
+| CA-10 | `test_CA_10_RB_03_contador_nao_cadastra_titulo_nem_registra_pagamento` | Passou |
+| CA-11 | `test_CA_11_operacao_fora_da_matriz_e_negada` | Passou |
+| CA-12 | `test_CA_12_retirar_permissao_vale_na_sessao_aberta` | Passou |
+| CA-13 | `test_CA_13_permissao_fixada_nao_muda` | Passou |
+| CA-14 | `test_CA_14_inativacao_derruba_a_sessao_e_preserva_a_auditoria` | Passou |
+| CA-15 | `test_CA_15_mudanca_de_perfil_vale_na_operacao_seguinte_e_e_auditada` | Passou |
+| CA-16 | `test_CA_16_RB_02_operador_nao_estorna_nem_chamando_o_servico` | Passou |
+
+### Onde está cada parte
+
+| Parte | Arquivo |
+|---|---|
+| Matriz, células fixadas e permissões efetivas (INV-4) | `src/remindme/dominio/acesso.py` |
+| Login, sessão, autorização em um único ponto (INV-5) e administração | `src/remindme/aplicacao/servico_acesso.py` |
+| Hash `scrypt` com salt (INV-3) | `src/remindme/aplicacao/senhas.py` |
+| Toda operação passa por `autorizar` antes do serviço (INV-2) | `src/remindme/aplicacao/sistema.py` |
+
+### Divergências e limitações
+
+| Item | Situação |
+|---|---|
+| Senha inicial | O Administrador informa a senha no cadastro, com no mínimo 8 caracteres (OPEN-35, sugestão adotada provisoriamente). |
+| Token de sessão | O banco guarda só o resumo SHA-256 do token; o token fica no cookie `HttpOnly` do navegador. |
+| Administrador | Não altera o próprio perfil, não se inativa e não retira do perfil Administrador a permissão de administrar (OPEN-36). |
+| Reativação | Além da inativação (A3), o Administrador pode reativar um usuário. Não há requisito; foi incluída para desfazer uma inativação por engano, com auditoria. |
+| Logout | Incluído com a interface (Spec 017). |

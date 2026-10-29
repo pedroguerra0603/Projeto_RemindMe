@@ -19,8 +19,8 @@ Lista ordenada das unidades implementáveis do sistema. O mapa não é implement
 | ID | Spec | RF | RB | RNF | UC | Entidades | Drivers e ADRs | Depende de | Situação |
 |---|---|---|---|---|---|---|---|---|---|
 | [001](001-fundacao-camadas-e-auditoria.md) | Fundação: estrutura em camadas e auditoria de operações | RF-04, RF-05, RF-61, RF-62 | RB-01, RB-30 | RNF-06, RNF-09, RNF-19, RNF-21, RNF-23 | — | `RegistroAuditoria` | DA-01, DA-02, DA-03, DA-07, DA-09; ADR-001, ADR-004 | OPEN-01, OPEN-02 | **Verificada** |
-| [002](002-autenticacao-e-autorizacao.md) | Autenticação e autorização por perfil | RF-02, RF-03, RF-65, RF-66, RF-67 | RB-03 | RNF-01 a RNF-05 | UC-01, UC-02 | `Usuario`, `Perfil` | DA-04 | 001; OPEN-03, OPEN-10 (decididas) | Proposta |
-| 003 | Cadastro de clientes | RF-01 | — | RNF-14 | UC-03 | `Cliente` | — | 001, 002 | A escrever |
+| [002](002-autenticacao-e-autorizacao.md) | Autenticação e autorização por perfil | RF-02, RF-03, RF-65, RF-66, RF-67 | RB-03 | RNF-01 a RNF-05 | UC-01, UC-02 | `Usuario`, `Perfil` | DA-04 | 001; OPEN-03, OPEN-10 (decididas) | **Verificada** |
+| [003](003-cadastro-de-clientes.md) | Cadastro de clientes | RF-01 | — | RNF-14 | UC-03 | `Cliente` | — | 001, 002 | Proposta; implementada e verificada, aguarda aprovação |
 | 004 | Orçamento: itens, valores e alçada de desconto | RF-06, RF-07, RF-10, RF-13 a RF-18 | RB-15, RB-24 | RNF-03 | UC-04, UC-05 | `Orcamento`, `ItemOrcamento`, `AlcadaDesconto`, `AprovacaoDesconto` | DA-01 | 003 | A escrever |
 | 005 | Envio, decisão do cliente e conversão em título | RF-08, RF-09, RF-11, RF-12, RF-19 | RB-05, RB-18 | RNF-09 | UC-04 | `Orcamento`, `Titulo` | DA-01, DA-07; ADR-002 | 004, 006; OPEN-15 | A escrever |
 | [006](006-titulo-pagamento-baixa-e-estorno.md) | Título: cadastro manual, pagamento, baixa e estorno | RF-20 a RF-27, RF-30, RF-31, RF-68 | RB-01, RB-02, RB-21, RB-22, RB-23 | RNF-09, RNF-19 | UC-06 | `Titulo`, `Pagamento` | DA-01, DA-03, DA-09; ADR-001 | 001; para o uso completo, 002 e 003 | **Verificada** |
@@ -33,7 +33,8 @@ Lista ordenada das unidades implementáveis do sistema. O mapa não é implement
 | 013 | Consulta de auditoria | RF-64 | RB-30 | RNF-06 | UC-12 | `RegistroAuditoria` | DA-02; ADR-004 | 001, 002 | A escrever |
 | 014 | Configuração de regras | RF-03, RF-14 | RB-07, RB-08, RB-16, RB-28 | RNF-18, RNF-20 | UC-13 | `AlcadaDesconto`, `CategoriaFinanceira` | DA-10 | 002 | A escrever |
 | 015 | Importação e exportação em CSV | RF-83, RF-84, RF-85 | RB-19 | RNF-09 | UC-14 | `Cliente`, `Titulo`, `LancamentoFinanceiro` | DA-03 | 003, 006, 012 | A escrever |
-| 016 | Painel por perfil | — | RB-13 | RNF-15, RNF-16, RNF-17 | UC-01 | — | — | 006, 010, 011 | A escrever |
+| 016 | Painel por perfil | — | RB-13 | RNF-15, RNF-16, RNF-17 | UC-01 | — | — | 006, 010, 011 | A escrever (painel inicial de títulos já entregue na 017) |
+| [017](017-interface-web.md) | Interface web e persistência | RF-22, RF-23, RF-64, RF-65 a RF-67 | — | RNF-01 a RNF-03, RNF-14 a RNF-17, RNF-21 | UC-01, UC-02, UC-03, UC-06, UC-12 | — | DA-02 a DA-05; ADR-001, ADR-004 | 001, 002, 003, 006; OPEN-01, OPEN-02, OPEN-13 | Proposta; implementada e verificada, aguarda aprovação |
 
 RNF-07 (disponibilidade) e RNF-08 (backup) são operacionais. Não pertencem a nenhuma spec de comportamento e serão tratados na entrega, depois de OPEN-09 e OPEN-12.
 

@@ -133,12 +133,12 @@ Cada item tem uma questão em aberto, com as restrições que os drivers impõem
 
 | Escolha | Restrição vinda dos drivers | Questão |
 |---|---|---|
-| Linguagem e framework web | Deve permitir domínio sem dependência do framework (DA-01) | OPEN-01: linguagem decidida em 2026-10-03 (Python 3.11, somente a biblioteca padrão); framework web a escolher na primeira spec com interface |
-| Banco de dados | Deve oferecer transações (DA-03) e restrição de unicidade (DA-08) | OPEN-02 |
+| Linguagem e framework web | Deve permitir domínio sem dependência do framework (DA-01) | OPEN-01: Python 3.11, somente a biblioteca padrão (2026-10-03); sem framework web, com WSGI da biblioteca padrão (2026-10-29, Spec 017) |
+| Banco de dados | Deve oferecer transações (DA-03) e restrição de unicidade (DA-08) | OPEN-02: SQLite (2026-10-29, Spec 017) |
 | Mecanismo de sessão | Deve permitir negar por padrão em toda rota (DA-04) | OPEN-03 |
 | Provedor de IA | Deve ser trocável sem alterar o domínio (DA-06, DA-07) | OPEN-04 |
 | Hospedagem | — | OPEN-12 |
-| Mecanismo do agendador | Não pode degradar o uso interativo (DA-05) | OPEN-13 |
+| Mecanismo do agendador | Não pode degradar o uso interativo (DA-05) | OPEN-13: tarefa periódica no próprio processo, em thread separada (2026-10-29, Spec 017) |
 
 As estruturas que respondem aos drivers são as decisões DT-01 a DT-09 da seção 3. As tecnologias ainda em aberto são decididas pela equipe quando for escrita a primeira spec que depende de cada uma, e o acompanhamento fica na questão correspondente em [`.specify/open.md`](../.specify/open.md):
 
