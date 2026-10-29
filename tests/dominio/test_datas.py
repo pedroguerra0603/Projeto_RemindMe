@@ -26,8 +26,11 @@ def titulo(vencimento):
 
 class DataDeReferenciaInjetavel(unittest.TestCase):
     def test_RF_24_codigo_de_producao_nao_le_o_relogio_da_maquina(self):
+        """Exceção única: `infraestrutura/relogio.py`, a implementação da porta `Relogio` usada em produção."""
         achados = []
         for caminho in sorted(RAIZ_DO_CODIGO.rglob("*.py")):
+            if caminho == RAIZ_DO_CODIGO / "infraestrutura" / "relogio.py":
+                continue
             for no in ast.walk(ast.parse(caminho.read_text(encoding="utf-8"))):
                 if isinstance(no, ast.Attribute) and no.attr in ("today", "now", "utcnow", "fromtimestamp"):
                     achados.append(f"{caminho.name}:{no.lineno} {no.attr}")
