@@ -71,7 +71,7 @@ def _documento_html(titulo: str, corpo: Html) -> Html:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{titulo} · RemindMe</title>
+<title>{titulo} | RemindMe</title>
 <link rel="icon" href="/estatico/icone.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/estatico/estilo.css">
 <script src="/estatico/tema.js"></script>
@@ -112,15 +112,13 @@ def layout(titulo: str, conteudo: Html, ctx: Contexto, secao: str = "", aviso: O
 <div class="corpo">
   <nav class="menu" aria-label="Principal"><ul>{itens}</ul></nav>
   <main id="conteudo">{aviso}{conteudo}</main>
-</div>
-<footer class="rodape">RemindMe · gestão de recebíveis e obrigações · {hoje}</footer>""",
+</div>""",
         nome=ctx.usuario.nome,
         perfil=ctx.usuario.perfil.value,
         protecao=protecao(ctx),
         itens=itens,
         aviso=caixa_de_aviso(*aviso) if aviso else Html(""),
         conteudo=conteudo,
-        hoje=f.data(ctx.hoje),
     )
     return _documento_html(titulo, corpo)
 
@@ -303,7 +301,9 @@ def pagina_painel(
     if ctx.pode(Operacao.MANTER_CLIENTES):
         acoes.append(botao_link("/clientes/novo", "Novo cliente", "secundario"))
     primeiro_nome = ctx.usuario.nome.split()[0] if ctx.usuario.nome else ""
-    partes.append(cabecalho(f"Olá, {primeiro_nome}", f"Hoje é {f.data(ctx.hoje)}. Este é o resumo do seu perfil.", juntar(acoes)))
+    partes.append(cabecalho(f"Olá, {primeiro_nome}", f.data_por_extenso(ctx.hoje).capitalize(), juntar(acoes)))
+    if visoes is not None:
+        partes.append(_regua_do_caixa(visoes, nomes_clientes, ctx))
 
     if pendentes:
         partes.append(_cartao_pendentes(pendentes, nomes_clientes))
@@ -316,7 +316,7 @@ def pagina_painel(
             h(
                 """<div class="indicadores">
   <div class="indicador"><div class="rotulo">Usuários ativos</div><div class="numero">{ativos}</div><div class="detalhe">{inativos} inativo(s)</div></div>
-  <div class="indicador"><div class="rotulo">Administração</div><div class="detalhe margem-topo"><a href="/usuarios">Usuários</a> · <a href="/permissoes">Permissões por perfil</a></div></div>
+  <div class="indicador"><div class="rotulo">Administração</div><div class="detalhe margem-topo"><a href="/usuarios">Usuários</a> e <a href="/permissoes">permissões por perfil</a></div></div>
 </div>""",
                 ativos=len(ativos),
                 inativos=len(usuarios) - len(ativos),
@@ -339,6 +339,31 @@ def pagina_painel(
 # Gráficos do painel: um conjunto por perfil, com os dados que o painel já tem.
 
 MESES = ("jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez")
+
+
+def _regua_do_caixa(visoes: list, nomes_clientes: Dict[str, str], ctx: Contexto) -> Html:
+    """O destaque do painel: vencidos à esquerda do hoje e os próximos 15 dias à direita."""
+    marcos = []
+    for v in visoes:
+        dias = (v.vencimento - ctx.hoje).days
+        if v.estado is EstadoTitulo.VENCIDO:
+            cor = "vermelho"
+        elif v.estado is EstadoTitulo.ABERTO and dias <= g.DIAS_DEPOIS:
+            cor = "laranja" if v.proximo_do_vencimento else "azul"
+        else:
+            continue
+        marcos.append((nomes_clientes.get(v.cliente_id, "Cliente"), dias, v.saldo, cor, f"/titulos/{v.id}"))
+    vencidos = [m for m in marcos if m[3] == "vermelho"]
+    a_vencer = [m for m in marcos if m[3] != "vermelho"]
+    resumo = h(
+        '<p class="regua-resumo"><span class="vermelho">{nv} vencido(s), {sv}</span><span class="laranja">{na} a vencer em 15 dias, {sa}</span></p>',
+        nv=len(vencidos), sv=f.moeda(sum((m[2] for m in vencidos), Decimal("0.00"))),
+        na=len(a_vencer), sa=f.moeda(sum((m[2] for m in a_vencer), Decimal("0.00"))),
+    )
+    return h(
+        '<section class="regua-do-caixa" aria-labelledby="t-regua"><h2 id="t-regua">Régua do caixa</h2>{r}{g}</section>',
+        r=resumo, g=g.regua(marcos, f.moeda_curta, f.data(ctx.hoje)[:5]),
+    )
 
 
 def _cartao_grafico(titulo: str, grafico: Html) -> Html:
@@ -629,7 +654,7 @@ def pagina_titulos(ctx: Contexto, visoes: list, nomes_clientes: Dict[str, str], 
     total = sum((v.saldo for v in visoes if v.estado in (EstadoTitulo.ABERTO, EstadoTitulo.VENCIDO)), Decimal("0.00"))
     conteudo = juntar(
         [
-            cabecalho("Títulos", f"{len(visoes)} título(s) · saldo em aberto de {f.moeda(total)}", juntar(acoes)),
+            cabecalho("Títulos", f"{len(visoes)} título(s), com {f.moeda(total)} em aberto", juntar(acoes)),
             h('<section class="cartao">{f}</section>', f=filtros),
             h('<section class="cartao sem-borda-interna">{t}</section>', t=_tabela_de_titulos(visoes, nomes_clientes)),
         ]
@@ -925,7 +950,7 @@ def pagina_orcamento(
     dados = h(
         """<dl class="dados">
 <div><dt>Valor bruto</dt><dd>{bruto}</dd></div>
-<div><dt>Desconto</dt><dd>{pct} · {desc}</dd></div>
+<div><dt>Desconto</dt><dd>{pct} ({desc})</dd></div>
 <div><dt>Valor líquido</dt><dd><strong>{liquido}</strong></dd></div>
 <div><dt>Condição de pagamento</dt><dd>{condicao}</dd></div>
 <div><dt>Criado em</dt><dd>{criado}</dd></div>
@@ -1106,7 +1131,7 @@ def _mudanca(r) -> Html:
 
 def _item_do_historico(r) -> Html:
     return h(
-        '<li><span class="quando">{quando}</span><span><strong>{quem}</strong> · {operacao}<br><span class="mudanca">{mudanca}</span></span></li>',
+        '<li><span class="quando">{quando}</span><span><strong>{quem}</strong>: {operacao}<br><span class="mudanca">{mudanca}</span></span></li>',
         quando=f.data_hora(r.data_hora),
         quem=r.responsavel,
         operacao=r.operacao,

@@ -41,11 +41,13 @@ ARQUIVOS_ESTATICOS = {
     "estilo.css": "text/css; charset=utf-8",
     "icone.svg": "image/svg+xml",
     "tema.js": "text/javascript; charset=utf-8",
+    "plex-sans-400.woff2": "font/woff2",
+    "plex-sans-600.woff2": "font/woff2",
 }
 ID = "[0-9a-f]{32}"
 
 POLITICA_DE_CONTEUDO = (
-    "default-src 'none'; style-src 'self'; img-src 'self'; script-src 'self'; form-action 'self'; "
+    "default-src 'none'; style-src 'self'; img-src 'self'; script-src 'self'; font-src 'self'; form-action 'self'; "
     "frame-ancestors 'none'; base-uri 'none'"
 )
 
@@ -154,7 +156,7 @@ class AplicacaoWeb:
         publica, protegida = False, True
         r.append(("GET", "/", self._inicio, publica))
         r.append(("GET", "/favicon.ico", self._favicon, publica))
-        r.append(("GET", "/estatico/(?P<nome>[a-z.]+)", self._estatico, publica))
+        r.append(("GET", "/estatico/(?P<nome>[a-z0-9.-]+)", self._estatico, publica))
         r.append(("GET", "/entrar", self._entrar_pagina, publica))
         r.append(("POST", "/entrar", self._entrar, publica))
         r.append(("POST", "/sair", self._sair, protegida))

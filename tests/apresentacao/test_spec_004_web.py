@@ -39,7 +39,7 @@ class OrcamentosPelaInterface(Base):
         resposta = carla.enviar(pagina, f"{pagina}/decisao", {"acao": "aprovar", "percentual": "15"})
         self.assertEqual(resposta.status, 303)
         texto = carla.get(pagina).texto
-        self.assertIn("15% · R$ 270,00", texto)
+        self.assertIn("15% (R$ 270,00)", texto)
         self.assertIn("R$ 1.530,00", texto)
 
         orcamento_id = pagina.rsplit("/", 1)[1]
