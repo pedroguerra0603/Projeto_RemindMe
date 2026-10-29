@@ -315,7 +315,9 @@ class SegurancaDoServidor(Base):
                 politica = pagina.cabecalho("Content-Security-Policy")
                 self.assertIn("default-src 'none'", politica)
                 self.assertIn("frame-ancestors 'none'", politica)
-                self.assertNotIn("script-src", politica)
+                # Só scripts do próprio site (o botão de tema): nada inline e nada de fora.
+                self.assertIn("script-src 'self';", politica)
+                self.assertNotIn("unsafe-inline", politica)
                 self.assertEqual(pagina.cabecalho("X-Content-Type-Options"), "nosniff")
                 self.assertEqual(pagina.cabecalho("X-Frame-Options"), "DENY")
         sessao = next(c for c in resposta.cookies_definidos() if c.startswith("remindme_sessao="))

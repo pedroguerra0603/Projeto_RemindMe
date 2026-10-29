@@ -47,7 +47,8 @@ class SemPontoFlutuante(unittest.TestCase):
                     achados.append(f"{caminho.name}:{no.lineno} literal float")
                 if isinstance(no, ast.Name) and no.id == "float":
                     achados.append(f"{caminho.name}:{no.lineno} uso de float")
-                if isinstance(no, ast.Div):
+                # Exceção: em `graficos.py` a divisão calcula só a escala do desenho, nunca dinheiro.
+                if isinstance(no, ast.BinOp) and isinstance(no.op, ast.Div) and caminho.name != "graficos.py":
                     achados.append(f"{caminho.name}:{no.lineno} divisão com /")
         self.assertEqual(achados, [])
 

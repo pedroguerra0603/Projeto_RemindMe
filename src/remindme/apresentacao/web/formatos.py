@@ -21,6 +21,13 @@ def moeda(valor: Decimal) -> str:
     return f"{sinal}R$ {'.'.join(grupos)},{centavos}"
 
 
+def moeda_curta(valor: Decimal) -> str:
+    """Para rótulos apertados de gráfico: R$ 850, R$ 1,2 mil."""
+    if abs(valor) >= 1000:
+        return "R$ " + f"{valor.scaleb(-3):.1f}".replace(".", ",") + " mil"
+    return f"R$ {valor:.0f}"
+
+
 def valor_para_campo(valor: Optional[Decimal]) -> str:
     """O valor como o usuário o digitaria: 1234,56."""
     return "" if valor is None else f"{valor:.2f}".replace(".", ",")

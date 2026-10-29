@@ -1,58 +1,111 @@
 /* RemindMe — estilo da interface web (Spec 017). Sem dependências externas. */
 
+/* Paleta "azul profundo". O tema escuro vale pelo sistema operacional ou pelo botão do topo (tema.js). */
+
 :root {
-  --fundo: #f4f6fb;
+  --fundo: #f4f6fa;
   --superficie: #ffffff;
-  --superficie-2: #f8fafc;
-  --borda: #e2e8f0;
+  --superficie-2: #f8fafd;
+  --borda: #e3e8f0;
   --texto: #0f172a;
   --texto-suave: #475569;
   --texto-fraco: #64748b;
-  --marca: #4338ca;
-  --marca-forte: #3730a3;
-  --marca-suave: #eef2ff;
-  --foco: #6366f1;
+  --marca: #1d4ed8;
+  --marca-forte: #1e40af;
+  --marca-suave: #eaf0ff;
+  --foco: #3b82f6;
   --perigo: #b91c1c;
   --perigo-suave: #fef2f2;
   --sucesso: #15803d;
   --sucesso-suave: #f0fdf4;
-  --alerta: #b45309;
-  --alerta-suave: #fffbeb;
+  --alerta: #c2410c;
+  --alerta-suave: #fff1e6;
   --info: #1d4ed8;
   --info-suave: #eff6ff;
   --neutro: #475569;
   --neutro-suave: #f1f5f9;
-  --sombra: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.08);
-  --raio: 10px;
+  --menu-fundo: #0f1e3d;
+  --menu-texto: #c7d2e8;
+  --menu-ativo: #1d4ed8;
+  --grafico-azul: #2563eb;
+  --grafico-laranja: #ea580c;
+  --grafico-vermelho: #dc2626;
+  --grafico-verde: #16a34a;
+  --grafico-cinza: #94a3b8;
+  --sombra: 0 1px 2px rgba(15, 30, 61, 0.05), 0 4px 12px rgba(15, 30, 61, 0.06);
+  --raio: 12px;
   color-scheme: light;
 }
 
+/* Escuro: pelo sistema, salvo se o botão escolheu claro; ou pelo botão. Os dois blocos têm as mesmas cores. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --fundo: #0b1020;
-    --superficie: #121a2e;
-    --superficie-2: #0f172a;
-    --borda: #24304a;
-    --texto: #e5e9f2;
-    --texto-suave: #b4bfd3;
-    --texto-fraco: #8a97ae;
-    --marca: #818cf8;
-    --marca-forte: #a5b4fc;
-    --marca-suave: #1e2445;
-    --foco: #a5b4fc;
+  :root:not([data-tema="claro"]) {
+    --fundo: #0b1220;
+    --superficie: #111a2e;
+    --superficie-2: #0e1729;
+    --borda: #22304a;
+    --texto: #e6ebf4;
+    --texto-suave: #b3bed2;
+    --texto-fraco: #8794ab;
+    --marca: #3b82f6;
+    --marca-forte: #2563eb;
+    --marca-suave: #15233f;
+    --foco: #93c5fd;
     --perigo: #f87171;
     --perigo-suave: #2a1316;
     --sucesso: #4ade80;
     --sucesso-suave: #0f2418;
-    --alerta: #fbbf24;
-    --alerta-suave: #2a2110;
+    --alerta: #fb923c;
+    --alerta-suave: #2b1a0e;
     --info: #93c5fd;
     --info-suave: #0f1d33;
-    --neutro: #b4bfd3;
+    --neutro: #b3bed2;
     --neutro-suave: #1b2438;
+    --menu-fundo: #070f22;
+    --menu-texto: #b3bed2;
+    --menu-ativo: #1d4ed8;
+    --grafico-azul: #60a5fa;
+    --grafico-laranja: #fb923c;
+    --grafico-vermelho: #f87171;
+    --grafico-verde: #4ade80;
+    --grafico-cinza: #64748b;
     --sombra: 0 1px 2px rgba(0, 0, 0, 0.4);
     color-scheme: dark;
   }
+}
+
+:root[data-tema="escuro"] {
+  --fundo: #0b1220;
+  --superficie: #111a2e;
+  --superficie-2: #0e1729;
+  --borda: #22304a;
+  --texto: #e6ebf4;
+  --texto-suave: #b3bed2;
+  --texto-fraco: #8794ab;
+  --marca: #3b82f6;
+  --marca-forte: #2563eb;
+  --marca-suave: #15233f;
+  --foco: #93c5fd;
+  --perigo: #f87171;
+  --perigo-suave: #2a1316;
+  --sucesso: #4ade80;
+  --sucesso-suave: #0f2418;
+  --alerta: #fb923c;
+  --alerta-suave: #2b1a0e;
+  --info: #93c5fd;
+  --info-suave: #0f1d33;
+  --neutro: #b3bed2;
+  --neutro-suave: #1b2438;
+  --menu-fundo: #070f22;
+  --menu-texto: #b3bed2;
+  --menu-ativo: #1d4ed8;
+  --grafico-azul: #60a5fa;
+  --grafico-laranja: #fb923c;
+  --grafico-vermelho: #f87171;
+  --grafico-verde: #4ade80;
+  --grafico-cinza: #64748b;
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -111,18 +164,17 @@ a:hover { color: var(--marca-forte); }
 .corpo { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: calc(100vh - 57px); }
 
 .menu {
-  background: var(--superficie);
-  border-right: 1px solid var(--borda);
+  background: var(--menu-fundo);
   padding: 20px 12px;
 }
 .menu ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .menu a {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 12px; border-radius: 8px;
-  color: var(--texto-suave); text-decoration: none; font-weight: 500;
+  color: var(--menu-texto); text-decoration: none; font-weight: 500;
 }
-.menu a:hover { background: var(--superficie-2); color: var(--texto); }
-.menu a[aria-current="page"] { background: var(--marca-suave); color: var(--marca); font-weight: 600; }
+.menu a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.menu a[aria-current="page"] { background: var(--menu-ativo); color: #fff; font-weight: 600; }
 .menu .icone { width: 18px; text-align: center; opacity: 0.85; }
 
 main { padding: 28px 32px 48px; max-width: 1180px; width: 100%; min-width: 0; }
@@ -316,3 +368,37 @@ button.discreto:hover { background: var(--superficie-2); color: var(--texto); }
 .cartao.destaque-alerta { border-left: 4px solid var(--alerta); }
 form.em-linha { display: inline; margin: 0; }
 td.numero form.em-linha button { margin-left: 4px; }
+
+/* Gráficos do painel (graficos.py). A cor de cada item vem da classe: azul, laranja, vermelho, verde, cinza. */
+.azul { --cor: var(--grafico-azul); }
+.laranja { --cor: var(--grafico-laranja); }
+.vermelho { --cor: var(--grafico-vermelho); }
+.verde { --cor: var(--grafico-verde); }
+.cinza { --cor: var(--grafico-cinza); }
+
+.cartao-grafico h2 { margin-bottom: 16px; }
+.grafico { display: block; width: 100%; height: auto; max-height: 260px; }
+.grafico rect { fill: var(--cor); }
+.grafico .eixo { stroke: var(--borda); stroke-width: 0.4; }
+.grafico text { text-anchor: middle; font-family: inherit; }
+.grafico .valor { font-size: 3.2px; font-weight: 600; fill: var(--texto); }
+.grafico .rotulo { font-size: 3.4px; fill: var(--texto-suave); }
+
+.grafico-barras { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.grafico-barras li { display: grid; grid-template-columns: minmax(0, 10rem) minmax(0, 1fr) auto; align-items: center; gap: 12px; font-size: 0.9rem; }
+.grafico-barras .rotulo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--texto-suave); }
+.grafico-barras .valor { font-weight: 600; font-variant-numeric: tabular-nums; }
+.barra { display: block; width: 100%; height: 12px; }
+.barra rect { fill: var(--cor); }
+.barra .trilho { fill: var(--neutro-suave); }
+
+.grafico-anel { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.grafico-anel svg { width: 160px; height: 160px; flex: none; }
+.grafico-anel circle { fill: none; stroke: var(--cor); stroke-width: 6; }
+.legenda { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; flex: 1; min-width: 200px; }
+.legenda li { display: flex; align-items: center; gap: 8px; color: var(--texto-suave); }
+.legenda strong { margin-left: auto; color: var(--texto); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.marcador { width: 12px; height: 12px; border-radius: 3px; background: var(--cor); flex: none; }
+
+/* Botão de tema claro/escuro (tema.js); fica escondido se o JavaScript estiver desligado. */
+.botao-tema { font-size: 0.85rem; }
