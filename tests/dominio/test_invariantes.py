@@ -18,6 +18,7 @@ from remindme.infraestrutura.memoria import (
     RepositorioTitulosEmMemoria,
     UnidadeDeTrabalhoEmMemoria,
 )
+from tests.apoio import ComSessoes
 
 HOJE = date(2026, 10, 3)
 ONTEM = HOJE - timedelta(days=1)
@@ -169,20 +170,21 @@ class RB22SomenteQuando(unittest.TestCase):
         self.assertIs(t.estado, A)
 
 
-class RegrasDePerfilNaAplicacao(unittest.TestCase):
+class RegrasDePerfilNaAplicacao(ComSessoes, unittest.TestCase):
     """RB-02 e OPEN-16 valem para todo perfil que não é o Dono, chamando o serviço sem interface (RNF-03)."""
 
     def setUp(self):
         self.titulos = RepositorioTitulosEmMemoria()
         self.auditoria = AuditoriaEmMemoria()
+        self.uow = UnidadeDeTrabalhoEmMemoria(self.titulos, self.auditoria)
         self.servico = ServicoTitulos(
-            UnidadeDeTrabalhoEmMemoria(self.titulos, self.auditoria),
+            self.uow,
             ClientesEmMemoria({"c1"}),
             RelogioFixo(datetime(2026, 10, 3, 10, 0)),
         )
         dono = Usuario("dono", "Dono", Perfil.DONO)
-        t = self.servico.cadastrar_titulo(dono, "c1", Decimal("100.00"), HOJE)
-        self.titulo = self.servico.registrar_pagamento(dono, t.id, Decimal("10.00"), HOJE)
+        t = self.servico.cadastrar_titulo(self.sessao(dono), "c1", Decimal("100.00"), HOJE)
+        self.titulo = self.servico.registrar_pagamento(self.sessao(dono), t.id, Decimal("10.00"), HOJE)
 
     def outros_perfis(self):
         return [Usuario(p.name, p.value, p) for p in Perfil if p is not Perfil.DONO]
@@ -192,22 +194,22 @@ class RegrasDePerfilNaAplicacao(unittest.TestCase):
         for usuario in self.outros_perfis():
             with self.subTest(perfil=usuario.perfil.value):
                 with self.assertRaises(OperacaoRecusada):
-                    self.servico.estornar_pagamento(usuario, self.titulo.id, pagamento, "motivo", HOJE)
+                    self.servico.estornar_pagamento(self.sessao(usuario), self.titulo.id, pagamento, "motivo", HOJE)
                 self.assertFalse(self.titulos.obter(self.titulo.id).pagamentos[0].estornado)
 
     def test_OPEN_16_nenhum_outro_perfil_cancela(self):
         for usuario in self.outros_perfis():
             with self.subTest(perfil=usuario.perfil.value):
                 with self.assertRaises(OperacaoRecusada):
-                    self.servico.cancelar_titulo(usuario, self.titulo.id, "motivo")
+                    self.servico.cancelar_titulo(self.sessao(usuario), self.titulo.id, "motivo")
                 self.assertIs(self.titulos.obter(self.titulo.id).estado, A)
 
     def test_RB_01_toda_mudanca_de_estado_tem_registro_de_auditoria(self):
         dono = Usuario("dono", "Dono", Perfil.DONO)
         s = self.servico
-        s.registrar_pagamento(dono, self.titulo.id, Decimal("90.00"), HOJE)
-        s.estornar_pagamento(dono, self.titulo.id, self.titulo.pagamentos[0].id, "motivo", HOJE + timedelta(days=1))
-        s.cancelar_titulo(dono, self.titulo.id, "motivo")
+        s.registrar_pagamento(self.sessao(dono), self.titulo.id, Decimal("90.00"), HOJE)
+        s.estornar_pagamento(self.sessao(dono), self.titulo.id, self.titulo.pagamentos[0].id, "motivo", HOJE + timedelta(days=1))
+        s.cancelar_titulo(self.sessao(dono), self.titulo.id, "motivo")
         mudancas = [(r.valor_anterior, r.valor_novo) for r in self.auditoria.registros if r.operacao == "mudar estado"]
         self.assertEqual(mudancas, [("Aberto", "Baixado"), ("Baixado", "Vencido"), ("Vencido", "Cancelado")])
         for r in self.auditoria.registros:

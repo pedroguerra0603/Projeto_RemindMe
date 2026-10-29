@@ -14,7 +14,7 @@ from decimal import Decimal
 from remindme.aplicacao import portas
 from remindme.aplicacao.servico_titulos import ServicoTitulos
 from remindme.dominio.auditoria import RegistroAuditoria
-from remindme.dominio.erros import OperacaoRecusada
+from remindme.dominio.erros import OperacaoNegada, OperacaoRecusada
 from remindme.dominio.titulo import EstadoTitulo
 from remindme.dominio.usuario import Perfil, Usuario
 from remindme.infraestrutura.memoria import (
@@ -24,16 +24,15 @@ from remindme.infraestrutura.memoria import (
     RepositorioTitulosEmMemoria,
     UnidadeDeTrabalhoEmMemoria,
 )
+from tests.apoio import ComSessoes
 
 HOJE = date(2026, 10, 3)
 FUTURO = HOJE + timedelta(days=30)
 DONO = Usuario("dono", "Dono", Perfil.DONO)
 
-PERMITIDO, NEGADO, SEM_RESTRICAO = "permitido", "negado", "sem restrição na Spec 006 (Spec 002)"
+PERMITIDO, NEGADO = "permitido", "negado"
 
-# Resultado esperado de cada operação para cada perfil, conforme RB-02 e OPEN-16 (decidida em 2026-10-03).
-# "Sem restrição" é o que a Spec 006 define (seção 7): a autorização geral, inclusive RB-03 (Contador só
-# consulta), é da Spec 002. Estas células ficam registradas, e não testadas como se fossem a regra final.
+# Resultado esperado de cada operação para cada perfil: RB-02, OPEN-16 e a matriz da Spec 002 (RB-03).
 MATRIZ = {
     "estornar pagamento": {
         Perfil.DONO: PERMITIDO,
@@ -49,9 +48,16 @@ MATRIZ = {
         Perfil.CLIENTE: NEGADO,
         Perfil.ADMINISTRADOR: NEGADO,
     },
-    "cadastrar título": {p: SEM_RESTRICAO for p in Perfil},
-    "registrar pagamento": {p: SEM_RESTRICAO for p in Perfil},
-    "verificar vencimentos": {p: SEM_RESTRICAO for p in Perfil},
+    **{
+        operacao: {
+            Perfil.DONO: PERMITIDO,
+            Perfil.OPERADOR_FINANCEIRO: PERMITIDO,
+            Perfil.CONTADOR: NEGADO,
+            Perfil.CLIENTE: NEGADO,
+            Perfil.ADMINISTRADOR: NEGADO,
+        }
+        for operacao in ("cadastrar título", "registrar pagamento", "verificar vencimentos")
+    },
 }
 
 
@@ -59,17 +65,18 @@ def usuario(perfil):
     return Usuario(perfil.name.lower(), perfil.value, perfil)
 
 
-class Base(unittest.TestCase):
+class Base(ComSessoes, unittest.TestCase):
     def setUp(self):
         self.titulos = RepositorioTitulosEmMemoria()
         self.auditoria = AuditoriaEmMemoria()
+        self.uow = UnidadeDeTrabalhoEmMemoria(self.titulos, self.auditoria)
         self.servico = ServicoTitulos(
-            UnidadeDeTrabalhoEmMemoria(self.titulos, self.auditoria),
+            self.uow,
             ClientesEmMemoria({"c1", "c2"}),
             RelogioFixo(datetime(2026, 10, 3, 10, 0)),
         )
-        self.titulo = self.servico.cadastrar_titulo(DONO, "c1", Decimal("1234.56"), FUTURO)
-        self.titulo = self.servico.registrar_pagamento(DONO, self.titulo.id, Decimal("10.00"), HOJE)
+        self.titulo = self.servico.cadastrar_titulo(self.sessao(DONO), "c1", Decimal("1234.56"), FUTURO)
+        self.titulo = self.servico.registrar_pagamento(self.sessao(DONO), self.titulo.id, Decimal("10.00"), HOJE)
         self.pagamento = self.titulo.pagamentos[0].id
         self.registros_antes = list(self.auditoria.registros)
 
@@ -77,9 +84,16 @@ class Base(unittest.TestCase):
         titulo_id = titulo_id or self.titulo.id
         return {
             "estornar pagamento": lambda: self.servico.estornar_pagamento(
-                usuario_, titulo_id, self.pagamento, "motivo", HOJE
+                self.sessao(usuario_), titulo_id, self.pagamento, "motivo", HOJE
             ),
-            "cancelar título": lambda: self.servico.cancelar_titulo(usuario_, titulo_id, "motivo"),
+            "cancelar título": lambda: self.servico.cancelar_titulo(self.sessao(usuario_), titulo_id, "motivo"),
+            "cadastrar título": lambda: self.servico.cadastrar_titulo(
+                self.sessao(usuario_), "c1", Decimal("10.00"), FUTURO
+            ),
+            "registrar pagamento": lambda: self.servico.registrar_pagamento(
+                self.sessao(usuario_), titulo_id, Decimal("10.00"), HOJE
+            ),
+            "verificar vencimentos": lambda: self.servico.verificar_vencimentos(self.sessao(usuario_), HOJE),
         }[nome]()
 
 
@@ -91,11 +105,13 @@ class MatrizPerfilOperacao(Base):
 
     def test_RNF_02_cada_celula_negada_recusa_a_operacao_sem_passar_pela_interface(self):
         negadas = [(op, p) for op, c in MATRIZ.items() for p, r in c.items() if r == NEGADO]
-        self.assertEqual(len(negadas), 8)
+        self.assertEqual(len(negadas), 17)
         for operacao, perfil in negadas:
             with self.subTest(operacao=operacao, perfil=perfil.value):
-                with self.assertRaises(OperacaoRecusada):
+                titulos_antes = dict(self.titulos.dados)
+                with self.assertRaises(OperacaoNegada):
                     self.operacao(operacao, usuario(perfil))
+                self.assertEqual(self.titulos.dados, titulos_antes)
                 self.assertIs(self.titulos.obter(self.titulo.id).estado, EstadoTitulo.ABERTO)
                 self.assertFalse(self.titulos.obter(self.titulo.id).pagamentos[0].estornado)
                 self.assertEqual(self.auditoria.registros, self.registros_antes)
@@ -125,12 +141,12 @@ class MatrizPerfilOperacao(Base):
 
     def test_RNF_02_a_permissao_e_verificada_antes_do_estado_e_do_motivo(self):
         """Quem não pode não descobre, pela mensagem, se o motivo faltava ou se o título estava cancelado."""
-        self.servico.cancelar_titulo(DONO, self.titulo.id, "desistência")
+        self.servico.cancelar_titulo(self.sessao(DONO), self.titulo.id, "desistência")
         with self.assertRaisesRegex(OperacaoRecusada, "Somente o Dono cancela"):
-            self.servico.cancelar_titulo(usuario(Perfil.OPERADOR_FINANCEIRO), self.titulo.id, None)
+            self.servico.cancelar_titulo(self.sessao(usuario(Perfil.OPERADOR_FINANCEIRO)), self.titulo.id, None)
         with self.assertRaisesRegex(OperacaoRecusada, "Somente o Dono estorna"):
             self.servico.estornar_pagamento(
-                usuario(Perfil.OPERADOR_FINANCEIRO), self.titulo.id, self.pagamento, None, HOJE
+                self.sessao(usuario(Perfil.OPERADOR_FINANCEIRO)), self.titulo.id, self.pagamento, None, HOJE
             )
 
 
@@ -169,15 +185,16 @@ class AuditoriaSomenteInclusao(Base):
         with self.assertRaises(dataclasses.FrozenInstanceError):
             self.auditoria.registros[0].campo_novo = "x"
 
-    def test_RB_30_a_porta_de_auditoria_so_oferece_incluir(self):
+    def test_RB_30_a_porta_de_auditoria_so_oferece_incluir_e_ler(self):
+        """A leitura entrou com a Spec 013 (consulta de auditoria); alteração e exclusão continuam fora."""
         publicos = {n for n, _ in inspect.getmembers(portas.RepositorioAuditoria) if not n.startswith("_")}
-        self.assertEqual(publicos, {"registrar"})
+        self.assertEqual(publicos, {"registrar", "listar"})
 
-    def test_RB_30_a_auditoria_em_memoria_so_oferece_incluir(self):
+    def test_RB_30_a_auditoria_em_memoria_so_oferece_incluir_e_ler(self):
         publicos = {
             n for n, _ in inspect.getmembers(AuditoriaEmMemoria, callable) if not n.startswith("_")
         }
-        self.assertEqual(publicos, {"registrar"})
+        self.assertEqual(publicos, {"registrar", "listar"})
 
     def test_RB_30_o_servico_nao_oferece_alterar_nem_excluir_auditoria(self):
         publicos = {n for n, _ in inspect.getmembers(ServicoTitulos, callable) if not n.startswith("_")}
@@ -186,7 +203,7 @@ class AuditoriaSomenteInclusao(Base):
     def test_RB_01_recusa_nao_apaga_nem_reescreve_a_auditoria_anterior(self):
         antes = list(self.auditoria.registros)
         with self.assertRaises(OperacaoRecusada):
-            self.servico.cancelar_titulo(usuario(Perfil.CONTADOR), self.titulo.id, "motivo")
+            self.servico.cancelar_titulo(self.sessao(usuario(Perfil.CONTADOR)), self.titulo.id, "motivo")
         self.assertEqual(self.auditoria.registros[: len(antes)], antes)
 
     def test_ADR_004_provisorio_o_duble_em_memoria_expoe_a_lista_de_registros(self):
@@ -198,21 +215,14 @@ class AuditoriaSomenteInclusao(Base):
 
 
 class Pendentes(unittest.TestCase):
-    """Dependem de specs ainda não aprovadas. Nenhum código é escrito antes (regra 1 do CLAUDE.md)."""
+    """Dependem de specs ainda não aprovadas. Nenhum código é escrito antes (regra 1 do CLAUDE.md).
 
-    @unittest.skip("Pendente da Spec 002: autorização geral. Contador não cria nem altera registro (RB-03, "
-                   "RF-67); perfil sem permissão explícita é negado por padrão (RNF-02) em cadastro, pagamento "
-                   "e verificação de vencimentos.")
-    def test_RB_03_contador_nao_cadastra_nem_registra_pagamento(self):
-        pass
+    RB-03 (Contador não cadastra nem paga) e RNF-01 (sem sessão) saíram daqui com a Spec 002: estão em
+    `test_spec_002_aceite.py` (CA-09, CA-10) e na matriz acima."""
 
     @unittest.skip("Pendente das Specs 002 e 009: o perfil Cliente só acessa títulos do próprio cliente "
                    "(RNF-25, RB-26). Hoje o serviço não conhece o vínculo entre usuário e cliente.")
     def test_RNF_25_cliente_nao_acessa_titulo_de_outro_cliente(self):
-        pass
-
-    @unittest.skip("Pendente da Spec 002: autenticação em toda funcionalidade (RNF-01); depende de OPEN-03.")
-    def test_RNF_01_acesso_sem_sessao_e_recusado(self):
         pass
 
     @unittest.skip("Pendente das Specs 009 e 011: o payload enviado à IA simulada não contém nome, documento "
@@ -220,10 +230,36 @@ class Pendentes(unittest.TestCase):
     def test_RNF_22_payload_da_ia_nao_contem_dados_pessoais(self):
         pass
 
-    @unittest.skip("Pendente da Spec 013: consulta de auditoria por perfil (UC-12). A exclusão e a alteração "
-                   "pelo banco dependem de OPEN-02.")
+
+class AuditoriaNoArmazenamentoReal(unittest.TestCase):
+    """RNF-06 com o banco escolhido (OPEN-36, ADR-007) e a consulta da Spec 013: nenhum perfil altera nem exclui."""
+
     def test_RNF_06_perfil_nenhum_exclui_registro_de_auditoria_no_armazenamento_real(self):
-        pass
+        import sqlite3
+        import tempfile
+        from pathlib import Path
+
+        from remindme.aplicacao.servico_acesso import ServicoAcesso
+        from remindme.aplicacao.servico_auditoria import ServicoAuditoria
+        from remindme.aplicacao.servico_clientes import ServicoClientes
+        from remindme.infraestrutura.sqlite import UnidadeDeTrabalhoSQLite, preparar_banco
+
+        for servico in (ServicoAcesso, ServicoAuditoria, ServicoClientes, ServicoTitulos):
+            publicos = {n for n, _ in inspect.getmembers(servico, callable) if not n.startswith("_")}
+            with self.subTest(servico=servico.__name__):
+                self.assertFalse({n for n in publicos if "excluir" in n or "apagar" in n or "alterar_registro" in n})
+        with tempfile.TemporaryDirectory() as pasta:
+            caminho = str(Path(pasta).joinpath("remindme.db"))
+            preparar_banco(caminho)
+            with UnidadeDeTrabalhoSQLite(caminho) as uow:
+                uow.auditoria.registrar(RegistroAuditoria("u1", datetime(2026, 10, 3), "operação", "titulo t1"))
+            conexao = sqlite3.connect(caminho)
+            try:
+                for comando in ("UPDATE auditoria SET motivo = 'adulterado'", "DELETE FROM auditoria"):
+                    with self.subTest(comando=comando), self.assertRaises(sqlite3.DatabaseError):
+                        conexao.execute(comando)
+            finally:
+                conexao.close()
 
 
 if __name__ == "__main__":

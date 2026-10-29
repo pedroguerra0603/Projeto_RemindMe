@@ -73,19 +73,20 @@ Esta spec oferece as operações de domínio que as Specs 005, 008, 009 e 011 us
 - **A1 — Pagamento parcial.** No passo 5, o saldo continua maior que zero. O estado não muda. O sistema devolve o saldo restante.
 - **A2 — Cadastro manual.** O usuário informa cliente, valor, vencimento e condição de pagamento. O sistema cria o título em Aberto, com origem "manual" e saldo igual ao valor.
 - **A3 — Vencimento.** Dada uma data de referência, todo título Aberto com vencimento anterior a ela e saldo maior que zero passa a Vencido.
-- **A4 — Estorno.** O Dono informa o pagamento e o motivo. O sistema marca o pagamento como estornado e recalcula o saldo. O título vai para Aberto, se o vencimento for igual ou posterior à data de referência, ou para Vencido, se for anterior.
+- **A4 — Estorno.** O Dono informa o pagamento e o motivo. O sistema marca o pagamento como estornado e recalcula o saldo. Se o título estava Baixado, ele vai para Aberto, se o vencimento for igual ou posterior à data de referência, ou para Vencido, se for anterior. Título Aberto ou Vencido continua no mesmo estado; a passagem de Aberto a Vencido é da verificação de vencimento (RF-24, OPEN-23).
 - **A5 — Cancelamento.** Um usuário autorizado informa o título e o motivo. Um título Aberto ou Vencido passa a Cancelado.
 - **A6 — Consulta.** O usuário filtra títulos por cliente, estado, vencimento e período. Cada título é apresentado com valor, saldo, vencimento, estado e a sinalização de próximo do vencimento.
 
 ### Exceções
 
-- **E1 — Valor inválido.** Valor menor ou igual a zero, ou maior que o saldo: o pagamento é recusado.
+- **E1 — Valor inválido.** Valor menor ou igual a zero, maior que o saldo, com mais de duas casas decimais (OPEN-20) ou com mais de 15 dígitos inteiros (OPEN-24): o pagamento é recusado, sem arredondamento.
+- **E9 — Data futura.** Pagamento com data posterior ao dia do registro é recusado; data passada é aceita (OPEN-17).
 - **E2 — Estado que não aceita pagamento.** Título Baixado ou Cancelado: o pagamento é recusado.
 - **E3 — Estorno por quem não é Dono.** A operação é recusada.
 - **E4 — Motivo ausente.** Estorno ou cancelamento sem motivo: a operação é recusada.
 - **E5 — Pagamento já estornado.** Novo estorno do mesmo pagamento é recusado.
 - **E6 — Cancelamento de título Baixado.** A operação é recusada. É preciso estornar antes.
-- **E7 — Dados inválidos no cadastro.** Valor menor ou igual a zero, cliente inexistente ou vencimento ausente: o cadastro é recusado.
+- **E7 — Dados inválidos no cadastro.** Valor menor ou igual a zero, com mais de duas casas decimais ou com mais de 15 dígitos inteiros, cliente inexistente ou vencimento ausente: o cadastro é recusado.
 - **E8 — Falha durante a operação.** Nenhuma alteração parcial permanece.
 
 Toda recusa informa o motivo e não altera nenhum dado.
@@ -131,6 +132,9 @@ Toda recusa informa o motivo e não altera nenhum dado.
 | CA-22 | um título Aberto | um pagamento válido é registrado | existe um registro de auditoria com usuário, data, operação e título afetado | RB-01, INV-7 |
 | CA-23 | um título Aberto | o registro de auditoria falha durante o registro de um pagamento | nenhum pagamento é gravado, e saldo e estado não mudam | RNF-09, INV-7 |
 | CA-24 | qualquer sequência de pagamentos e estornos válidos sobre um título | a sequência termina | o saldo é igual ao valor menos a soma dos pagamentos não estornados | INV-1, INV-2 |
+| CA-25 | um título Aberto de R$ 100,00 | o usuário registra um pagamento com data de amanhã | o pagamento é recusado e nada é gravado; com a data de hoje ou passada, é aceito | E9, OPEN-17 |
+| CA-26 | um título Aberto de R$ 100,00 | o usuário registra um pagamento de R$ 0,001 ou cadastra um título de R$ 100,001 | a operação é recusada, sem arredondamento; R$ 10,000 é aceito como R$ 10,00 | E1, E7, OPEN-20 |
+| CA-27 | um cliente cadastrado | o usuário cadastra um título ou registra um pagamento com 16 dígitos inteiros | a operação é recusada; com 15 dígitos inteiros, é aceita sem perder centavos | E1, E7, OPEN-24 |
 
 Os testes automatizados levam no nome o identificador da regra ou do critério, por exemplo `RB-23_recusa_pagamento_maior_que_o_saldo`.
 
@@ -143,13 +147,13 @@ Os testes automatizados levam no nome o identificador da regra ou do critério, 
 | OPEN-11 | Juros e multa em título vencido | Decidida em 2026-10-03: fora do MVP. |
 | OPEN-15 | Um título ou um título por parcela | Aberta. Não bloqueia: esta spec trata cada título isoladamente. |
 | OPEN-16 | Qual perfil pode cancelar um título | Decidida em 2026-10-03: somente o Dono. |
-| OPEN-17 | A data do pagamento pode ser anterior à data do registro? E pode ser futura? | Aberta. A implementação não restringe a data. |
-| OPEN-18 | O Dono pode estornar um pagamento de título Cancelado? | Aberta, surgiu na implementação. Comportamento provisório: recusa. |
-| OPEN-19 | O filtro "período" do RF-22 é sobre o vencimento ou sobre outra data? | Aberta, surgiu na implementação. Comportamento provisório: intervalo de vencimento. |
-| OPEN-20 | Valores monetários podem ter mais de duas casas decimais? | Aberta, surgiu nos testes de exceção (#68). Comportamento atual: aceita. |
-| OPEN-21 | De onde vem a antecedência de próximo do vencimento (RF-23)? | Aberta, surgiu na rastreabilidade (#40). Comportamento atual: o valor é parâmetro da consulta. |
-| OPEN-22 | O valor do título pode ser alterado (RF-31 × INV-5)? | Aberta, surgiu na análise de divergências (#57). Comportamento atual: não há operação que altere o valor. |
-| OPEN-23 | O estorno de pagamento de título Aberto ou Vencido reavalia o estado pelo vencimento (A4)? | Aberta, surgiu na análise de divergências (#57). Comportamento atual: só título Baixado muda de estado no estorno. |
+| OPEN-17 | A data do pagamento pode ser anterior à data do registro? E pode ser futura? | Decidida em 2026-10-23 por João Pedro Silva Guerra: data passada é aceita; data futura é recusada (E9, CA-25). |
+| OPEN-18 | O Dono pode estornar um pagamento de título Cancelado? | Decidida em 2026-10-23 por João Pedro Silva Guerra: recusar. |
+| OPEN-19 | O filtro "período" do RF-22 é sobre o vencimento ou sobre outra data? | Decidida em 2026-10-23 por João Pedro Silva Guerra: intervalo de vencimento. |
+| OPEN-20 | Valores monetários podem ter mais de duas casas decimais? | Decidida em 2026-10-23 por João Pedro Silva Guerra: não; o valor é recusado, sem arredondamento (E1, E7, CA-26). |
+| OPEN-21 | De onde vem a antecedência de próximo do vencimento (RF-23)? | Decidida em 2026-10-23 por João Pedro Silva Guerra: parâmetro configurado pelo Administrador (UC-13, Spec 014). Até lá, é parâmetro da consulta; o valor padrão está em OPEN-37. |
+| OPEN-22 | O valor do título pode ser alterado (RF-31 × INV-5)? | Decidida em 2026-10-23 por João Pedro Silva Guerra: o valor não muda (INV-5); RF-31 trata só de cancelamento e estorno. |
+| OPEN-23 | O estorno de pagamento de título Aberto ou Vencido reavalia o estado pelo vencimento (A4)? | Decidida em 2026-10-23 por João Pedro Silva Guerra: só título Baixado muda de estado no estorno; A4 ajustada. |
 
 ## 8. Verificação
 
@@ -183,6 +187,9 @@ Verificada em 2026-10-03, com `python3 -m unittest discover -s tests -t .`: 48 t
 | CA-22 | `test_CA_22 (2 testes, inclui RB-01)` | Passou |
 | CA-23 | `test_CA_23` | Passou |
 | CA-24 | `test_CA_24 (50 sequências aleatórias com semente fixa)` | Passou |
+| CA-25 | `test_OPEN_17_*` (domínio e aplicação, 5 testes), verificado em 2026-10-23 | Passou |
+| CA-26 | `test_OPEN_20_*` (2 testes), verificado em 2026-10-23 | Passou |
+| CA-27 | `test_OPEN_24_*` e `test_D_06_corrigido_*` (5 testes), verificado em 2026-10-23 | Passou |
 
 ### Invariantes
 
@@ -203,12 +210,13 @@ Verificada em 2026-10-03, com `python3 -m unittest discover -s tests -t .`: 48 t
 | Persistência | Em memória, com transação por cópia e restauração. O banco depende de OPEN-02. |
 | Estado Em Renegociação | Fica fora de `EstadoTitulo` até a Spec 009, como está no escopo. |
 | Quem cadastra título e registra pagamento | Sem restrição de perfil nesta spec. A autorização geral, inclusive RB-03 (Contador só consulta), é da Spec 002. |
-| Data do pagamento | Sem restrição, até a decisão de OPEN-17. |
-| Estorno em título Cancelado | Recusado provisoriamente (OPEN-18). |
-| Filtro por período | Intervalo de vencimento, provisoriamente (OPEN-19). |
+| Data do pagamento | Data futura recusada desde 2026-10-23 (OPEN-17). O domínio recebe o dia de hoje da camada de aplicação, que o lê do relógio. |
+| Estorno em título Cancelado | Recusado (OPEN-18, decidida em 2026-10-23). |
+| Filtro por período | Intervalo de vencimento (OPEN-19, decidida em 2026-10-23). |
 | Nome dos testes | Python não aceita hífen em identificador: `RB-23_...` vira `test_RB_23_...`. |
 | Validação de entrada (2026-10-09, #70) | Valor `NaN`, infinito, `float`, texto ou `None` e motivo que não é texto geravam erro interno, e um pagamento em `float` ficava anexado ao título antes do erro. Agora são recusados com motivo, no domínio (E1, E4, E7). Defeitos D-01 a D-05 em [`docs/qualidade/defeitos.md`](../../docs/qualidade/defeitos.md). |
-| Precisão monetária | Valor com mais de duas casas decimais é aceito, até a decisão de OPEN-20. |
+| Precisão monetária e limite de valor | Desde 2026-10-23, valor com mais de duas casas decimais ou com mais de 15 dígitos inteiros é recusado (OPEN-20, OPEN-24). Isso corrige o defeito D-06. |
+| Pedido repetido de pagamento parcial | Decidido em OPEN-25 (identificador do pedido enviado pela interface); a implementação entra com a primeira spec com interface. |
 | Análise de divergências (2026-10-16, #57) | Código, spec e baseline comparados. Nenhuma mudança de código; três novas questões (OPEN-21 a OPEN-23). Registro em [`docs/qualidade/divergencias.md`](../../docs/qualidade/divergencias.md). |
 
 ### Reverificação de 2026-10-09

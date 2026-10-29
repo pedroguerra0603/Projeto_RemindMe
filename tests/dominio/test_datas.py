@@ -14,6 +14,7 @@ import unittest
 from datetime import date, timedelta
 from decimal import Decimal
 
+from remindme.dominio.erros import OperacaoRecusada
 from remindme.dominio.titulo import EstadoTitulo, Titulo
 
 HOJE = date(2026, 10, 3)
@@ -25,9 +26,13 @@ def titulo(vencimento):
 
 
 class DataDeReferenciaInjetavel(unittest.TestCase):
-    def test_RF_24_codigo_de_producao_nao_le_o_relogio_da_maquina(self):
+    def test_RF_24_so_o_adaptador_do_relogio_le_o_relogio_da_maquina(self):
+        """Desde a Spec 017, `infraestrutura/relogio.py` é o único ponto que lê o relógio da máquina, atrás da
+        porta `Relogio`; domínio e aplicação continuam recebendo a data de referência de fora."""
         achados = []
         for caminho in sorted(RAIZ_DO_CODIGO.rglob("*.py")):
+            if caminho.relative_to(RAIZ_DO_CODIGO).as_posix() == "infraestrutura/relogio.py":
+                continue
             for no in ast.walk(ast.parse(caminho.read_text(encoding="utf-8"))):
                 if isinstance(no, ast.Attribute) and no.attr in ("today", "now", "utcnow", "fromtimestamp"):
                     achados.append(f"{caminho.name}:{no.lineno} {no.attr}")
@@ -119,19 +124,24 @@ class FusoHorarioDaMaquina(unittest.TestCase):
 
 
 class DataDePagamento(unittest.TestCase):
-    """OPEN-17 está aberta: a baseline não diz se a data do pagamento pode ser passada ou futura."""
+    """OPEN-17, decidida em 2026-10-23: data passada é aceita; data posterior a hoje é recusada."""
 
-    def test_OPEN_17_provisorio_pagamento_com_data_futura_e_aceito_hoje(self):
-        """Caracteriza o comportamento atual, sem decidi-lo. Se a equipe decidir recusar data futura (sugestão
-        de OPEN-17), este teste muda para exigir a recusa, no mesmo PR da decisão."""
+    def test_OPEN_17_pagamento_com_data_futura_e_recusado(self):
         t = titulo(HOJE)
-        pagamento = t.registrar_pagamento("p1", Decimal("40.00"), HOJE + timedelta(days=365))
-        self.assertEqual(pagamento.data, HOJE + timedelta(days=365))
+        for dias in (1, 365):
+            with self.subTest(dias=dias):
+                with self.assertRaisesRegex(OperacaoRecusada, "posterior a hoje"):
+                    t.registrar_pagamento("p1", Decimal("40.00"), HOJE + timedelta(days=dias), hoje=HOJE)
+        self.assertEqual(t.pagamentos, [])
+
+    def test_OPEN_17_pagamento_com_data_de_hoje_e_aceito(self):
+        t = titulo(HOJE)
+        t.registrar_pagamento("p1", Decimal("40.00"), HOJE, hoje=HOJE)
         self.assertEqual(t.saldo, Decimal("60.00"))
 
-    def test_OPEN_17_provisorio_pagamento_com_data_passada_e_aceito(self):
+    def test_OPEN_17_pagamento_com_data_passada_e_aceito(self):
         t = titulo(HOJE)
-        t.registrar_pagamento("p1", Decimal("40.00"), HOJE - timedelta(days=400))
+        t.registrar_pagamento("p1", Decimal("40.00"), HOJE - timedelta(days=400), hoje=HOJE)
         self.assertEqual(t.saldo, Decimal("60.00"))
 
     def test_OPEN_17_a_data_do_pagamento_nao_define_o_estado_do_titulo(self):

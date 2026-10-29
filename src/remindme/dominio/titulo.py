@@ -9,6 +9,9 @@ from typing import List, Optional
 from remindme.dominio.erros import OperacaoRecusada
 
 ZERO = Decimal("0.00")
+CENTAVO = Decimal("0.01")
+# OPEN-24, decidida em 2026-10-23: no máximo 15 dígitos inteiros, longe do limite da aritmética (D-06).
+LIMITE_VALOR = Decimal(10) ** 15
 
 
 class EstadoTitulo(Enum):
@@ -30,6 +33,12 @@ class Pagamento:
     data: date
     estornado: bool = False
     motivo_estorno: Optional[str] = None
+    # OPEN-25: identificador do pedido enviado pela interface, para ignorar o pedido repetido.
+    pedido_id: Optional[str] = None
+
+
+class PedidoDePagamentoRepetido(OperacaoRecusada):
+    """OPEN-25, decidida em 2026-10-23: o segundo pedido com o mesmo identificador não registra nada."""
 
 
 @dataclass
@@ -54,10 +63,11 @@ class Titulo:
     ) -> "Titulo":
         """RF-20, RF-21: o título nasce Aberto, com origem manual e saldo igual ao valor."""
         if vencimento is None:
-            raise OperacaoRecusada("O vencimento é obrigatório.")
+            _recusar("vencimento", "O vencimento é obrigatório.")
         _exigir_decimal(valor, "O valor do título deve ser um número decimal finito.")
+        _exigir_valor_monetario(valor, "do título")
         if valor <= ZERO:
-            raise OperacaoRecusada("O valor do título deve ser maior que zero.")
+            _recusar("valor", "O valor do título deve ser maior que zero.")
         return cls(
             id=id,
             cliente_id=cliente_id,
@@ -74,20 +84,37 @@ class Titulo:
         pago = sum((p.valor for p in self.pagamentos if not p.estornado), ZERO)
         return self.valor - pago
 
-    def registrar_pagamento(self, pagamento_id: str, valor: Decimal, data: date) -> Pagamento:
-        """RF-25, RF-26, RF-27. RB-21: só Aberto ou Vencido aceita pagamento. RB-23: 0 < valor <= saldo."""
+    def registrar_pagamento(
+        self,
+        pagamento_id: str,
+        valor: Decimal,
+        data: date,
+        hoje: Optional[date] = None,
+        pedido_id: Optional[str] = None,
+    ) -> Pagamento:
+        """RF-25, RF-26, RF-27. RB-21: só Aberto ou Vencido aceita pagamento. RB-23: 0 < valor <= saldo.
+
+        OPEN-17, decidida em 2026-10-23: data passada é aceita e data posterior a `hoje` é recusada. A camada
+        de aplicação sempre informa `hoje`, pelo relógio. OPEN-25: o pedido repetido é verificado antes de
+        tudo, porque o primeiro pode ter baixado o título.
+        """
+        if pedido_id is not None and any(p.pedido_id == pedido_id for p in self.pagamentos):
+            raise PedidoDePagamentoRepetido("Este pagamento já foi registrado.")
         if self.estado not in ESTADOS_QUE_ACEITAM_PAGAMENTO:
             raise OperacaoRecusada(
                 f"Título {self.estado.value} não aceita pagamento (RB-21)."
             )
         _exigir_decimal(valor, "O valor do pagamento deve ser um número decimal finito (RB-23).")
+        _exigir_valor_monetario(valor, "do pagamento")
         if valor <= ZERO:
-            raise OperacaoRecusada("O valor do pagamento deve ser maior que zero (RB-23).")
+            _recusar("valor", "O valor do pagamento deve ser maior que zero (RB-23).")
         if valor > self.saldo:
-            raise OperacaoRecusada(
-                f"O valor do pagamento é maior que o saldo de {self.saldo} (RB-23)."
-            )
-        pagamento = Pagamento(id=pagamento_id, valor=valor, data=data)
+            _recusar("valor", f"O valor do pagamento é maior que o saldo de {self.saldo} (RB-23).")
+        if not isinstance(data, date):
+            _recusar("data", "A data do pagamento é obrigatória.")
+        if hoje is not None and data > hoje:
+            _recusar("data", "A data do pagamento não pode ser posterior a hoje.")
+        pagamento = Pagamento(id=pagamento_id, valor=valor, data=data, pedido_id=pedido_id)
         self.pagamentos.append(pagamento)
         # RB-22: Baixado se, e somente se, o saldo é zero.
         if self.saldo == ZERO:
@@ -105,7 +132,7 @@ class Titulo:
         """RF-30. A permissão (RB-02) é verificada antes, pela camada de aplicação."""
         _exigir_motivo(motivo, "estorno")
         if self.estado is EstadoTitulo.CANCELADO:
-            # Comportamento provisório: OPEN-18.
+            # OPEN-18, decidida em 2026-10-23: para corrigir, o Dono estorna antes de cancelar.
             raise OperacaoRecusada("Título Cancelado não aceita estorno (OPEN-18).")
         pagamento = self._pagamento(pagamento_id)
         if pagamento.estornado:
@@ -144,12 +171,28 @@ class Titulo:
         raise OperacaoRecusada("Pagamento não encontrado neste título.")
 
 
+def _recusar(campo: str, mensagem: str) -> None:
+    """Recusa ligada ao campo que a causou (RNF-14)."""
+    raise OperacaoRecusada(mensagem, {campo: mensagem})
+
+
 def _exigir_decimal(valor: Decimal, mensagem: str) -> None:
     """E1, E7: NaN, infinito, float ou texto não são valor monetário (defeitos D-01 a D-04)."""
     if not isinstance(valor, Decimal) or not valor.is_finite():
-        raise OperacaoRecusada(mensagem)
+        _recusar("valor", mensagem)
+
+
+def _exigir_valor_monetario(valor: Decimal, sujeito: str) -> None:
+    """OPEN-20 e OPEN-24, decididas em 2026-10-23: até duas casas decimais e até 15 dígitos inteiros.
+
+    Valor fora disso é recusado, sem arredondamento.
+    """
+    if abs(valor) >= LIMITE_VALOR:
+        _recusar("valor", f"O valor {sujeito} deve ter no máximo 15 dígitos inteiros.")
+    if valor != valor.quantize(CENTAVO):
+        _recusar("valor", f"O valor {sujeito} deve ter no máximo duas casas decimais.")
 
 
 def _exigir_motivo(motivo: Optional[str], operacao: str) -> None:
     if not isinstance(motivo, str) or not motivo.strip():
-        raise OperacaoRecusada(f"O motivo do {operacao} é obrigatório (RF-31).")
+        _recusar("motivo", f"O motivo do {operacao} é obrigatório (RF-31).")

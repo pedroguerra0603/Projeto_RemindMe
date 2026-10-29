@@ -14,9 +14,10 @@ Spec: [001 — Fundação: estrutura em camadas e auditoria de operações](../s
 | Camada | Módulo | Conteúdo |
 |---|---|---|
 | Domínio | `src/remindme/dominio/auditoria.py` | `RegistroAuditoria` imutável, com `campo`, `automatica` e `rotina`; valida INV-3 na criação |
-| Aplicação | `src/remindme/aplicacao/auditoria.py` | Ponto único (INV-5): `Auditoria.operacao(...)` abre a transação, entrega a `OperacaoAuditada`, que grava os registros, e trata recusa e erro não tratado; `RegistroErrosNoLog` |
+| Aplicação | `src/remindme/aplicacao/auditoria.py` | Ponto único de gravação (INV-5): `OperacaoAuditada` grava os registros; `RegistroErrosNoLog` |
+| Aplicação | `src/remindme/aplicacao/execucao.py` | Desde a Spec 002: `Execucao` abre a transação, verifica o acesso, entrega a `OperacaoAuditada` e trata recusa e erro não tratado (no início desta spec, isso ficava na classe `Auditoria`) |
 | Aplicação | `src/remindme/aplicacao/portas.py` | `RegistroErro` e a porta `RegistroErros`, fora da transação |
-| Aplicação | `src/remindme/aplicacao/servico_titulos.py` | Operações da Spec 006 passam a usar `Auditoria.operacao` |
+| Aplicação | `src/remindme/aplicacao/servico_titulos.py` | Operações da Spec 006 passam pelo ponto único (hoje, `Execucao`) |
 | Infraestrutura | `src/remindme/infraestrutura/memoria.py` | `AuditoriaEmMemoria` com leitura somente por cópia; `RegistroErrosEmMemoria` |
 
 ## Decisões locais
@@ -25,7 +26,7 @@ Spec: [001 — Fundação: estrutura em camadas e auditoria de operações](../s
 - **Referência ao registro afetado.** Texto `titulo <id>` para o título e `titulo <id>, pagamento <id>` para o pagamento: o pagamento existe dentro do título, e a Spec 006 (CA-22) pede o título afetado no registro do pagamento.
 - **Campos auditados.** Criação de título: `estado`, de vazio para Aberto (A1). Pagamento: `valor`, de vazio para o valor pago. Estorno: `estornado`, de "não" para "sim", com o motivo (A3). Mudança de estado do título: `estado`, com a operação "mudar estado" (A2).
 - **Ordem dentro da transação.** O domínio executa, a auditoria é gravada e o título é gravado por último. Assim, uma falha na gravação do título acontece depois de a auditoria ser gravada e desfaz os dois (E3, CA-06).
-- **Operação automática.** `verificar_vencimentos(None, data)` é a rotina "verificação de vencimento" (A4, OPEN-30). Chamada com usuário, continua registrando o usuário. Operação sem usuário e sem rotina é recusada pela própria aplicação.
+- **Operação automática.** `verificar_vencimentos_automaticamente(data)` é a rotina "verificação de vencimento" (A4, OPEN-30). Chamada por um usuário, `verificar_vencimentos(sessao, data)` registra o usuário. Operação sem usuário e sem rotina é recusada pela própria aplicação. (Antes da Spec 002, a rotina automática era `verificar_vencimentos(None, data)`.)
 - **Recusa e erro.** `OperacaoRecusada` desfaz a transação e não deixa registro algum (E1). Qualquer outra exceção desfaz a transação, grava um `RegistroErro` com data e hora, operação, usuário e identificador de correlação, acrescenta o identificador às notas da exceção e a repassa a quem chamou (E2, E3, E5).
 - **Imutabilidade.** `RegistroAuditoria` é `dataclass` congelada. `AuditoriaEmMemoria.registros` é uma propriedade sem atribuição que devolve uma cópia da lista: apagar itens da cópia não altera o armazenado (CA-07, CA-08). A garantia no armazenamento real é da persistência escolhida em OPEN-02.
 - **CA-13.** Verificado de duas formas: teste que confirma que `src/` não lê variável de ambiente e que o fluxo de CI não usa segredo; e execução da suíte com o ambiente vazio (`env -i`).

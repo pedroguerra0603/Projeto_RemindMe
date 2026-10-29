@@ -4,8 +4,9 @@ import unittest
 from datetime import date
 from decimal import Decimal
 
-from remindme.dominio import regras
 from remindme.dominio.erros import OperacaoRecusada
+from remindme.dominio.operacoes import Operacao
+from remindme.dominio.permissoes import MatrizPermissoes
 from remindme.dominio.titulo import EstadoTitulo, Titulo
 from remindme.dominio.usuario import Perfil, Usuario
 
@@ -105,20 +106,22 @@ class RB23ValorDoPagamento(unittest.TestCase):
 
 class RB02Estorno(unittest.TestCase):
     def test_RB_02_somente_o_dono_estorna(self):
-        regras.exigir_permissao_de_estorno(DONO)
+        matriz = MatrizPermissoes.inicial()
+        matriz.exigir(Perfil.DONO, Operacao.ESTORNAR_PAGAMENTO)
         for perfil in Perfil:
             if perfil is not Perfil.DONO:
-                with self.subTest(perfil=perfil), self.assertRaises(OperacaoRecusada):
-                    regras.exigir_permissao_de_estorno(Usuario("u", "x", perfil))
+                with self.subTest(perfil=perfil), self.assertRaisesRegex(OperacaoRecusada, "RB-02"):
+                    matriz.exigir(perfil, Operacao.ESTORNAR_PAGAMENTO)
 
 
 class OPEN16Cancelamento(unittest.TestCase):
     def test_OPEN_16_somente_o_dono_cancela(self):
-        regras.exigir_permissao_de_cancelamento(DONO)
+        matriz = MatrizPermissoes.inicial()
+        matriz.exigir(Perfil.DONO, Operacao.CANCELAR_TITULO)
         for perfil in Perfil:
             if perfil is not Perfil.DONO:
-                with self.subTest(perfil=perfil), self.assertRaises(OperacaoRecusada):
-                    regras.exigir_permissao_de_cancelamento(Usuario("u", "x", perfil))
+                with self.subTest(perfil=perfil), self.assertRaisesRegex(OperacaoRecusada, "OPEN-16"):
+                    matriz.exigir(perfil, Operacao.CANCELAR_TITULO)
 
 
 class RF31Motivo(unittest.TestCase):

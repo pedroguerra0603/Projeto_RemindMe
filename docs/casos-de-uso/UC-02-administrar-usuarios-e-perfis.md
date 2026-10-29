@@ -15,7 +15,7 @@
 
 ## Fluxo principal
 
-1. O Administrador informa nome, e-mail e perfil do novo usuário.
+1. O Administrador informa nome, e-mail, perfil e uma senha provisória do novo usuário (OPEN-35).
 2. O sistema valida os dados e cria o usuário associado ao perfil.
 3. O Administrador ajusta as permissões do perfil, quando necessário.
 4. O sistema aplica as permissões às operações seguintes dos usuários desse perfil.

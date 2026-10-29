@@ -139,31 +139,37 @@ class PagamentosFracionados(unittest.TestCase):
 
 
 class ValoresComMuitosDigitos(unittest.TestCase):
-    def test_RF_25_valor_de_vinte_digitos_mantem_o_centavo(self):
-        t = titulo("99999999999999999999.99")
-        t.registrar_pagamento("p1", Decimal("0.01"), HOJE)
-        self.assertEqual(t.saldo, Decimal("99999999999999999999.98"))
+    """OPEN-24, decidida em 2026-10-23: no máximo 15 dígitos inteiros. Corrige o defeito D-06."""
 
-    def test_RB_22_valor_de_vinte_digitos_e_baixado_pelo_pagamento_integral(self):
-        t = titulo("99999999999999999999.99")
-        t.registrar_pagamento("p1", Decimal("99999999999999999999.98"), HOJE)
+    MAIOR = "9" * 15 + ".99"
+
+    def test_OPEN_24_maior_valor_aceito_mantem_o_centavo(self):
+        t = titulo(self.MAIOR)
+        t.registrar_pagamento("p1", Decimal("0.01"), HOJE)
+        self.assertEqual(t.saldo, Decimal("9" * 15 + ".98"))
+
+    def test_OPEN_24_RB_22_maior_valor_aceito_e_baixado_pelo_pagamento_integral(self):
+        t = titulo(self.MAIOR)
+        t.registrar_pagamento("p1", Decimal("9" * 15 + ".98"), HOJE)
         self.assertEqual(t.saldo, Decimal("0.01"))
         t.registrar_pagamento("p2", Decimal("0.01"), HOJE)
         self.assertIs(t.estado, EstadoTitulo.BAIXADO)
 
-    def test_RF_25_valor_de_vinte_e_seis_digitos_inteiros_com_centavos_mantem_o_centavo(self):
-        """O limite da aritmética padrão do Python é de 28 dígitos significativos: 26 inteiros + 2 casas."""
-        t = titulo("9" * 26 + ".99")
-        t.registrar_pagamento("p1", Decimal("0.01"), HOJE)
-        self.assertEqual(t.saldo, Decimal("9" * 26 + ".98"))
+    def test_OPEN_24_titulo_com_mais_de_15_digitos_inteiros_e_recusado(self):
+        for valor in ("1" + "0" * 15, "9" * 20 + ".99", "1" + "0" * 30 + ".01"):
+            with self.subTest(valor=valor):
+                with self.assertRaisesRegex(OperacaoRecusada, "15 dígitos inteiros"):
+                    titulo(valor)
 
-    @unittest.expectedFailure
-    def test_D_06_valor_acima_de_28_digitos_perde_o_centavo_sem_aviso(self):
-        """Defeito D-06, aberto: com mais de 28 dígitos significativos, a subtração do saldo arredonda. O
-        título nasce com saldo diferente do valor (INV-1) e pagamentos de centavos não alteram o saldo.
-        O correto é recusar o valor ou calcular sem perda; o limite aceito depende de OPEN-24. Quando houver
-        decisão e correção, este teste passa e a suíte avisa (sucesso inesperado): retirar a marcação."""
-        t = titulo("1" + "0" * 30 + ".01")
+    def test_OPEN_24_pagamento_com_mais_de_15_digitos_inteiros_e_recusado(self):
+        t = titulo(self.MAIOR)
+        with self.assertRaisesRegex(OperacaoRecusada, "15 dígitos inteiros"):
+            t.registrar_pagamento("p1", Decimal("1" + "0" * 15), HOJE)
+        self.assertEqual(t.saldo, t.valor)
+        self.assertEqual(t.pagamentos, [])
+
+    def test_D_06_corrigido_o_saldo_nasce_igual_ao_valor_em_todo_valor_aceito(self):
+        t = titulo(self.MAIOR)
         self.assertEqual(t.saldo, t.valor)
 
 
