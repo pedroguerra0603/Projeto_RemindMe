@@ -14,7 +14,7 @@
   --borda: #e3e8f0;
   --texto: #0f172a;
   --texto-suave: #475569;
-  --texto-fraco: #64748b;
+  --texto-fraco: #556275;
   --marca: #1d4ed8;
   --marca-forte: #1e40af;
   --marca-suave: #eaf0ff;
@@ -221,7 +221,7 @@ main > * + * { margin-top: 28px; }
 
 .dados { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 20px 24px; margin: 0; }
 .dados dt { color: var(--texto-suave); font-size: 0.8125rem; }
-.dados dd { margin: 2px 0 0; font-size: 1.0625rem; font-weight: 600; color: var(--tinta); font-variant-numeric: tabular-nums; }
+.dados dd { overflow-wrap: anywhere; margin: 2px 0 0; font-size: 1.0625rem; font-weight: 600; color: var(--tinta); font-variant-numeric: tabular-nums; }
 
 /* Tabelas */
 
@@ -316,19 +316,40 @@ button.discreto:hover { background: var(--superficie-2); color: var(--tinta); }
 
 /* Ajustes pontuais (sem estilo inline, por causa da política de segurança de conteúdo) */
 
-.titulo-entrada { margin: 0 0 16px; font-size: 1.375rem; }
 .margem-topo { margin-top: 8px; }
 
-/* Entrada (login) e páginas de erro */
+/* Telas públicas (entrar e criar conta): painel da marca à esquerda, formulário à direita. */
 
-.entrada { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--fundo); }
-.entrada .caixa { width: 100%; max-width: 400px; }
-.entrada .marca { font-size: 1.5rem; margin-bottom: 4px; }
-.entrada .marca img { width: 36px; height: 36px; }
-.entrada .lema { color: var(--texto-suave); margin: 0 0 24px; }
-.entrada .cartao { padding: 28px; border-top: 4px solid var(--tinta); }
-.entrada form.formulario { max-width: none; }
-.entrada button { width: 100%; padding: 11px 16px; }
+.publica { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); min-height: 100vh; }
+.publica-marca {
+  background: var(--menu-fundo); color: #c7d2e8;
+  padding: 48px 56px; display: flex; flex-direction: column; gap: 16px; justify-content: center;
+}
+.marca-clara, .marca-clara:hover { color: #fff; font-size: 1.375rem; }
+.marca-clara img { width: 34px; height: 34px; }
+.publica-frase { margin: 24px 0 0; color: #fff; font-size: 2rem; line-height: 1.2; font-weight: 600; max-width: 18ch; text-wrap: balance; }
+.publica-apoio { margin: 0; max-width: 40ch; }
+.regua-ilustrativa { width: 100%; max-width: 560px; margin-top: 32px; overflow: visible; }
+.regua-ilustrativa .eixo { stroke: #33415e; stroke-width: 0.8; }
+.regua-ilustrativa .hoje { stroke: #fff; stroke-width: 0.6; stroke-dasharray: 1.4 1.2; }
+.regua-ilustrativa .haste { stroke: #33415e; stroke-width: 0.5; }
+.regua-ilustrativa circle { fill: var(--cor); }
+.regua-ilustrativa .azul { --cor: #60a5fa; }
+.regua-ilustrativa .laranja { --cor: #fb923c; }
+.regua-ilustrativa .vermelho { --cor: #f87171; }
+.regua-ilustrativa text { fill: #e6ebf4; font-family: inherit; font-size: 5.2px; font-weight: 600; text-anchor: middle; }
+.regua-ilustrativa .rotulo { fill: #c7d2e8; font-weight: 400; }
+
+.publica-conteudo { display: flex; flex-direction: column; justify-content: center; padding: 48px 56px; max-width: 520px; width: 100%; min-width: 0; }
+.publica-conteudo > * + * { margin-top: 20px; }
+.publica-conteudo h1 { font-size: 1.875rem; }
+.publica-conteudo form.formulario { max-width: none; }
+.publica-conteudo button[type="submit"] { width: 100%; padding: 11px 16px; }
+.publica-texto, .publica-troca { color: var(--texto-suave); margin-bottom: 0; }
+.publica-conteudo h1 + .publica-texto { margin-top: 8px; }
+
+/* Páginas de erro */
+
 .erro-pagina { max-width: 560px; margin: 10vh auto; padding: 0 16px; }
 .erro-pagina .codigo { font-size: 3rem; font-weight: 600; color: var(--marca); }
 
@@ -381,6 +402,11 @@ button.discreto:hover { background: var(--superficie-2); color: var(--tinta); }
   .indicador:nth-child(n+3) { border-top: 1px solid var(--borda); }
   .indicador .numero { font-size: 1.375rem; }
   .regua-do-caixa { padding: 18px 16px 10px; }
+  .publica { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .publica-marca { padding: 24px 20px; gap: 8px; }
+  .publica-frase { margin-top: 8px; font-size: 1.375rem; max-width: none; }
+  .publica-apoio, .regua-ilustrativa { display: none; }
+  .publica-conteudo { padding: 28px 20px 40px; max-width: none; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

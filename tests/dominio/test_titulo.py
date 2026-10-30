@@ -108,8 +108,9 @@ class RB02Estorno(unittest.TestCase):
     def test_RB_02_somente_o_dono_estorna(self):
         matriz = MatrizPermissoes.inicial()
         matriz.exigir(Perfil.DONO, Operacao.ESTORNAR_PAGAMENTO)
+        matriz.exigir(Perfil.ADMINISTRADOR, Operacao.ESTORNAR_PAGAMENTO)  # OPEN-53: o Administrador pode tudo
         for perfil in Perfil:
-            if perfil is not Perfil.DONO:
+            if perfil not in (Perfil.DONO, Perfil.ADMINISTRADOR):
                 with self.subTest(perfil=perfil), self.assertRaisesRegex(OperacaoRecusada, "RB-02"):
                     matriz.exigir(perfil, Operacao.ESTORNAR_PAGAMENTO)
 
@@ -118,8 +119,9 @@ class OPEN16Cancelamento(unittest.TestCase):
     def test_OPEN_16_somente_o_dono_cancela(self):
         matriz = MatrizPermissoes.inicial()
         matriz.exigir(Perfil.DONO, Operacao.CANCELAR_TITULO)
+        matriz.exigir(Perfil.ADMINISTRADOR, Operacao.CANCELAR_TITULO)  # OPEN-53: o Administrador pode tudo
         for perfil in Perfil:
-            if perfil is not Perfil.DONO:
+            if perfil not in (Perfil.DONO, Perfil.ADMINISTRADOR):
                 with self.subTest(perfil=perfil), self.assertRaisesRegex(OperacaoRecusada, "OPEN-16"):
                     matriz.exigir(perfil, Operacao.CANCELAR_TITULO)
 

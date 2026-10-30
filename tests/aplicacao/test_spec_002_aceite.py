@@ -241,7 +241,7 @@ class DecisoesDaSpec002(Base):
             self.acesso.inativar_usuario(self.admin, admin.id)
         with self.assertRaisesRegex(OperacaoRecusada, "OPEN-45"):
             self.acesso.alterar_perfil(self.admin, admin.id, Perfil.DONO)
-        with self.assertRaisesRegex(OperacaoRecusada, "OPEN-45"):
+        with self.assertRaisesRegex(OperacaoRecusada, "OPEN-53"):
             self.acesso.retirar_permissao(self.admin, Perfil.ADMINISTRADOR, Operacao.ADMINISTRAR_USUARIOS)
         segundo = self.cadastrar("Bruno Admin", "bruno@exemplo.com", Perfil.ADMINISTRADOR)
         self.acesso.inativar_usuario(self.admin, segundo.id)

@@ -14,6 +14,7 @@ from typing import List, Optional
 from remindme.aplicacao.portas import Sessao
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.cliente import Cliente
+from remindme.dominio.empresa import CAMPOS as CAMPOS_DA_EMPRESA, Empresa
 from remindme.dominio.orcamento import AprovacaoDesconto, EstadoOrcamento, ItemOrcamento, Orcamento, PendenciaDesconto
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.permissoes import MatrizPermissoes
@@ -126,7 +127,20 @@ CREATE TABLE decisoes_desconto (
 );
 """
 
-MIGRACOES = [_ESQUEMA_1, _ESQUEMA_2]
+# OPEN-54: os dados da empresa, numa linha só (id = 1).
+_ESQUEMA_3 = """
+CREATE TABLE empresa (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    razao_social TEXT NOT NULL,
+    nome_fantasia TEXT NOT NULL,
+    cnpj TEXT NOT NULL,
+    telefone TEXT NOT NULL,
+    email TEXT NOT NULL,
+    endereco TEXT NOT NULL
+);
+"""
+
+MIGRACOES = [_ESQUEMA_1, _ESQUEMA_2, _ESQUEMA_3]
 
 
 def preparar_banco(caminho: str) -> None:
@@ -147,6 +161,9 @@ def preparar_banco(caminho: str) -> None:
                         "INSERT INTO permissoes (operacao, perfil) VALUES (?, ?)",
                         [(o.name, p.name) for o, p in MatrizPermissoes.inicial().concedidas],
                     )
+                if numero == 3:
+                    # Bancos criados antes: o Dono ganha a nova operação, como na matriz inicial (OPEN-54).
+                    conexao.execute("INSERT OR IGNORE INTO permissoes (operacao, perfil) VALUES ('MANTER_EMPRESA', 'DONO')")
                 conexao.execute(f"PRAGMA user_version = {numero}")
                 conexao.execute("COMMIT")
             except Exception:
@@ -180,6 +197,7 @@ class UnidadeDeTrabalhoSQLite:
         self.titulos = RepositorioTitulosSQLite(self)
         self.clientes = RepositorioClientesSQLite(self)
         self.orcamentos = RepositorioOrcamentosSQLite(self)
+        self.empresa = RepositorioEmpresaSQLite(self)
         self.auditoria = AuditoriaSQLite(self)
         self.usuarios = RepositorioUsuariosSQLite(self)
         self.sessoes = RepositorioSessoesSQLite(self)
@@ -335,6 +353,18 @@ class RepositorioClientesSQLite(_Repositorio):
     def _um(self, comando: str, chave: str) -> Optional[Cliente]:
         linha = self._executar(comando, (chave,)).fetchone()
         return Cliente(*linha) if linha else None
+
+
+class RepositorioEmpresaSQLite(_Repositorio):
+    def obter(self) -> Optional[Empresa]:
+        linha = self._executar(f"SELECT {', '.join(CAMPOS_DA_EMPRESA)} FROM empresa WHERE id = 1").fetchone()
+        return Empresa(*linha) if linha else None
+
+    def salvar(self, empresa: Empresa) -> None:
+        valores = [getattr(empresa, c) for c in CAMPOS_DA_EMPRESA]
+        self._executar(
+            f"INSERT OR REPLACE INTO empresa (id, {', '.join(CAMPOS_DA_EMPRESA)}) VALUES (1, ?, ?, ?, ?, ?, ?)", valores
+        )
 
 
 class RepositorioOrcamentosSQLite(_Repositorio):

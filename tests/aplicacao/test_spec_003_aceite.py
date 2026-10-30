@@ -133,9 +133,10 @@ class Spec003(Base):
         self.assertEqual({v.cliente_id for v in visoes}, {a.id})
         self.assertEqual(len(visoes), 2)
 
-    def test_CA_12_RNF_02_administrador_nao_pesquisa_clientes(self):
-        with self.assertRaises(OperacaoNegada):
-            self.clientes.consultar_clientes(self.sessao(ADMIN))
+    def test_OPEN_53_administrador_pesquisa_clientes_pela_permissao_global(self):
+        """Antes (CA-12) o Administrador não pesquisava clientes; a OPEN-53 deu a ele todas as permissões."""
+        self.cadastrar()
+        self.assertEqual(len(self.clientes.consultar_clientes(self.sessao(ADMIN))), 1)
 
     def test_CA_13_OPEN_40_cnpj_alfanumerico_valido_e_aceito(self):
         cliente = self.cadastrar(documento="12.ABC.345/01DE-35")

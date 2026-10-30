@@ -30,6 +30,7 @@ MATRIZ_INICIAL: Dict[Operacao, FrozenSet[Perfil]] = {
     Operacao.IMPORTAR_CSV: frozenset({_D, _O}),
     Operacao.EXPORTAR_CSV: frozenset({_D, _O, _C}),
     Operacao.ADMINISTRAR_USUARIOS: frozenset({_A}),
+    Operacao.MANTER_EMPRESA: frozenset({_D}),  # OPEN-54
 }
 
 
@@ -83,12 +84,6 @@ class MatrizPermissoes:
         celula = self._alteravel(operacao, perfil)
         if not celula.permitido:
             raise OperacaoRecusada("O perfil não tem essa permissão.")
-        if operacao is Operacao.ADMINISTRAR_USUARIOS and perfil is Perfil.ADMINISTRADOR:
-            # OPEN-45, decidida em 2026-10-23: o sistema não fica sem quem o administre.
-            raise OperacaoRecusada(
-                "O perfil Administrador não perde a administração de usuários e permissões: "
-                "sem ela, ninguém mais administraria o sistema (OPEN-45)."
-            )
         return MatrizPermissoes(self.concedidas - {(operacao, perfil)})
 
     def _alteravel(self, operacao: Operacao, perfil: Perfil) -> Celula:
