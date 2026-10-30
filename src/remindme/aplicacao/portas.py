@@ -6,6 +6,7 @@ from typing import List, Optional, Protocol
 
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.cliente import Cliente
+from remindme.dominio.empresa import Empresa
 from remindme.dominio.orcamento import Orcamento
 from remindme.dominio.permissoes import MatrizPermissoes
 from remindme.dominio.titulo import Titulo
@@ -22,6 +23,13 @@ class RepositorioOrcamentos(Protocol):
     def obter(self, orcamento_id: str) -> Optional[Orcamento]: ...
     def salvar(self, orcamento: Orcamento) -> None: ...
     def listar(self) -> List[Orcamento]: ...
+
+
+class RepositorioEmpresa(Protocol):
+    """Um único registro: os dados da empresa que usa o sistema (OPEN-54)."""
+
+    def obter(self) -> Optional[Empresa]: ...
+    def salvar(self, empresa: Empresa) -> None: ...
 
 
 class RepositorioClientes(Protocol):
@@ -106,6 +114,7 @@ class UnidadeDeTrabalho(Protocol):
     titulos: RepositorioTitulos
     clientes: RepositorioClientes
     orcamentos: RepositorioOrcamentos
+    empresa: RepositorioEmpresa
     auditoria: RepositorioAuditoria
     usuarios: RepositorioUsuarios
     sessoes: RepositorioSessoes

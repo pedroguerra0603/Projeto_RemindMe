@@ -57,6 +57,12 @@ class Usuario:
             raise OperacaoRecusada("O usuário já tem esse perfil.", {"perfil": "O usuário já tem esse perfil."})
         return replace(self, perfil=perfil)
 
+    def ativado(self) -> "Usuario":
+        """OPEN-55: o Administrador ativa a conta criada pela tela de entrada."""
+        if self.ativo:
+            raise OperacaoRecusada("O usuário já está ativo.")
+        return replace(self, ativo=True)
+
     def inativado(self) -> "Usuario":
         """A3: o histórico é preservado; só o acesso termina."""
         if not self.ativo:

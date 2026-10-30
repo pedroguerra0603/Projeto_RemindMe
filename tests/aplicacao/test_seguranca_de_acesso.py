@@ -32,21 +32,22 @@ DONO = Usuario("dono", "Dono", Perfil.DONO)
 
 PERMITIDO, NEGADO = "permitido", "negado"
 
-# Resultado esperado de cada operação para cada perfil: RB-02, OPEN-16 e a matriz da Spec 002 (RB-03).
+# Resultado esperado de cada operação para cada perfil: RB-02, OPEN-16, a matriz da Spec 002 (RB-03) e o
+# Administrador global (OPEN-53).
 MATRIZ = {
     "estornar pagamento": {
         Perfil.DONO: PERMITIDO,
         Perfil.OPERADOR_FINANCEIRO: NEGADO,
         Perfil.CONTADOR: NEGADO,
         Perfil.CLIENTE: NEGADO,
-        Perfil.ADMINISTRADOR: NEGADO,
+        Perfil.ADMINISTRADOR: PERMITIDO,
     },
     "cancelar título": {
         Perfil.DONO: PERMITIDO,
         Perfil.OPERADOR_FINANCEIRO: NEGADO,
         Perfil.CONTADOR: NEGADO,
         Perfil.CLIENTE: NEGADO,
-        Perfil.ADMINISTRADOR: NEGADO,
+        Perfil.ADMINISTRADOR: PERMITIDO,
     },
     **{
         operacao: {
@@ -54,7 +55,7 @@ MATRIZ = {
             Perfil.OPERADOR_FINANCEIRO: PERMITIDO,
             Perfil.CONTADOR: NEGADO,
             Perfil.CLIENTE: NEGADO,
-            Perfil.ADMINISTRADOR: NEGADO,
+            Perfil.ADMINISTRADOR: PERMITIDO,
         }
         for operacao in ("cadastrar título", "registrar pagamento", "verificar vencimentos")
     },
@@ -105,7 +106,7 @@ class MatrizPerfilOperacao(Base):
 
     def test_RNF_02_cada_celula_negada_recusa_a_operacao_sem_passar_pela_interface(self):
         negadas = [(op, p) for op, c in MATRIZ.items() for p, r in c.items() if r == NEGADO]
-        self.assertEqual(len(negadas), 17)
+        self.assertEqual(len(negadas), 12)
         for operacao, perfil in negadas:
             with self.subTest(operacao=operacao, perfil=perfil.value):
                 titulos_antes = dict(self.titulos.dados)

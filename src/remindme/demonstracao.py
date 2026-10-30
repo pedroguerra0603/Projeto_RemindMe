@@ -97,6 +97,14 @@ def preparar_demonstracao(sistema, senha: str) -> List[Tuple[str, str, str]]:
     orcamentos.cancelar_orcamento(operador, cancelado_o.id, "Cliente desistiu da compra")
     orcamentos.criar_orcamento(operador, sergio.id, "A combinar")
 
+    # Dados da empresa (OPEN-54), preenchidos pela Dona, e um pedido de conta esperando o Administrador (OPEN-55).
+    servicos.empresa.salvar(
+        dona, razao_social="Menezes Serviços Empresariais Ltda", nome_fantasia="Menezes Serviços",
+        cnpj=_documento("334445550001"), telefone="(11) 3322-4455", email="contato@menezes.example",
+        endereco="Rua das Palmeiras, 120, sala 4, São Paulo, SP",
+    )
+    acesso.criar_conta("Bruno Lima", "bruno@demo.example", Perfil.OPERADOR_FINANCEIRO, senha)
+
     for sessao in (admin, dona, operador):
         acesso.sair(sessao)
     pessoas = [(ADMINISTRADOR[0], ADMINISTRADOR[1], Perfil.ADMINISTRADOR.value)]

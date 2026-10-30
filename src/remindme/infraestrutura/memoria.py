@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Set
 from remindme.aplicacao.portas import RegistroErro, Sessao
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.cliente import Cliente
+from remindme.dominio.empresa import Empresa
 from remindme.dominio.orcamento import Orcamento
 from remindme.dominio.permissoes import MatrizPermissoes
 from remindme.dominio.titulo import Titulo
@@ -50,6 +51,23 @@ class RepositorioOrcamentosEmMemoria:
 
     def _estado(self):
         return copy.deepcopy(self.dados)
+
+    def _restaurar(self, estado) -> None:
+        self.dados = estado
+
+
+class RepositorioEmpresaEmMemoria:
+    def __init__(self):
+        self.dados: Optional[Empresa] = None
+
+    def obter(self) -> Optional[Empresa]:
+        return self.dados
+
+    def salvar(self, empresa: Empresa) -> None:
+        self.dados = empresa
+
+    def _estado(self):
+        return self.dados
 
     def _restaurar(self, estado) -> None:
         self.dados = estado
@@ -211,6 +229,7 @@ class UnidadeDeTrabalhoEmMemoria:
         self.titulos = titulos if titulos is not None else RepositorioTitulosEmMemoria()
         self.clientes = clientes if clientes is not None else RepositorioClientesEmMemoria()
         self.orcamentos = orcamentos if orcamentos is not None else RepositorioOrcamentosEmMemoria()
+        self.empresa = RepositorioEmpresaEmMemoria()
         self.auditoria = auditoria if auditoria is not None else AuditoriaEmMemoria()
         self.usuarios = usuarios if usuarios is not None else RepositorioUsuariosEmMemoria()
         self.sessoes = sessoes if sessoes is not None else RepositorioSessoesEmMemoria()
@@ -220,7 +239,8 @@ class UnidadeDeTrabalhoEmMemoria:
 
     def _repositorios(self):
         return (
-            self.titulos, self.clientes, self.orcamentos, self.auditoria, self.usuarios, self.sessoes, self.permissoes
+            self.titulos, self.clientes, self.orcamentos, self.empresa, self.auditoria, self.usuarios, self.sessoes,
+            self.permissoes,
         )
 
     def __enter__(self):

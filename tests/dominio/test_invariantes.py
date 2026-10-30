@@ -187,7 +187,8 @@ class RegrasDePerfilNaAplicacao(ComSessoes, unittest.TestCase):
         self.titulo = self.servico.registrar_pagamento(self.sessao(dono), t.id, Decimal("10.00"), HOJE)
 
     def outros_perfis(self):
-        return [Usuario(p.name, p.value, p) for p in Perfil if p is not Perfil.DONO]
+        """Os perfis de negócio que não são o Dono; o Administrador pode tudo (OPEN-53)."""
+        return [Usuario(p.name, p.value, p) for p in Perfil if p not in (Perfil.DONO, Perfil.ADMINISTRADOR)]
 
     def test_RB_02_nenhum_outro_perfil_estorna(self):
         pagamento = self.titulo.pagamentos[0].id

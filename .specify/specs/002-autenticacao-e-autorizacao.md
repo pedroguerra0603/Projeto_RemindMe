@@ -108,6 +108,8 @@ Proposta montada a partir das personas e dos atores dos casos de uso. **P** = pe
 | Exportar CSV | UC-14 | P | P | P | — | — |
 | Administrar usuários e permissões | UC-02 | — | — | — | — | P |
 
+> **Mudanças de 2026-10-30, a pedido do professor:** o Administrador passou a ter todas as permissões, fixas (OPEN-53); a operação "Manter dados da empresa" foi acrescentada, permitida ao Dono (OPEN-54); e qualquer pessoa pode pedir uma conta pela tela de entrada, que nasce inativa até o Administrador ativá-la (OPEN-55).
+
 Nesta spec, a matriz é aplicada às operações das Specs 002 e 006. As demais linhas valem quando a spec de cada operação for implementada. O Dono que também administra o sistema usa um segundo usuário, com perfil Administrador (OPEN-10), porque cada usuário tem exatamente um perfil (RF-02).
 
 ## 5. Invariantes

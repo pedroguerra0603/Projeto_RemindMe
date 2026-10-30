@@ -35,6 +35,7 @@ TABELA_DA_SPEC = {
     Operacao.IMPORTAR_CSV: {D, O},
     Operacao.EXPORTAR_CSV: {D, O, C},
     Operacao.ADMINISTRAR_USUARIOS: {A},
+    Operacao.MANTER_EMPRESA: {D},
 }
 
 
@@ -44,7 +45,9 @@ class MatrizInicial(unittest.TestCase):
         for operacao in Operacao:
             for perfil in Perfil:
                 with self.subTest(operacao=operacao.value, perfil=perfil.value):
-                    self.assertEqual(matriz.permite(perfil, operacao), perfil in TABELA_DA_SPEC[operacao])
+                    # OPEN-53: além da tabela, o Administrador pode tudo.
+                    esperado = perfil in TABELA_DA_SPEC[operacao] or perfil is A
+                    self.assertEqual(matriz.permite(perfil, operacao), esperado)
 
     def test_RNF_02_perfil_desconhecido_e_negado_em_tudo(self):
         matriz = MatrizPermissoes.inicial()
@@ -53,8 +56,8 @@ class MatrizInicial(unittest.TestCase):
                 matriz.exigir(object(), operacao)
 
     def test_RF_67_a_negacao_informa_o_motivo(self):
-        with self.assertRaisesRegex(OperacaoNegada, "Administrador não tem permissão para cadastrar título"):
-            MatrizPermissoes.inicial().exigir(A, Operacao.CADASTRAR_TITULO)
+        with self.assertRaisesRegex(OperacaoNegada, "Operador Financeiro não tem permissão para consultar auditoria"):
+            MatrizPermissoes.inicial().exigir(O, Operacao.CONSULTAR_AUDITORIA)
 
 
 class PermissoesFixadas(unittest.TestCase):

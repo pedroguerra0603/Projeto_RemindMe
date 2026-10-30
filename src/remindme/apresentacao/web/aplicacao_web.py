@@ -21,6 +21,7 @@ from remindme.aplicacao.portas import RegistroErro, RegistroErros, Relogio
 from remindme.aplicacao.servico_acesso import ServicoAcesso
 from remindme.aplicacao.servico_auditoria import FiltroAuditoria, ServicoAuditoria
 from remindme.aplicacao.servico_clientes import ServicoClientes
+from remindme.aplicacao.servico_empresa import ServicoEmpresa
 from remindme.aplicacao.servico_orcamentos import FiltroOrcamentos, ServicoOrcamentos
 from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroTitulos, ServicoTitulos
 from remindme.aplicacao.tempo import data_local
@@ -28,6 +29,7 @@ from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
 from remindme.apresentacao.web.html import Html
 from remindme.dominio.erros import OperacaoNegada, OperacaoRecusada
+from remindme.dominio.empresa import CAMPOS as CAMPOS_DA_EMPRESA
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.orcamento import EstadoOrcamento
 from remindme.dominio.titulo import EstadoTitulo
@@ -47,7 +49,7 @@ ARQUIVOS_ESTATICOS = {
 ID = "[0-9a-f]{32}"
 
 POLITICA_DE_CONTEUDO = (
-    "default-src 'none'; style-src 'self'; img-src 'self'; script-src 'self'; font-src 'self'; form-action 'self'; "
+    "default-src 'none'; style-src 'self'; img-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; "
     "frame-ancestors 'none'; base-uri 'none'"
 )
 
@@ -72,6 +74,8 @@ AVISOS = {
     "condicao": ("sucesso", "Condição de pagamento atualizada."),
     "decisao": ("sucesso", "Decisão registrada. O orçamento voltou a Rascunho."),
     "orcamento-cancelado": ("sucesso", "Orçamento cancelado."),
+    "empresa": ("sucesso", "Dados da empresa salvos."),
+    "ativacao": ("sucesso", "Usuário ativado. Ele já pode entrar."),
 }
 
 _CORRELACAO = re.compile(r"Identificador de correlação: ([0-9a-f]+)")
@@ -84,6 +88,7 @@ class Servicos:
     titulos: ServicoTitulos
     auditoria: ServicoAuditoria
     orcamentos: Optional[ServicoOrcamentos] = None
+    empresa: Optional[ServicoEmpresa] = None
 
 
 class CorpoGrandeDemais(Exception):
@@ -159,6 +164,9 @@ class AplicacaoWeb:
         r.append(("GET", "/estatico/(?P<nome>[a-z0-9.-]+)", self._estatico, publica))
         r.append(("GET", "/entrar", self._entrar_pagina, publica))
         r.append(("POST", "/entrar", self._entrar, publica))
+        r.append(("GET", "/criar-conta", self._criar_conta_pagina, publica))
+        r.append(("POST", "/criar-conta", self._criar_conta, publica))
+        r.append(("GET", "/robots.txt", self._robots, publica))
         r.append(("POST", "/sair", self._sair, protegida))
         r.append(("GET", "/painel", self._painel, protegida))
         r.append(("GET", "/clientes", self._clientes, protegida))
@@ -190,6 +198,8 @@ class AplicacaoWeb:
         r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/decisao", self._decisao, protegida))
         r.append(("GET", f"/orcamentos/(?P<orcamento_id>{ID})/cancelamento", self._orcamento_cancelamento_pagina, protegida))
         r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/cancelamento", self._orcamento_cancelamento, protegida))
+        r.append(("GET", "/empresa", self._empresa, protegida))
+        r.append(("POST", "/empresa", self._empresa_salvar, protegida))
         r.append(("GET", "/auditoria", self._auditoria, protegida))
         r.append(("GET", "/usuarios", self._usuarios, protegida))
         r.append(("GET", "/usuarios/novo", self._usuario_novo_pagina, protegida))
@@ -197,6 +207,7 @@ class AplicacaoWeb:
         r.append(("GET", f"/usuarios/(?P<usuario_id>{ID})", self._usuario, protegida))
         r.append(("POST", f"/usuarios/(?P<usuario_id>{ID})/perfil", self._usuario_perfil, protegida))
         r.append(("POST", f"/usuarios/(?P<usuario_id>{ID})/inativacao", self._usuario_inativacao, protegida))
+        r.append(("POST", f"/usuarios/(?P<usuario_id>{ID})/ativacao", self._usuario_ativacao, protegida))
         r.append(("GET", "/permissoes", self._permissoes, protegida))
         r.append(("POST", "/permissoes", self._permissao, protegida))
         self._rotas = [(metodo, re.compile(padrao), funcao, privada) for metodo, padrao, funcao, privada in r]
@@ -305,6 +316,30 @@ class AplicacaoWeb:
             return self._entrar_pagina(req, recusa.motivo, req.campo("email"), 401)
         resposta = Resposta.redirecionar("/painel").cookie(COOKIE_SESSAO, aberta.identificador, req.https)
         return resposta.cookie(COOKIE_ENTRADA, "", req.https, apagar=True)
+
+    def _criar_conta_pagina(
+        self, req: Requisicao, valores: Optional[Dict[str, str]] = None, erros: Optional[Dict[str, str]] = None,
+        criada: bool = False,
+    ) -> Resposta:
+        """OPEN-55. Usa a mesma proteção de formulário da entrada."""
+        protecao = req.cookies.get(COOKIE_ENTRADA) or secrets.token_urlsafe(24)
+        pagina = p.pagina_criar_conta(protecao, valores or {}, erros or {}, criada)
+        return Resposta.pagina(pagina, 400 if erros else 200).cookie(COOKIE_ENTRADA, protecao, req.https)
+
+    def _criar_conta(self, req: Requisicao) -> Resposta:
+        valores = _valores(req, "nome", "email", "perfil")
+        if not _confere(req.formulario.get("protecao", ""), req.cookies.get(COOKIE_ENTRADA, "")):
+            return self._criar_conta_pagina(req, valores, {"_": "A página expirou. Tente de novo."})
+        try:
+            self._s.acesso.criar_conta(valores["nome"], valores["email"], _perfil(valores["perfil"]), req.formulario.get("senha", ""))
+        except OperacaoRecusada as recusa:
+            return self._criar_conta_pagina(req, valores, _erros(recusa))
+        return self._criar_conta_pagina(req, valores, criada=True)
+
+    def _robots(self, req: Requisicao) -> Resposta:
+        """SEO: só a entrada e a criação de conta são públicas; o resto exige sessão."""
+        texto = "User-agent: *\nAllow: /entrar\nAllow: /criar-conta\nDisallow: /\n"
+        return Resposta(200, texto.encode("utf-8"), "text/plain; charset=utf-8")
 
     def _sair(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         self._s.acesso.sair(sessao)
@@ -695,6 +730,32 @@ class AplicacaoWeb:
             return self._orcamento_cancelamento_pagina(req, sessao, ctx, orcamento_id, valores, _erros(recusa))
         return Resposta.redirecionar(f"/orcamentos/{orcamento_id}?aviso=orcamento-cancelado")
 
+    # Empresa (OPEN-54)
+
+    def _empresa(
+        self, req: Requisicao, sessao: str, ctx: p.Contexto,
+        valores: Optional[Dict[str, str]] = None, erros: Optional[Dict[str, str]] = None,
+    ) -> Resposta:
+        empresa = self._s.empresa.obter(sessao)
+        if valores is None:
+            valores = {c: getattr(empresa, c) for c in CAMPOS_DA_EMPRESA} if empresa else {}
+            if empresa:
+                valores["cnpj"], valores["telefone"] = f.documento(empresa.cnpj), f.contato(empresa.telefone)
+        visoes = self._s.titulos.consultar_titulos(sessao, FiltroTitulos(), ctx.hoje) if ctx.pode(Operacao.CONSULTAR_TITULOS) else None
+        clientes = len(self._s.clientes.consultar_clientes(sessao)) if ctx.pode(Operacao.CONSULTAR_CLIENTES) else None
+        pagina = p.pagina_empresa(ctx, empresa, visoes, clientes, valores, erros or {}, None if erros else _aviso(req))
+        return Resposta.pagina(pagina, 400 if erros else 200)
+
+    def _empresa_salvar(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        valores = _valores(req, *CAMPOS_DA_EMPRESA)
+        try:
+            self._s.empresa.salvar(sessao, **valores)
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return self._empresa(req, sessao, ctx, valores, _erros(recusa))
+        return Resposta.redirecionar("/empresa?aviso=empresa")
+
     # Auditoria (Spec 013)
 
     def _auditoria(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
@@ -764,6 +825,15 @@ class AplicacaoWeb:
         except OperacaoRecusada as recusa:
             return self._usuario(req, sessao, ctx, usuario_id, {}, _erros(recusa))
         return Resposta.redirecionar(f"/usuarios/{usuario_id}?aviso=inativacao")
+
+    def _usuario_ativacao(self, req: Requisicao, sessao: str, ctx: p.Contexto, usuario_id: str) -> Resposta:
+        try:
+            self._s.acesso.ativar_usuario(sessao, usuario_id)
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return self._usuario(req, sessao, ctx, usuario_id, {}, _erros(recusa))
+        return Resposta.redirecionar(f"/usuarios/{usuario_id}?aviso=ativacao")
 
     def _permissoes(self, req: Requisicao, sessao: str, ctx: p.Contexto, aviso=None, status: int = 200) -> Resposta:
         pagina = p.pagina_permissoes(ctx, self._s.acesso.matriz(sessao), aviso or _aviso(req))

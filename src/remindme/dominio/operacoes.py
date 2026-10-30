@@ -22,6 +22,7 @@ class Operacao(Enum):
     IMPORTAR_CSV = "Importar CSV"
     EXPORTAR_CSV = "Exportar CSV"
     ADMINISTRAR_USUARIOS = "Administrar usuários e permissões"
+    MANTER_EMPRESA = "Manter dados da empresa"
 
     @property
     def descricao(self) -> str:

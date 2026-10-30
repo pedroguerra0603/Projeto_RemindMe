@@ -2,7 +2,7 @@
 
 import secrets
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Dict, FrozenSet, List, Optional
 
@@ -17,8 +17,9 @@ from remindme.dominio.permissoes import Celula
 from remindme.dominio.usuario import Perfil, Usuario, normalizar_email
 
 CREDENCIAIS_INVALIDAS = "E-mail ou senha incorretos."
-USUARIO_INATIVO = "Usuário inativo. Procure o Administrador."
+USUARIO_INATIVO = "Usuário inativo ou aguardando ativação. Procure o Administrador."
 ROTINA_DE_INSTALACAO = "instalação"
+ROTINA_DE_CRIAR_CONTA = "criar conta pela entrada"
 
 
 @dataclass(frozen=True)
@@ -110,6 +111,21 @@ class ServicoAcesso:
                 raise OperacaoRecusada("Já existe um Administrador ativo. Os demais usuários são cadastrados por ele.")
             return self._cadastrar(op, nome, email, Perfil.ADMINISTRADOR, senha)
 
+    def criar_conta(self, nome: object, email: object, perfil: object, senha: object) -> Usuario:
+        """OPEN-55: qualquer pessoa pede uma conta pela tela de entrada. Ela nasce inativa, e só entra depois
+        que um Administrador a ativa; o perfil Administrador não pode ser pedido assim."""
+        with self._execucao.automatica("criar conta", ROTINA_DE_CRIAR_CONTA) as op:
+            recusa_do_perfil = "O perfil Administrador é dado só por outro Administrador." if perfil is Perfil.ADMINISTRADOR else ""
+            return self._cadastrar(op, nome, email, perfil, senha, ativo=False, recusa_do_perfil=recusa_do_perfil)
+
+    def ativar_usuario(self, sessao: Optional[str], usuario_id: str) -> Usuario:
+        """OPEN-55: libera a entrada de quem criou a conta (ou volta a liberar um inativado)."""
+        with self._execucao.operacao("ativar usuário", sessao, Operacao.ADMINISTRAR_USUARIOS) as op:
+            ativo = self._usuario(op.uow, usuario_id).ativado()
+            op.uow.usuarios.salvar(ativo)
+            op.registrar(_ref(ativo), "ativo", "não", "sim")
+        return ativo
+
     def alterar_perfil(self, sessao: Optional[str], usuario_id: str, perfil: object) -> Usuario:
         """A2: a operação seguinte do usuário já usa o novo perfil. RF-05: auditoria do anterior e do novo."""
         with self._execucao.operacao("alterar perfil", sessao, Operacao.ADMINISTRAR_USUARIOS) as op:
@@ -160,7 +176,8 @@ class ServicoAcesso:
             op.registrar("permissões", f"{perfil.value}: {operacao.value}", "sim", "não")
 
     def _cadastrar(
-        self, op: OperacaoAuditada, nome: object, email: object, perfil: object, senha: object
+        self, op: OperacaoAuditada, nome: object, email: object, perfil: object, senha: object, ativo: bool = True,
+        recusa_do_perfil: str = "",
     ) -> Usuario:
         campos: Dict[str, str] = {}
         usuario: Optional[Usuario] = None
@@ -174,14 +191,18 @@ class ServicoAcesso:
         motivo = motivo_da_senha(senha)
         if motivo:
             campos["senha"] = motivo
+        if recusa_do_perfil:
+            campos["perfil"] = recusa_do_perfil
         recusar_campos(campos)
+        if not ativo:
+            usuario = replace(usuario, ativo=False)
         op.uow.usuarios.salvar(usuario)
         op.uow.usuarios.guardar_hash(usuario.id, self._cifrador.gerar(senha))
         for campo, valor in (
             ("nome", usuario.nome),
             ("email", usuario.email),
             ("perfil", usuario.perfil.value),
-            ("ativo", "sim"),
+            ("ativo", "sim" if ativo else "não"),
         ):
             op.registrar(_ref(usuario), campo, None, valor)
         return usuario

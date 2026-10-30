@@ -88,7 +88,7 @@ class AcessoPelaInterface(Base):
     def test_CA_02_RF_65_painel_com_nome_perfil_e_menu_do_perfil(self):
         for email, nome, perfil, com, sem in (
             ("helena@exemplo.com", "Helena Prado", "Contador", ["/titulos", "/clientes", "/auditoria"], ["/usuarios", "/titulos/novo", "/clientes/novo"]),
-            ("admin@exemplo.com", "Ana Admin", "Administrador", ["/auditoria", "/usuarios", "/permissoes"], ["/titulos", "/clientes"]),
+            ("admin@exemplo.com", "Ana Admin", "Administrador", ["/auditoria", "/usuarios", "/permissoes", "/titulos", "/clientes"], []),
             ("diego@exemplo.com", "Diego Ramos", "Operador Financeiro", ["/titulos", "/clientes", "/titulos/novo"], ["/auditoria", "/usuarios"]),
         ):
             with self.subTest(perfil=perfil):

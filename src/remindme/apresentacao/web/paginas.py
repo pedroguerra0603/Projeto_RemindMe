@@ -33,6 +33,7 @@ class Contexto:
 
 MENU = (
     ("painel", "/painel", "Painel", "◧", None),
+    ("empresa", "/empresa", "Empresa", "▣", None),
     ("titulos", "/titulos", "Títulos", "▤", Operacao.CONSULTAR_TITULOS),
     ("orcamentos", "/orcamentos", "Orçamentos", "◇", Operacao.CONDUZIR_ORCAMENTO),
     ("clientes", "/clientes", "Clientes", "◉", Operacao.CONSULTAR_CLIENTES),
@@ -64,7 +65,10 @@ PERFIS_DE_USUARIO = [p for p in Perfil if p is not Perfil.CLIENTE]
 # Estrutura
 
 
-def _documento_html(titulo: str, corpo: Html) -> Html:
+DESCRICAO_PADRAO = "RemindMe: gestão de recebíveis, orçamentos e clientes de micro e pequenas empresas."
+
+
+def _documento_html(titulo: str, corpo: Html, descricao: str = DESCRICAO_PADRAO) -> Html:
     return h(
         """<!doctype html>
 <html lang="pt-BR">
@@ -72,6 +76,8 @@ def _documento_html(titulo: str, corpo: Html) -> Html:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{titulo} | RemindMe</title>
+<meta name="description" content="{descricao}">
+<meta name="theme-color" content="#0f1e3d">
 <link rel="icon" href="/estatico/icone.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/estatico/estilo.css">
 <script src="/estatico/tema.js"></script>
@@ -83,6 +89,7 @@ def _documento_html(titulo: str, corpo: Html) -> Html:
 """,
         titulo=titulo,
         corpo=corpo,
+        descricao=descricao,
     )
 
 
@@ -250,32 +257,90 @@ def tabela(cabecalhos: Sequence[Tuple[str, str]], linhas: List[Html], vazio: str
 # Entrada
 
 
-def pagina_entrar(protecao_da_entrada: str, email: str = "", erro: str = "", aviso: str = "") -> Html:
+# Telas públicas: entrar e criar conta. Painel da marca à esquerda (com a régua do caixa em miniatura,
+# só ilustrativa) e o formulário à direita.
+
+_REGUA_ILUSTRATIVA = Html(
+    """<svg class="regua-ilustrativa" viewBox="-12 -6 224 50" aria-hidden="true" focusable="false">
+<line class="eixo" x1="0" y1="34" x2="200" y2="34"/><line class="hoje" x1="133" y1="0" x2="133" y2="37"/>
+<line class="haste" x1="58" y1="34" x2="58" y2="28"/><circle class="vermelho" cx="58" cy="28" r="3.2"/><text x="58" y="21">R$ 680</text>
+<line class="haste" x1="102" y1="34" x2="102" y2="14"/><circle class="vermelho" cx="102" cy="14" r="3.2"/><text x="102" y="7">R$ 3,8 mil</text>
+<line class="haste" x1="146" y1="34" x2="146" y2="28"/><circle class="laranja" cx="146" cy="28" r="3.2"/><text x="146" y="21">R$ 1,2 mil</text>
+<line class="haste" x1="186" y1="34" x2="186" y2="28"/><circle class="azul" cx="186" cy="28" r="3.2"/><text x="186" y="21">R$ 720</text>
+<text class="rotulo" x="133" y="44">hoje</text>
+</svg>"""
+)
+
+
+def _tela_publica(titulo: str, descricao: str, conteudo: Html) -> Html:
     corpo = h(
-        """<main class="entrada" id="conteudo">
-  <div class="caixa">
-    <div class="marca"><img src="/estatico/icone.svg" alt="">RemindMe</div>
-    <p class="lema">Recebíveis, cobranças e obrigações da sua empresa, num só lugar.</p>
-    <div class="cartao">
-      <h1 class="titulo-entrada">Entrar</h1>
-      {aviso}{erro}
-      <form class="formulario" method="post" action="/entrar">
-        <input type="hidden" name="protecao" value="{protecao}">
-        <div class="campo"><label for="email">E-mail</label>
-          <input id="email" name="email" type="email" value="{email}" autocomplete="username" required autofocus></div>
-        <div class="campo"><label for="senha">Senha</label>
-          <input id="senha" name="senha" type="password" autocomplete="current-password" required></div>
-        <button type="submit">Entrar</button>
-      </form>
-    </div>
-  </div>
-</main>""",
+        """<div class="publica">
+  <aside class="publica-marca">
+    <div class="marca marca-clara"><img src="/estatico/icone.svg" alt="">RemindMe</div>
+    <p class="publica-frase">Cada cobrança e cada prazo no dia certo.</p>
+    <p class="publica-apoio">Títulos, orçamentos e clientes da sua empresa, com o que vence hoje à vista.</p>
+    {regua}
+  </aside>
+  <main class="publica-conteudo" id="conteudo">{conteudo}</main>
+</div>""",
+        regua=_REGUA_ILUSTRATIVA,
+        conteudo=conteudo,
+    )
+    return _documento_html(titulo, corpo, descricao)
+
+
+def pagina_entrar(protecao_da_entrada: str, email: str = "", erro: str = "", aviso: str = "") -> Html:
+    conteudo = h(
+        """<h1>Entrar</h1>
+{aviso}{erro}
+<form class="formulario" method="post" action="/entrar">
+  <input type="hidden" name="protecao" value="{protecao}">
+  <div class="campo"><label for="email">E-mail</label>
+    <input id="email" name="email" type="email" value="{email}" autocomplete="username" required autofocus></div>
+  <div class="campo"><label for="senha">Senha</label>
+    <input id="senha" name="senha" type="password" autocomplete="current-password" required></div>
+  <button type="submit">Entrar</button>
+</form>
+<p class="publica-troca">Ainda não tem acesso? <a href="/criar-conta">Criar conta</a></p>""",
         aviso=caixa_de_aviso("info", aviso) if aviso else Html(""),
         erro=caixa_de_aviso("erro", erro) if erro else Html(""),
         protecao=protecao_da_entrada,
         email=email,
     )
-    return _documento_html("Entrar", corpo)
+    return _tela_publica(
+        "Entrar", "Entre no RemindMe para acompanhar títulos a receber, orçamentos e clientes da sua empresa.", conteudo
+    )
+
+
+PERFIS_DA_CRIACAO_DE_CONTA = [p for p in Perfil if p not in (Perfil.CLIENTE, Perfil.ADMINISTRADOR)]
+
+
+def pagina_criar_conta(protecao_da_entrada: str, valores: Valores, erros: Erros, criada: bool = False) -> Html:
+    if criada:
+        conteudo = h(
+            """<h1>Conta criada</h1>
+<p class="publica-texto">A conta de {email} aguarda a ativação pelo Administrador da empresa. Assim que ela for ativada, entre com o seu e-mail e a senha que você escolheu.</p>
+<p><a class="botao" href="/entrar">Ir para a entrada</a></p>""",
+            email=valores.get("email", ""),
+        )
+    else:
+        conteudo = h(
+            """<h1>Criar conta</h1>
+<p class="publica-texto">A conta fica aguardando a ativação pelo Administrador da empresa.</p>
+<form class="formulario" method="post" action="/criar-conta" novalidate>
+  <input type="hidden" name="protecao" value="{protecao}">{geral}
+  {nome}{email}{perfil}{senha}
+  <button type="submit">Criar conta</button>
+</form>
+<p class="publica-troca">Já tem acesso? <a href="/entrar">Entrar</a></p>""",
+            protecao=protecao_da_entrada,
+            geral=erro_geral(erros),
+            nome=campo("nome", "Nome", valores, erros, extra='autocomplete="name"'),
+            email=campo("email", "E-mail", valores, erros, tipo="email", extra='autocomplete="email"'),
+            perfil=selecao("perfil", "Perfil", [(p.name, p.value) for p in PERFIS_DA_CRIACAO_DE_CONTA], valores, erros, vazio="Escolha o perfil"),
+            senha=campo("senha", "Senha", {}, erros, tipo="password", ajuda="Pelo menos 8 caracteres.", extra='autocomplete="new-password"'),
+        )
+    return _tela_publica("Criar conta", "Peça acesso ao RemindMe da sua empresa. A conta é ativada pelo Administrador.", conteudo)
 
 
 # Painel
@@ -1084,6 +1149,67 @@ def pagina_item_formulario(ctx: Contexto, orcamento, item, valores: Valores, err
     return layout("Alterar item", conteudo, ctx, "orcamentos")
 
 
+# Empresa (OPEN-54)
+
+
+def pagina_empresa(ctx: Contexto, empresa, visoes: Optional[list], clientes: Optional[int], valores: Valores, erros: Erros, aviso=None) -> Html:
+    partes = [cabecalho(empresa.nome_fantasia or empresa.razao_social if empresa else "Empresa", "Dados da sua empresa no RemindMe.")]
+    if empresa:
+        partes.append(
+            h(
+                """<section class="cartao"><dl class="dados">
+<div><dt>Razão social</dt><dd>{razao}</dd></div>
+<div><dt>CNPJ</dt><dd>{cnpj}</dd></div>
+<div><dt>Telefone</dt><dd>{telefone}</dd></div>
+<div><dt>E-mail</dt><dd>{email}</dd></div>
+<div><dt>Endereço</dt><dd>{endereco}</dd></div>
+</dl></section>""",
+                razao=empresa.razao_social,
+                cnpj=f.documento(empresa.cnpj),
+                telefone=f.contato(empresa.telefone) if empresa.telefone else "Não informado",
+                email=empresa.email or "Não informado",
+                endereco=empresa.endereco or "Não informado",
+            )
+        )
+    elif not ctx.pode(Operacao.MANTER_EMPRESA):
+        partes.append(caixa_de_aviso("info", "Os dados da empresa ainda não foram preenchidos. Peça ao Dono para preenchê-los."))
+    indicadores = []
+    if clientes is not None:
+        indicadores.append(h('<div class="indicador"><div class="rotulo">Clientes</div><div class="numero">{n}</div></div>', n=clientes))
+    if visoes is not None:
+        em_aberto = [v for v in visoes if v.estado in (EstadoTitulo.ABERTO, EstadoTitulo.VENCIDO)]
+        indicadores.append(h('<div class="indicador"><div class="rotulo">Títulos em aberto</div><div class="numero">{n}</div></div>', n=len(em_aberto)))
+        indicadores.append(
+            h(
+                '<div class="indicador"><div class="rotulo">A receber</div><div class="numero">{v}</div></div>',
+                v=f.moeda(sum((v.saldo for v in em_aberto), Decimal("0.00"))),
+            )
+        )
+    if indicadores:
+        partes.append(h('<div class="indicadores">{i}</div>', i=juntar(indicadores)))
+    if ctx.pode(Operacao.MANTER_EMPRESA):
+        formulario = h(
+            """<form class="formulario" method="post" action="/empresa" novalidate>
+{protecao}{geral}
+{razao}{fantasia}
+<div class="linha-campos">{cnpj}{telefone}</div>
+{email}{endereco}
+<div class="acoes"><button type="submit">Salvar dados da empresa</button></div>
+</form>""",
+            protecao=protecao(ctx),
+            geral=erro_geral(erros),
+            razao=campo("razao_social", "Razão social", valores, erros),
+            fantasia=campo("nome_fantasia", "Nome fantasia", valores, erros, obrigatorio=False),
+            cnpj=campo("cnpj", "CNPJ", valores, erros, extra='inputmode="numeric"'),
+            telefone=campo("telefone", "Telefone", valores, erros, tipo="text", obrigatorio=False, extra='inputmode="tel"'),
+            email=campo("email", "E-mail", valores, erros, tipo="email", obrigatorio=False),
+            endereco=campo("endereco", "Endereço", valores, erros, obrigatorio=False),
+        )
+        titulo = "Alterar dados" if empresa else "Preencher dados da empresa"
+        partes.append(h('<section class="cartao"><h2>{t}</h2>{f}</section>', t=titulo, f=formulario))
+    return layout("Empresa", juntar(partes), ctx, "empresa", aviso)
+
+
 # Auditoria
 
 
@@ -1094,6 +1220,8 @@ def _descrever(registro: str) -> Tuple[str, Optional[str]]:
         return ("Pagamento do título " if len(partes) > 1 else "Título ") + chave[:8], f"/titulos/{chave}"
     if tipo == "cliente":
         return "Cliente " + chave[:8], f"/clientes/{chave}"
+    if tipo == "empresa":
+        return "Dados da empresa", "/empresa"
     if tipo == "orcamento":
         return ("Item do orçamento " if len(partes) > 1 else "Orçamento ") + chave[:8], f"/orcamentos/{chave}"
     if tipo == "usuario":
@@ -1257,6 +1385,15 @@ def pagina_usuario(ctx: Contexto, usuario: Usuario, valores: Valores, erros: Err
                 id=usuario.id,
                 protecao=protecao(ctx),
                 perfil=selecao("perfil", "Novo perfil", [(p.name, p.value) for p in PERFIS_DE_USUARIO], valores or {"perfil": usuario.perfil.name}, erros),
+            )
+        )
+    else:
+        partes.append(
+            h(
+                """<section class="cartao"><h2>Ativar usuário</h2><p class="secundario">Libera a entrada com o e-mail e a senha que a pessoa escolheu ao criar a conta.</p>
+<form method="post" action="/usuarios/{id}/ativacao">{protecao}<button type="submit">Ativar usuário</button></form></section>""",
+                id=usuario.id,
+                protecao=protecao(ctx),
             )
         )
     partes.append(h('<p><a href="/auditoria?registro=usuario+{id}">Histórico deste usuário</a></p>', id=usuario.id))
