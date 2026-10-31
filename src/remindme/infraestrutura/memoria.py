@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Set
 from remindme.aplicacao.portas import RegistroErro, Sessao
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.cliente import Cliente
+from remindme.dominio.conta_pagar import ContaPagar
 from remindme.dominio.empresa import Empresa
 from remindme.dominio.fornecedor import Fornecedor
 from remindme.dominio.orcamento import Orcamento
@@ -28,6 +29,27 @@ class RepositorioTitulosEmMemoria:
 
     def listar(self) -> List[Titulo]:
         return [copy.deepcopy(t) for t in self.dados.values()]
+
+    def _estado(self):
+        return copy.deepcopy(self.dados)
+
+    def _restaurar(self, estado) -> None:
+        self.dados = estado
+
+
+class RepositorioContasPagarEmMemoria:
+    def __init__(self):
+        self.dados: Dict[str, ContaPagar] = {}
+
+    def obter(self, conta_id: str) -> Optional[ContaPagar]:
+        conta = self.dados.get(conta_id)
+        return copy.deepcopy(conta) if conta else None
+
+    def salvar(self, conta: ContaPagar) -> None:
+        self.dados[conta.id] = copy.deepcopy(conta)
+
+    def listar(self) -> List[ContaPagar]:
+        return [copy.deepcopy(c) for c in self.dados.values()]
 
     def _estado(self):
         return copy.deepcopy(self.dados)
@@ -258,6 +280,7 @@ class UnidadeDeTrabalhoEmMemoria:
         self.orcamentos = orcamentos if orcamentos is not None else RepositorioOrcamentosEmMemoria()
         self.empresa = RepositorioEmpresaEmMemoria()
         self.fornecedores = RepositorioFornecedoresEmMemoria()
+        self.contas_pagar = RepositorioContasPagarEmMemoria()
         self.auditoria = auditoria if auditoria is not None else AuditoriaEmMemoria()
         self.usuarios = usuarios if usuarios is not None else RepositorioUsuariosEmMemoria()
         self.sessoes = sessoes if sessoes is not None else RepositorioSessoesEmMemoria()
@@ -267,7 +290,7 @@ class UnidadeDeTrabalhoEmMemoria:
 
     def _repositorios(self):
         return (
-            self.titulos, self.clientes, self.fornecedores, self.orcamentos, self.empresa, self.auditoria, self.usuarios, self.sessoes,
+            self.titulos, self.clientes, self.fornecedores, self.contas_pagar, self.orcamentos, self.empresa, self.auditoria, self.usuarios, self.sessoes,
             self.permissoes,
         )
 

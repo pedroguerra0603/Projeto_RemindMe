@@ -14,7 +14,9 @@ from typing import List, Optional
 from remindme.aplicacao.portas import Sessao
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.cliente import Cliente
+from remindme.dominio.conta_pagar import ContaPagar, EstadoContaPagar
 from remindme.dominio.empresa import CAMPOS as CAMPOS_DA_EMPRESA, Empresa
+from remindme.dominio.fornecedor import Fornecedor
 from remindme.dominio.orcamento import AprovacaoDesconto, EstadoOrcamento, ItemOrcamento, Orcamento, PendenciaDesconto
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.permissoes import MatrizPermissoes
@@ -140,7 +142,51 @@ CREATE TABLE empresa (
 );
 """
 
-MIGRACOES = [_ESQUEMA_1, _ESQUEMA_2, _ESQUEMA_3]
+# Spec 018: fornecedores, contas a pagar e os pagamentos delas. O perfil Cliente sai da matriz (OPEN-57).
+_ESQUEMA_4 = """
+CREATE TABLE fornecedores (
+    id TEXT PRIMARY KEY,
+    nome TEXT NOT NULL,
+    documento TEXT NOT NULL UNIQUE,
+    contato TEXT NOT NULL
+);
+CREATE TABLE contas_pagar (
+    id TEXT PRIMARY KEY,
+    fornecedor_id TEXT NOT NULL REFERENCES fornecedores (id),
+    descricao TEXT NOT NULL,
+    valor TEXT NOT NULL,
+    vencimento TEXT NOT NULL,
+    condicao_pagamento TEXT,
+    estado TEXT NOT NULL
+);
+CREATE INDEX contas_por_vencimento ON contas_pagar (vencimento);
+CREATE TABLE pagamentos_conta (
+    id TEXT PRIMARY KEY,
+    conta_id TEXT NOT NULL REFERENCES contas_pagar (id),
+    ordem INTEGER NOT NULL,
+    valor TEXT NOT NULL,
+    data TEXT NOT NULL,
+    estornado INTEGER NOT NULL,
+    motivo_estorno TEXT,
+    pedido_id TEXT,
+    UNIQUE (conta_id, pedido_id)
+);
+CREATE INDEX pagamentos_da_conta ON pagamentos_conta (conta_id, ordem);
+DELETE FROM permissoes WHERE perfil = 'CLIENTE';
+"""
+
+# Operações novas da Spec 018: bancos criados antes as recebem como na matriz inicial.
+_OPERACOES_DA_SPEC_018 = (
+    Operacao.MANTER_FORNECEDORES,
+    Operacao.CONSULTAR_FORNECEDORES,
+    Operacao.CADASTRAR_CONTA_PAGAR,
+    Operacao.PAGAR_CONTA,
+    Operacao.ESTORNAR_PAGAMENTO_CONTA,
+    Operacao.CANCELAR_CONTA_PAGAR,
+    Operacao.CONSULTAR_CONTAS_PAGAR,
+)
+
+MIGRACOES = [_ESQUEMA_1, _ESQUEMA_2, _ESQUEMA_3, _ESQUEMA_4]
 
 
 def preparar_banco(caminho: str) -> None:
@@ -164,6 +210,11 @@ def preparar_banco(caminho: str) -> None:
                 if numero == 3:
                     # Bancos criados antes: o Dono ganha a nova operação, como na matriz inicial (OPEN-54).
                     conexao.execute("INSERT OR IGNORE INTO permissoes (operacao, perfil) VALUES ('MANTER_EMPRESA', 'DONO')")
+                if numero == 4:
+                    conexao.executemany(
+                        "INSERT OR IGNORE INTO permissoes (operacao, perfil) VALUES (?, ?)",
+                        [(o.name, p.name) for o, p in MatrizPermissoes.inicial().concedidas if o in _OPERACOES_DA_SPEC_018],
+                    )
                 conexao.execute(f"PRAGMA user_version = {numero}")
                 conexao.execute("COMMIT")
             except Exception:
@@ -198,6 +249,8 @@ class UnidadeDeTrabalhoSQLite:
         self.clientes = RepositorioClientesSQLite(self)
         self.orcamentos = RepositorioOrcamentosSQLite(self)
         self.empresa = RepositorioEmpresaSQLite(self)
+        self.fornecedores = RepositorioFornecedoresSQLite(self)
+        self.contas_pagar = RepositorioContasPagarSQLite(self)
         self.auditoria = AuditoriaSQLite(self)
         self.usuarios = RepositorioUsuariosSQLite(self)
         self.sessoes = RepositorioSessoesSQLite(self)
@@ -353,6 +406,94 @@ class RepositorioClientesSQLite(_Repositorio):
     def _um(self, comando: str, chave: str) -> Optional[Cliente]:
         linha = self._executar(comando, (chave,)).fetchone()
         return Cliente(*linha) if linha else None
+
+
+class RepositorioFornecedoresSQLite(_Repositorio):
+    _COLUNAS = "id, nome, documento, contato"
+
+    def obter(self, fornecedor_id: str) -> Optional[Fornecedor]:
+        return self._um(f"SELECT {self._COLUNAS} FROM fornecedores WHERE id = ?", fornecedor_id)
+
+    def obter_por_documento(self, documento: str) -> Optional[Fornecedor]:
+        return self._um(f"SELECT {self._COLUNAS} FROM fornecedores WHERE documento = ?", documento)
+
+    def salvar(self, fornecedor: Fornecedor) -> None:
+        self._executar(
+            """INSERT INTO fornecedores (id, nome, documento, contato) VALUES (?, ?, ?, ?)
+               ON CONFLICT (id) DO UPDATE SET nome = excluded.nome, documento = excluded.documento,
+                   contato = excluded.contato""",
+            (fornecedor.id, fornecedor.nome, fornecedor.documento, fornecedor.contato),
+        )
+
+    def listar(self) -> List[Fornecedor]:
+        return [Fornecedor(*linha) for linha in self._executar(f"SELECT {self._COLUNAS} FROM fornecedores").fetchall()]
+
+    def existe(self, fornecedor_id: str) -> bool:
+        return self._executar("SELECT 1 FROM fornecedores WHERE id = ?", (fornecedor_id,)).fetchone() is not None
+
+    def _um(self, comando: str, chave: str) -> Optional[Fornecedor]:
+        linha = self._executar(comando, (chave,)).fetchone()
+        return Fornecedor(*linha) if linha else None
+
+
+class RepositorioContasPagarSQLite(_Repositorio):
+    """Como o repositório de títulos: a conta e os pagamentos, que só são incluídos ou marcados como estornados."""
+
+    _COLUNAS = "id, fornecedor_id, descricao, valor, vencimento, condicao_pagamento, estado"
+
+    def obter(self, conta_id: str) -> Optional[ContaPagar]:
+        linha = self._executar(f"SELECT {self._COLUNAS} FROM contas_pagar WHERE id = ?", (conta_id,)).fetchone()
+        return self._montar(linha, self._pagamentos(conta_id).get(conta_id, [])) if linha else None
+
+    def salvar(self, conta: ContaPagar) -> None:
+        self._executar(
+            """INSERT INTO contas_pagar (id, fornecedor_id, descricao, valor, vencimento, condicao_pagamento, estado)
+               VALUES (?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT (id) DO UPDATE SET estado = excluded.estado""",
+            (
+                conta.id, conta.fornecedor_id, conta.descricao, str(conta.valor), conta.vencimento.isoformat(),
+                conta.condicao_pagamento, conta.estado.name,
+            ),
+        )
+        for ordem, pagamento in enumerate(conta.pagamentos):
+            self._executar(
+                """INSERT INTO pagamentos_conta (id, conta_id, ordem, valor, data, estornado, motivo_estorno, pedido_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                   ON CONFLICT (id) DO UPDATE SET estornado = excluded.estornado,
+                       motivo_estorno = excluded.motivo_estorno""",
+                (
+                    pagamento.id, conta.id, ordem, str(pagamento.valor), pagamento.data.isoformat(),
+                    int(pagamento.estornado), pagamento.motivo_estorno, pagamento.pedido_id,
+                ),
+            )
+
+    def listar(self) -> List[ContaPagar]:
+        linhas = self._executar(f"SELECT {self._COLUNAS} FROM contas_pagar ORDER BY vencimento, id").fetchall()
+        pagamentos = self._pagamentos(None)
+        return [self._montar(linha, pagamentos.get(linha[0], [])) for linha in linhas]
+
+    def _pagamentos(self, conta_id: Optional[str]):
+        colunas = "conta_id, id, valor, data, estornado, motivo_estorno, pedido_id"
+        if conta_id is None:
+            linhas = self._executar(f"SELECT {colunas} FROM pagamentos_conta ORDER BY conta_id, ordem").fetchall()
+        else:
+            linhas = self._executar(
+                f"SELECT {colunas} FROM pagamentos_conta WHERE conta_id = ? ORDER BY ordem", (conta_id,)
+            ).fetchall()
+        por_conta = {}
+        for conta, id_, valor, data, estornado, motivo, pedido in linhas:
+            por_conta.setdefault(conta, []).append(
+                Pagamento(id_, Decimal(valor), date.fromisoformat(data), bool(estornado), motivo, pedido)
+            )
+        return por_conta
+
+    @staticmethod
+    def _montar(linha, pagamentos) -> ContaPagar:
+        id_, fornecedor_id, descricao, valor, vencimento, condicao, estado = linha
+        return ContaPagar(
+            id_, fornecedor_id, descricao, Decimal(valor), date.fromisoformat(vencimento), condicao,
+            EstadoContaPagar[estado], pagamentos,
+        )
 
 
 class RepositorioEmpresaSQLite(_Repositorio):

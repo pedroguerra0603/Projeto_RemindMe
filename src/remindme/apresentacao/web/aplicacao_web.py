@@ -21,7 +21,9 @@ from remindme.aplicacao.portas import RegistroErro, RegistroErros, Relogio
 from remindme.aplicacao.servico_acesso import ServicoAcesso
 from remindme.aplicacao.servico_auditoria import FiltroAuditoria, ServicoAuditoria
 from remindme.aplicacao.servico_clientes import ServicoClientes
+from remindme.aplicacao.servico_contas_pagar import ServicoContasPagar
 from remindme.aplicacao.servico_empresa import ServicoEmpresa
+from remindme.aplicacao.servico_fornecedores import ServicoFornecedores
 from remindme.aplicacao.servico_orcamentos import FiltroOrcamentos, ServicoOrcamentos
 from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroTitulos, ServicoTitulos
 from remindme.aplicacao.tempo import data_local
@@ -94,6 +96,8 @@ class Servicos:
     auditoria: ServicoAuditoria
     orcamentos: Optional[ServicoOrcamentos] = None
     empresa: Optional[ServicoEmpresa] = None
+    fornecedores: Optional[ServicoFornecedores] = None
+    contas_pagar: Optional[ServicoContasPagar] = None
 
 
 class CorpoGrandeDemais(Exception):

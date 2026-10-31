@@ -6,6 +6,7 @@ from typing import List, Optional, Protocol
 
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.cliente import Cliente
+from remindme.dominio.conta_pagar import ContaPagar
 from remindme.dominio.empresa import Empresa
 from remindme.dominio.fornecedor import Fornecedor
 from remindme.dominio.orcamento import Orcamento
@@ -18,6 +19,12 @@ class RepositorioTitulos(Protocol):
     def obter(self, titulo_id: str) -> Optional[Titulo]: ...
     def salvar(self, titulo: Titulo) -> None: ...
     def listar(self) -> List[Titulo]: ...
+
+
+class RepositorioContasPagar(Protocol):
+    def obter(self, conta_id: str) -> Optional[ContaPagar]: ...
+    def salvar(self, conta: ContaPagar) -> None: ...
+    def listar(self) -> List[ContaPagar]: ...
 
 
 class RepositorioOrcamentos(Protocol):
@@ -123,6 +130,7 @@ class UnidadeDeTrabalho(Protocol):
     titulos: RepositorioTitulos
     clientes: RepositorioClientes
     fornecedores: RepositorioFornecedores
+    contas_pagar: RepositorioContasPagar
     orcamentos: RepositorioOrcamentos
     empresa: RepositorioEmpresa
     auditoria: RepositorioAuditoria

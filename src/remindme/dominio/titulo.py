@@ -7,11 +7,10 @@ from enum import Enum
 from typing import List, Optional
 
 from remindme.dominio.erros import OperacaoRecusada
-
-ZERO = Decimal("0.00")
-CENTAVO = Decimal("0.01")
-# OPEN-24, decidida em 2026-10-23: no máximo 15 dígitos inteiros, longe do limite da aritmética (D-06).
-LIMITE_VALOR = Decimal(10) ** 15
+from remindme.dominio.valores import ZERO
+from remindme.dominio.valores import exigir_decimal as _exigir_decimal
+from remindme.dominio.valores import exigir_valor_monetario as _exigir_valor_monetario
+from remindme.dominio.valores import exigir_motivo, recusar as _recusar
 
 
 class EstadoTitulo(Enum):
@@ -130,7 +129,7 @@ class Titulo:
 
     def estornar_pagamento(self, pagamento_id: str, motivo: Optional[str], data_referencia: date) -> Pagamento:
         """RF-30. A permissão (RB-02) é verificada antes, pela camada de aplicação."""
-        _exigir_motivo(motivo, "estorno")
+        exigir_motivo(motivo, "estorno", "RF-31")
         if self.estado is EstadoTitulo.CANCELADO:
             # OPEN-18, decidida em 2026-10-23: para corrigir, o Dono estorna antes de cancelar.
             raise OperacaoRecusada("Título Cancelado não aceita estorno (OPEN-18).")
@@ -149,7 +148,7 @@ class Titulo:
 
     def cancelar(self, motivo: Optional[str]) -> None:
         """RF-31. RB-21: só Aberto ou Vencido pode ser cancelado."""
-        _exigir_motivo(motivo, "cancelamento")
+        exigir_motivo(motivo, "cancelamento", "RF-31")
         if self.estado not in ESTADOS_QUE_ACEITAM_CANCELAMENTO:
             raise OperacaoRecusada(
                 f"Título {self.estado.value} não pode ser cancelado (RB-21)."
@@ -169,30 +168,3 @@ class Titulo:
             if pagamento.id == pagamento_id:
                 return pagamento
         raise OperacaoRecusada("Pagamento não encontrado neste título.")
-
-
-def _recusar(campo: str, mensagem: str) -> None:
-    """Recusa ligada ao campo que a causou (RNF-14)."""
-    raise OperacaoRecusada(mensagem, {campo: mensagem})
-
-
-def _exigir_decimal(valor: Decimal, mensagem: str) -> None:
-    """E1, E7: NaN, infinito, float ou texto não são valor monetário (defeitos D-01 a D-04)."""
-    if not isinstance(valor, Decimal) or not valor.is_finite():
-        _recusar("valor", mensagem)
-
-
-def _exigir_valor_monetario(valor: Decimal, sujeito: str) -> None:
-    """OPEN-20 e OPEN-24, decididas em 2026-10-23: até duas casas decimais e até 15 dígitos inteiros.
-
-    Valor fora disso é recusado, sem arredondamento.
-    """
-    if abs(valor) >= LIMITE_VALOR:
-        _recusar("valor", f"O valor {sujeito} deve ter no máximo 15 dígitos inteiros.")
-    if valor != valor.quantize(CENTAVO):
-        _recusar("valor", f"O valor {sujeito} deve ter no máximo duas casas decimais.")
-
-
-def _exigir_motivo(motivo: Optional[str], operacao: str) -> None:
-    if not isinstance(motivo, str) or not motivo.strip():
-        _recusar("motivo", f"O motivo do {operacao} é obrigatório (RF-31).")
