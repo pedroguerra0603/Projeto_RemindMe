@@ -5,11 +5,15 @@ ao agendador e à interface web.
 """
 
 import argparse
+import errno
 import getpass
 import logging
 import secrets
+import socket
+import sqlite3
 import ssl
 import sys
+from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
@@ -109,9 +113,35 @@ def endereco(servidor: WSGIServer, https: bool) -> str:
     return f"{'https' if https else 'http'}://{'localhost' if host in ('127.0.0.1', '::1') else host}:{porta}"
 
 
-def servir(sistema: Sistema, host: str, porta: int, certificado: Optional[str], chave: Optional[str]) -> None:
+def porta_livre(host: str, porta: int) -> bool:
+    """Confere a porta como o servidor a abriria (com SO_REUSEADDR): só falha se outro programa a estiver usando."""
+    familia = socket.AF_INET6 if ":" in host else socket.AF_INET
+    with socket.socket(familia, socket.SOCK_STREAM) as teste:
+        teste.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            teste.bind((host, porta))
+        except OSError:
+            return False
+    return True
+
+
+def _avisar_porta_ocupada(porta: int) -> None:
+    print(
+        f"A porta {porta} já está em uso. Talvez o RemindMe ainda esteja aberto em outro terminal: "
+        f"pare-o com Ctrl+C (Ctrl+Z só suspende, e a porta continua ocupada) ou use outra porta, por exemplo --porta {porta + 1}.",
+        file=sys.stderr,
+    )
+
+
+def servir(sistema: Sistema, host: str, porta: int, certificado: Optional[str], chave: Optional[str]) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-    servidor = criar_servidor(sistema, host, porta, certificado, chave)
+    try:
+        servidor = criar_servidor(sistema, host, porta, certificado, chave)
+    except OSError as erro:
+        if erro.errno != errno.EADDRINUSE:
+            raise
+        _avisar_porta_ocupada(porta)
+        return 1
     sistema.agendador.iniciar()
     print(f"\nRemindMe no ar em {endereco(servidor, bool(certificado))}  (Ctrl+C para parar)\n", flush=True)
     try:
@@ -121,6 +151,7 @@ def servir(sistema: Sistema, host: str, porta: int, certificado: Optional[str], 
     finally:
         sistema.agendador.parar()
         servidor.server_close()
+    return 0
 
 
 def _ha_administrador(sistema: Sistema) -> bool:
@@ -160,19 +191,33 @@ def _servidor(argumentos) -> int:
             "ou prepare dados de demonstração com `python3 -m remindme demonstracao`.",
             file=sys.stderr,
         )
-    servir(sistema, argumentos.host, argumentos.porta, argumentos.certificado, argumentos.chave)
-    return 0
+    return servir(sistema, argumentos.host, argumentos.porta, argumentos.certificado, argumentos.chave)
+
+
+def _e_banco_da_demonstracao(caminho: Path) -> bool:
+    """O banco foi criado por `demonstracao`? Só esse pode ser recriado sem pedir (os dados são de exemplo)."""
+    from remindme.demonstracao import ADMINISTRADOR
+
+    try:
+        with closing(sqlite3.connect(f"{caminho.resolve().as_uri()}?mode=ro", uri=True)) as conexao:
+            return conexao.execute("SELECT 1 FROM usuarios WHERE email = ?", (ADMINISTRADOR[1],)).fetchone() is not None
+    except sqlite3.Error:
+        return False
 
 
 def _demonstracao(argumentos) -> int:
     from remindme.demonstracao import preparar_demonstracao
 
     caminho = Path(argumentos.banco)
+    if not argumentos.sem_servidor and not porta_livre("127.0.0.1", argumentos.porta):
+        # Antes de mexer no banco: outro servidor pode estar usando este mesmo arquivo.
+        _avisar_porta_ocupada(argumentos.porta)
+        return 1
     if caminho.exists():
-        if not argumentos.substituir:
+        if not (argumentos.substituir or _e_banco_da_demonstracao(caminho)):
             print(
-                f"O banco {caminho} já existe. Use --substituir para criar outro do zero, "
-                f"ou inicie o servidor com: python3 -m remindme --banco {caminho}",
+                f"O banco {caminho} já existe e não é de demonstração. Use --substituir para apagá-lo e criar outro "
+                f"do zero, ou inicie o servidor com: python3 -m remindme --banco {caminho}",
                 file=sys.stderr,
             )
             return 1
@@ -192,8 +237,7 @@ def _demonstracao(argumentos) -> int:
     print(f"  Senha: {senha}\n")
     if argumentos.sem_servidor:
         return 0
-    servir(sistema, "127.0.0.1", argumentos.porta, None, None)
-    return 0
+    return servir(sistema, "127.0.0.1", argumentos.porta, None, None)
 
 
 def _analisador() -> argparse.ArgumentParser:
@@ -219,7 +263,7 @@ def _analisador() -> argparse.ArgumentParser:
     demonstracao.add_argument("--banco", default=BANCO_DA_DEMONSTRACAO, help=f"arquivo SQLite (padrão: {BANCO_DA_DEMONSTRACAO})")
     demonstracao.add_argument("--porta", type=int, default=8000, help="porta (padrão: 8000)")
     demonstracao.add_argument("--senha", help="senha dos usuários de demonstração (padrão: gerada agora)")
-    demonstracao.add_argument("--substituir", action="store_true", help="apaga o banco de demonstração existente")
+    demonstracao.add_argument("--substituir", action="store_true", help="apaga o banco existente mesmo que não seja de demonstração (o de demonstração é recriado sempre)")
     demonstracao.add_argument("--sem-servidor", action="store_true", help="só prepara os dados, sem iniciar o servidor")
     demonstracao.set_defaults(executar=_demonstracao)
     return analisador

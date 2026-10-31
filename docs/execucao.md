@@ -19,7 +19,9 @@ O comando cria o banco `remindme-demonstracao.db` com dados de exemplo, mostra n
 | Contador | `helena@demo.example` |
 | Administrador | `admin@demo.example` |
 
-A senha é a mesma para todos e aparece no terminal. Para escolher a senha, use `--senha` (pelo menos 8 caracteres): `python3 iniciar.py demonstracao --senha minha-senha-de-apresentacao`. Para recomeçar do zero, acrescente `--substituir`. `Ctrl+C` encerra o servidor; para voltar depois ao mesmo banco, `python3 iniciar.py --banco remindme-demonstracao.db`.
+A senha é a mesma para todos e aparece no terminal. Para escolher a senha, use `--senha` (pelo menos 8 caracteres): `python3 iniciar.py demonstracao --senha minha-senha-de-apresentacao`. `Ctrl+C` encerra o servidor. Rodar `python3 iniciar.py demonstracao` de novo recria o banco de demonstração do zero, com datas atualizadas (só um banco de outro tipo exige `--substituir`). Como as sessões ficam no banco, quem estava com o navegador aberto volta à tela de entrada com um aviso e, ao entrar, cai na mesma página em que estava. Para voltar ao mesmo banco sem recriá-lo, use `python3 iniciar.py --banco remindme-demonstracao.db`.
+
+Se aparecer "A porta 8000 já está em uso", outro RemindMe ainda está aberto (por exemplo, em outro terminal, ou suspenso com `Ctrl+Z`): encerre-o com `Ctrl+C` ou use `--porta 8001`. O banco não é tocado nesse caso.
 
 A demonstração tem clientes e títulos em todos os estados: Aberto, Vencido (pela verificação automática), Baixado, Cancelado, com pagamento parcial e com estorno, além da trilha de auditoria de cada operação.
 

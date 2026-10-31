@@ -55,6 +55,11 @@ POLITICA_DE_CONTEUDO = (
 
 AVISOS = {
     "saiu": ("info", "Você saiu do sistema."),
+    "sessao-encerrada": (
+        "info",
+        "Sua sessão terminou: ela venceu, foi encerrada em outra aba ou o servidor foi reiniciado com um banco novo. "
+        "Entre de novo para continuar de onde parou.",
+    ),
     "cliente": ("sucesso", "Cliente cadastrado."),
     "cliente-alterado": ("sucesso", "Dados do cliente atualizados."),
     "titulo": ("sucesso", "Título cadastrado em Aberto."),
@@ -99,7 +104,8 @@ class Requisicao:
     def __init__(self, ambiente: dict):
         self.metodo = ambiente.get("REQUEST_METHOD", "GET").upper()
         self.caminho = ambiente.get("PATH_INFO", "") or "/"
-        self.consulta = _primeiros(parse_qs(ambiente.get("QUERY_STRING", ""), keep_blank_values=True))
+        self.consulta_original = ambiente.get("QUERY_STRING", "")
+        self.consulta = _primeiros(parse_qs(self.consulta_original, keep_blank_values=True))
         self.https = ambiente.get("wsgi.url_scheme") == "https"
         try:
             self.cookies = {nome: m.value for nome, m in SimpleCookie(ambiente.get("HTTP_COOKIE", "")).items()}
@@ -259,7 +265,7 @@ class AplicacaoWeb:
         try:
             ativa = self._s.acesso.sessao_ativa(sessao)
         except SessaoInvalida:
-            return Resposta.redirecionar("/entrar").cookie(COOKIE_SESSAO, "", req.https, apagar=True)
+            return _sessao_encerrada(req)
         if req.metodo == "POST" and not _confere(req.formulario.get("protecao", ""), ativa.protecao):
             return self._erro(
                 403,
@@ -270,7 +276,7 @@ class AplicacaoWeb:
         try:
             return funcao(req, sessao, ctx, **parametros)
         except SessaoInvalida:
-            return Resposta.redirecionar("/entrar").cookie(COOKIE_SESSAO, "", req.https, apagar=True)
+            return _sessao_encerrada(req)
         except OperacaoNegada as negada:
             return self._erro(403, "Acesso negado", negada.motivo)
         except OperacaoRecusada as recusa:
@@ -303,7 +309,8 @@ class AplicacaoWeb:
                 pass
         protecao = req.cookies.get(COOKIE_ENTRADA) or secrets.token_urlsafe(24)
         aviso = AVISOS.get(req.consulta.get("aviso", ""), ("", ""))[1]
-        pagina = p.pagina_entrar(protecao, email=email, erro=erro, aviso="" if erro else aviso)
+        volta = _volta(req.formulario.get("volta") or req.consulta.get("volta", ""))
+        pagina = p.pagina_entrar(protecao, email=email, erro=erro, aviso="" if erro else aviso, volta=volta)
         return Resposta.pagina(pagina, status).cookie(COOKIE_ENTRADA, protecao, req.https)
 
     def _entrar(self, req: Requisicao) -> Resposta:
@@ -314,7 +321,8 @@ class AplicacaoWeb:
             aberta = self._s.acesso.entrar(req.campo("email"), req.formulario.get("senha", ""))
         except OperacaoRecusada as recusa:
             return self._entrar_pagina(req, recusa.motivo, req.campo("email"), 401)
-        resposta = Resposta.redirecionar("/painel").cookie(COOKIE_SESSAO, aberta.identificador, req.https)
+        destino = _volta(req.formulario.get("volta", "")) or "/painel"
+        resposta = Resposta.redirecionar(destino).cookie(COOKIE_SESSAO, aberta.identificador, req.https)
         return resposta.cookie(COOKIE_ENTRADA, "", req.https, apagar=True)
 
     def _criar_conta_pagina(
@@ -893,6 +901,25 @@ class AplicacaoWeb:
 
 def _primeiros(valores: Dict[str, List[str]]) -> Dict[str, str]:
     return {chave: lista[0] for chave, lista in valores.items() if lista}
+
+
+def _sessao_encerrada(req: Requisicao) -> Resposta:
+    """RNF-01: sem sessão válida, volta à entrada. Se havia uma sessão (venceu, foi encerrada ou o banco é outro),
+    explica o motivo e guarda a página pedida, para voltar a ela depois de entrar."""
+    if not req.cookies.get(COOKIE_SESSAO):
+        return Resposta.redirecionar("/entrar")
+    destino = "/entrar?aviso=sessao-encerrada"
+    if req.metodo == "GET":
+        pedida = req.caminho + (f"?{req.consulta_original}" if req.consulta_original else "")
+        destino += "&" + urlencode({"volta": pedida})
+    return Resposta.redirecionar(destino).cookie(COOKIE_SESSAO, "", req.https, apagar=True)
+
+
+def _volta(endereco: str) -> str:
+    """Só aceita voltar para uma página do próprio RemindMe, para a entrada não servir de redirecionamento a outro site."""
+    if not re.fullmatch(r"/[A-Za-z0-9][A-Za-z0-9/_.=&%?-]*", endereco or "") or endereco.startswith("/sair"):
+        return ""
+    return endereco
 
 
 def _confere(enviado: str, esperado: str) -> bool:

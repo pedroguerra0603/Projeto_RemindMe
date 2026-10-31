@@ -1,11 +1,13 @@
 """Critérios de aceitação da Spec 017 pela interface web, no próprio processo (testes de API, OPEN-29)."""
 
+import io
 import re
 import shutil
 import subprocess
 import tempfile
 import threading
 import unittest
+from contextlib import redirect_stderr
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -81,7 +83,8 @@ class AcessoPelaInterface(Base):
             for caminho in caminhos:
                 with self.subTest(metodo=metodo, caminho=caminho):
                     resposta = navegador.pedir(metodo, caminho, {"protecao": "x"})
-                    self.assertEqual((resposta.status, resposta.destino), (303, "/entrar"))
+                    self.assertEqual(resposta.status, 303)
+                    self.assertRegex(resposta.destino, r"^/entrar(\?aviso=sessao-encerrada|$)")
                     self.assertEqual(resposta.texto, "")
         self.assertEqual(self.titulo_salvo().estado, EstadoTitulo.ABERTO)
 
@@ -357,7 +360,7 @@ class AdministracaoPelaInterface(Base):
         self.assertEqual((resposta.status, resposta.destino), (303, "/entrar?aviso=saiu"))
         self.assertNotIn("remindme_sessao", navegador.cookies)
         antigo = ClienteWeb(self.sistema.web, cookies={"remindme_sessao": sessao_antiga})
-        self.assertEqual(antigo.get("/painel").destino, "/entrar")
+        self.assertEqual(antigo.get("/painel").destino, "/entrar?aviso=sessao-encerrada&volta=%2Fpainel")
 
     def test_usuario_inativado_pela_tela_perde_a_sessao_aberta(self):
         diego = self.navegador("diego@exemplo.com")
@@ -366,7 +369,33 @@ class AdministracaoPelaInterface(Base):
             usuario = uow.usuarios.obter_por_email("diego@exemplo.com")
         caminho = f"/usuarios/{usuario.id}"
         self.assertEqual(admin.enviar(caminho, f"{caminho}/inativacao", {}).status, 303)
-        self.assertEqual(diego.get("/painel").destino, "/entrar")
+        self.assertEqual(diego.get("/painel").destino, "/entrar?aviso=sessao-encerrada&volta=%2Fpainel")
+
+    def test_sessao_que_deixou_de_valer_avisa_na_entrada_e_volta_para_a_mesma_pagina(self):
+        """Ao reiniciar a demonstração, o banco é novo e o cookie antigo não vale mais: o usuário é avisado
+        e, ao entrar de novo, volta para a página que tinha pedido."""
+        navegador = ClienteWeb(self.sistema.web, cookies={"remindme_sessao": "sessao-de-um-banco-antigo"})
+        resposta = navegador.get("/titulos?situacao=vencido")
+        self.assertEqual(resposta.destino, "/entrar?aviso=sessao-encerrada&volta=%2Ftitulos%3Fsituacao%3Dvencido")
+        self.assertNotIn("remindme_sessao", navegador.cookies)
+        entrada = navegador.get(resposta.destino)
+        self.assertIn("Sua sessão terminou", entrada.texto)
+        self.assertIn('name="volta" value="/titulos?situacao=vencido"', entrada.texto)
+        dentro = navegador.post(
+            "/entrar",
+            {"protecao": entrada.protecao, "email": "diego@exemplo.com", "senha": SENHA, "volta": "/titulos?situacao=vencido"},
+        )
+        self.assertEqual((dentro.status, dentro.destino), (303, "/titulos?situacao=vencido"))
+
+    def test_volta_depois_da_entrada_so_aceita_endereco_do_proprio_site(self):
+        for volta in ("https://golpe.example/", "//golpe.example/", "/\\golpe.example", "painel", "/sair"):
+            with self.subTest(volta=volta):
+                navegador = ClienteWeb(self.sistema.web)
+                protecao = navegador.get("/entrar").protecao
+                dentro = navegador.post(
+                    "/entrar", {"protecao": protecao, "email": "diego@exemplo.com", "senha": SENHA, "volta": volta}
+                )
+                self.assertEqual(dentro.destino, "/painel")
 
 
 class Demonstracao(unittest.TestCase):
@@ -413,6 +442,32 @@ class ErrosDaInterface(Base):
 class LinhaDeComando(unittest.TestCase):
     def test_OPEN_38_servidor_na_rede_sem_certificado_nao_inicia(self):
         self.assertEqual(principal(["--host", "0.0.0.0", "--banco", ":memory:"]), 2)
+
+    def test_demonstracao_recria_o_proprio_banco_ao_ser_executada_de_novo(self):
+        """Depois do Ctrl+C o arquivo da demonstração continua no disco; rodar de novo deve funcionar."""
+        with tempfile.TemporaryDirectory() as pasta:
+            banco = str(Path(pasta).joinpath("demo.db"))
+            argumentos = ["demonstracao", "--banco", banco, "--sem-servidor", "--senha", SENHA]
+            self.assertEqual(principal(argumentos), 0)
+            self.assertEqual(principal(argumentos), 0)
+            sistema = montar(banco, cifrador=CIFRADOR_DE_TESTE)
+            with sistema.uow as uow:
+                self.assertEqual(len([u for u in uow.usuarios.listar() if u.email == "admin@demo.example"]), 1)
+
+    def test_demonstracao_com_a_porta_ocupada_avisa_e_nao_mexe_no_banco(self):
+        import socket
+
+        with tempfile.TemporaryDirectory() as pasta, socket.socket() as ocupada:
+            ocupada.bind(("127.0.0.1", 0))
+            ocupada.listen()
+            porta = str(ocupada.getsockname()[1])
+            banco = Path(pasta).joinpath("demo.db")
+            self.assertEqual(principal(["demonstracao", "--banco", str(banco), "--sem-servidor", "--senha", SENHA]), 0)
+            antes = banco.stat().st_mtime_ns
+            with redirect_stderr(io.StringIO()) as saida:
+                self.assertEqual(principal(["demonstracao", "--banco", str(banco), "--porta", porta, "--senha", SENHA]), 1)
+            self.assertIn(f"A porta {porta} já está em uso", saida.getvalue())
+            self.assertEqual(banco.stat().st_mtime_ns, antes)
 
     def test_demonstracao_nao_apaga_banco_existente_sem_pedir(self):
         with tempfile.TemporaryDirectory() as pasta:
