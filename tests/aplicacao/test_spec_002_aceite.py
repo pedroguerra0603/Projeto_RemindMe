@@ -112,6 +112,8 @@ class Spec002(Base):
                 Operacao.APURAR_RESULTADO,
                 Operacao.CONSULTAR_AUDITORIA,
                 Operacao.EXPORTAR_CSV,
+                Operacao.CONSULTAR_FORNECEDORES,  # Spec 018
+                Operacao.CONSULTAR_CONTAS_PAGAR,
             },
         )
 

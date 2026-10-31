@@ -24,11 +24,7 @@ class Cliente:
     @classmethod
     def cadastrar(cls, id: str, nome: object, documento: object, contato: object) -> "Cliente":
         """RF-01. E1, E3 e E4 de uma vez, com todos os campos inválidos (RNF-14)."""
-        campos: Dict[str, str] = {}
-        nome_valido = _nome(nome, campos)
-        documento_valido = _documento(documento, campos)
-        contato_valido = _contato(contato, campos)
-        recusar_campos(campos)
+        nome_valido, documento_valido, contato_valido = validar_pessoa(nome, documento, contato, "cliente")
         return cls(id=id, nome=nome_valido, documento=documento_valido, contato=contato_valido)
 
     def alterado(self, nome: object, documento: object, contato: object) -> Tuple["Cliente", Alteracoes]:
@@ -40,6 +36,18 @@ class Cliente:
             if getattr(self, campo) != getattr(novo, campo)
         }
         return replace(self, nome=novo.nome, documento=novo.documento, contato=novo.contato), alteracoes
+
+
+def validar_pessoa(nome: object, documento: object, contato: object, sujeito: str) -> Tuple[str, str, str]:
+    """Nome, documento e contato normalizados, ou a recusa com todos os campos inválidos (RNF-14).
+
+    Vale para o cliente (Spec 003) e para o fornecedor (Spec 018); `sujeito` entra na mensagem do nome."""
+    campos: Dict[str, str] = {}
+    nome_valido = _nome(nome, campos, sujeito)
+    documento_valido = _documento(documento, campos)
+    contato_valido = _contato(contato, campos)
+    recusar_campos(campos)
+    return nome_valido, documento_valido, contato_valido
 
 
 def normalizar_documento(documento: object) -> str:
@@ -58,10 +66,10 @@ def tipo_do_documento(documento: str) -> Optional[str]:
     return None
 
 
-def _nome(nome: object, campos: Dict[str, str]) -> str:
+def _nome(nome: object, campos: Dict[str, str], sujeito: str) -> str:
     texto = " ".join(nome.split()) if isinstance(nome, str) else ""
     if not texto:
-        campos["nome"] = "Informe o nome do cliente."
+        campos["nome"] = f"Informe o nome do {sujeito}."
     elif len(texto) > TAMANHO_MAXIMO:
         campos["nome"] = f"O nome tem no máximo {TAMANHO_MAXIMO} caracteres."
     return texto

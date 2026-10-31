@@ -23,6 +23,14 @@ class Operacao(Enum):
     EXPORTAR_CSV = "Exportar CSV"
     ADMINISTRAR_USUARIOS = "Administrar usuários e permissões"
     MANTER_EMPRESA = "Manter dados da empresa"
+    # Spec 018 (OPEN-56): fornecedores e contas a pagar.
+    MANTER_FORNECEDORES = "Manter fornecedores"
+    CONSULTAR_FORNECEDORES = "Consultar fornecedores"
+    CADASTRAR_CONTA_PAGAR = "Cadastrar conta a pagar"
+    PAGAR_CONTA = "Registrar pagamento de conta a pagar"
+    ESTORNAR_PAGAMENTO_CONTA = "Estornar pagamento de conta a pagar"
+    CANCELAR_CONTA_PAGAR = "Cancelar conta a pagar"
+    CONSULTAR_CONTAS_PAGAR = "Consultar contas a pagar"
 
     @property
     def descricao(self) -> str:

@@ -1,6 +1,6 @@
 """Permissões fixadas por regra de negócio: não mudam por configuração (Spec 002, INV-4).
 
-Cada regra de perfil fica só aqui (RNF-19): RB-02, RB-03, RB-15, OPEN-16 e OPEN-53. RB-26 foi retirada com o perfil Cliente (OPEN-57).
+Cada regra de perfil fica só aqui (RNF-19): RB-02, RB-03, RB-15, RB-33, OPEN-16 e OPEN-53. RB-26 foi retirada com o perfil Cliente (OPEN-57).
 """
 
 from dataclasses import dataclass
@@ -22,6 +22,8 @@ _SOMENTE_O_DONO = {
     Operacao.ESTORNAR_PAGAMENTO: ("RB-02", "Somente o Dono estorna um pagamento (RB-02)."),
     Operacao.CANCELAR_TITULO: ("OPEN-16", "Somente o Dono cancela um título (OPEN-16)."),
     Operacao.APROVAR_DESCONTO: ("RB-15", "Somente o Dono aprova desconto fora da alçada (RB-15)."),
+    Operacao.ESTORNAR_PAGAMENTO_CONTA: ("RB-33", "Somente o Dono estorna um pagamento de conta a pagar (RB-33)."),
+    Operacao.CANCELAR_CONTA_PAGAR: ("RB-33", "Somente o Dono cancela uma conta a pagar (RB-33)."),
 }
 
 # OPEN-53, decidida em 2026-10-30 a pedido do professor: o Administrador é o administrador geral do sistema.
@@ -39,6 +41,9 @@ _CONTADOR_NAO_ALTERA = {
     Operacao.GERENCIAR_OBRIGACOES,
     Operacao.CLASSIFICAR_LANCAMENTO,
     Operacao.IMPORTAR_CSV,
+    Operacao.MANTER_FORNECEDORES,
+    Operacao.CADASTRAR_CONTA_PAGAR,
+    Operacao.PAGAR_CONTA,
 }
 
 

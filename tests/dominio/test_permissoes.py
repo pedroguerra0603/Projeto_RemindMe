@@ -35,6 +35,14 @@ TABELA_DA_SPEC = {
     Operacao.EXPORTAR_CSV: {D, O, C},
     Operacao.ADMINISTRAR_USUARIOS: {A},
     Operacao.MANTER_EMPRESA: {D},
+    # Spec 018, seção 4 (RB-03, RB-33).
+    Operacao.MANTER_FORNECEDORES: {D, O},
+    Operacao.CONSULTAR_FORNECEDORES: {D, O, C},
+    Operacao.CADASTRAR_CONTA_PAGAR: {D, O},
+    Operacao.PAGAR_CONTA: {D, O},
+    Operacao.ESTORNAR_PAGAMENTO_CONTA: {D},
+    Operacao.CANCELAR_CONTA_PAGAR: {D},
+    Operacao.CONSULTAR_CONTAS_PAGAR: {D, O, C},
 }
 
 
