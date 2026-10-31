@@ -59,7 +59,7 @@ CLASSE_DO_ESTADO_DO_ORCAMENTO = {
     EstadoOrcamento.CANCELADO: "cancelado",
 }
 
-PERFIS_DE_USUARIO = [p for p in Perfil if p is not Perfil.CLIENTE]
+PERFIS_DE_USUARIO = list(Perfil)
 
 
 # Estrutura
@@ -313,7 +313,7 @@ def pagina_entrar(protecao_da_entrada: str, email: str = "", erro: str = "", avi
     )
 
 
-PERFIS_DA_CRIACAO_DE_CONTA = [p for p in Perfil if p not in (Perfil.CLIENTE, Perfil.ADMINISTRADOR)]
+PERFIS_DA_CRIACAO_DE_CONTA = [p for p in Perfil if p is not Perfil.ADMINISTRADOR]
 
 
 def pagina_criar_conta(protecao_da_entrada: str, valores: Valores, erros: Erros, criada: bool = False) -> Html:

@@ -247,9 +247,9 @@ class DecisoesDaSpec002(Base):
         self.acesso.inativar_usuario(self.admin, segundo.id)
         self.assertTrue(self.uow.usuarios.obter(admin.id).ativo)
 
-    def test_OPEN_46_o_perfil_cliente_nao_e_cadastrado_como_usuario(self):
+    def test_OPEN_57_o_cliente_nao_e_perfil_e_nao_e_cadastrado_como_usuario(self):
         with self.assertRaises(OperacaoRecusada) as ctx:
-            self.cadastrar("Sérgio Tavares", "sergio@exemplo.com", Perfil.CLIENTE)
+            self.cadastrar("Sérgio Tavares", "sergio@exemplo.com", "Cliente")
         self.assertEqual(set(ctx.exception.campos), {"perfil"})
 
     def test_OPEN_47_entrar_e_sair_sao_auditados_sem_senha_nem_sessao(self):

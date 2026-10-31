@@ -12,7 +12,6 @@ class Perfil(Enum):
     DONO = "Dono"
     OPERADOR_FINANCEIRO = "Operador Financeiro"
     CONTADOR = "Contador"
-    CLIENTE = "Cliente"
     ADMINISTRADOR = "Administrador"
 
 
@@ -77,9 +76,6 @@ def normalizar_email(email: object) -> str:
 def _motivo_do_perfil(perfil: object) -> str:
     if not isinstance(perfil, Perfil):
         return "Escolha um perfil."
-    if perfil is Perfil.CLIENTE:
-        # OPEN-46, decidida em 2026-10-23: o Cliente acessa por link com código (OPEN-08), na Spec 009.
-        return "O Cliente não é cadastrado como usuário: ele acessa por link com código (Spec 009)."
     return ""
 
 

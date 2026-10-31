@@ -39,14 +39,12 @@ MATRIZ = {
         Perfil.DONO: PERMITIDO,
         Perfil.OPERADOR_FINANCEIRO: NEGADO,
         Perfil.CONTADOR: NEGADO,
-        Perfil.CLIENTE: NEGADO,
         Perfil.ADMINISTRADOR: PERMITIDO,
     },
     "cancelar título": {
         Perfil.DONO: PERMITIDO,
         Perfil.OPERADOR_FINANCEIRO: NEGADO,
         Perfil.CONTADOR: NEGADO,
-        Perfil.CLIENTE: NEGADO,
         Perfil.ADMINISTRADOR: PERMITIDO,
     },
     **{
@@ -54,8 +52,7 @@ MATRIZ = {
             Perfil.DONO: PERMITIDO,
             Perfil.OPERADOR_FINANCEIRO: PERMITIDO,
             Perfil.CONTADOR: NEGADO,
-            Perfil.CLIENTE: NEGADO,
-            Perfil.ADMINISTRADOR: PERMITIDO,
+                Perfil.ADMINISTRADOR: PERMITIDO,
         }
         for operacao in ("cadastrar título", "registrar pagamento", "verificar vencimentos")
     },
@@ -106,7 +103,7 @@ class MatrizPerfilOperacao(Base):
 
     def test_RNF_02_cada_celula_negada_recusa_a_operacao_sem_passar_pela_interface(self):
         negadas = [(op, p) for op, c in MATRIZ.items() for p, r in c.items() if r == NEGADO]
-        self.assertEqual(len(negadas), 12)
+        self.assertEqual(len(negadas), 7)  # 12 até a retirada do perfil Cliente (OPEN-57)
         for operacao, perfil in negadas:
             with self.subTest(operacao=operacao, perfil=perfil.value):
                 titulos_antes = dict(self.titulos.dados)
@@ -154,7 +151,7 @@ class MatrizPerfilOperacao(Base):
 class SemVazamentoNaRecusa(Base):
     def test_RNF_25_recusa_por_perfil_nao_revela_se_o_titulo_existe(self):
         existente = self.titulo.id
-        for perfil in (Perfil.OPERADOR_FINANCEIRO, Perfil.CONTADOR, Perfil.CLIENTE):
+        for perfil in (Perfil.OPERADOR_FINANCEIRO, Perfil.CONTADOR):
             with self.subTest(perfil=perfil.value):
                 mensagens = set()
                 for titulo_id in (existente, "titulo-que-nao-existe"):
@@ -166,7 +163,7 @@ class SemVazamentoNaRecusa(Base):
     def test_RNF_25_a_mensagem_de_recusa_nao_contem_dados_do_titulo(self):
         for operacao in ("estornar pagamento", "cancelar título"):
             with self.assertRaises(OperacaoRecusada) as ctx:
-                self.operacao(operacao, usuario(Perfil.CLIENTE))
+                self.operacao(operacao, usuario(Perfil.CONTADOR))
             for dado in (self.titulo.id, self.pagamento, "1234.56", "c1"):
                 with self.subTest(operacao=operacao, dado=dado):
                     self.assertNotIn(dado, ctx.exception.motivo)
@@ -220,11 +217,6 @@ class Pendentes(unittest.TestCase):
 
     RB-03 (Contador não cadastra nem paga) e RNF-01 (sem sessão) saíram daqui com a Spec 002: estão em
     `test_spec_002_aceite.py` (CA-09, CA-10) e na matriz acima."""
-
-    @unittest.skip("Pendente das Specs 002 e 009: o perfil Cliente só acessa títulos do próprio cliente "
-                   "(RNF-25, RB-26). Hoje o serviço não conhece o vínculo entre usuário e cliente.")
-    def test_RNF_25_cliente_nao_acessa_titulo_de_outro_cliente(self):
-        pass
 
     @unittest.skip("Pendente das Specs 009 e 011: o payload enviado à IA simulada não contém nome, documento "
                    "nem contato (RNF-22). Depende do simulador de IA (#79).")

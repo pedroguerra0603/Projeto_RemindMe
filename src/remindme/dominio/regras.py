@@ -1,6 +1,6 @@
 """Permissões fixadas por regra de negócio: não mudam por configuração (Spec 002, INV-4).
 
-Cada regra de perfil fica só aqui (RNF-19): RB-02, RB-03, RB-15, RB-26, OPEN-16 e OPEN-53.
+Cada regra de perfil fica só aqui (RNF-19): RB-02, RB-03, RB-15, OPEN-16 e OPEN-53. RB-26 foi retirada com o perfil Cliente (OPEN-57).
 """
 
 from dataclasses import dataclass
@@ -52,9 +52,5 @@ def permissao_fixada(operacao: Operacao, perfil: Perfil) -> Optional[PermissaoFi
     if perfil is Perfil.CONTADOR and operacao in _CONTADOR_NAO_ALTERA:
         return PermissaoFixada(
             False, "RB-03", "O Contador consulta e exporta, mas não cria nem altera registros (RB-03)."
-        )
-    if perfil is Perfil.CLIENTE and operacao is Operacao.CONSULTAR_TITULOS:
-        return PermissaoFixada(
-            False, "RB-26", "O Cliente só consulta os próprios títulos, pelo acesso da Spec 009 (RB-26)."
         )
     return None

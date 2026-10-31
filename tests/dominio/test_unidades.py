@@ -160,17 +160,17 @@ class Cancelamento(unittest.TestCase):
 class ObjetosDeValor(unittest.TestCase):
     def test_usuario_e_imutavel(self):
         with self.assertRaises(dataclasses.FrozenInstanceError):
-            Usuario("u", "Nome", Perfil.DONO).perfil = Perfil.CLIENTE
+            Usuario("u", "Nome", Perfil.DONO).perfil = Perfil.CONTADOR
 
     def test_RB_30_registro_de_auditoria_e_imutavel(self):
         registro = RegistroAuditoria("u", datetime(2026, 10, 3), "operação", "titulo t1")
         with self.assertRaises(dataclasses.FrozenInstanceError):
             registro.operacao = "outra"
 
-    def test_perfis_sao_os_cinco_da_baseline(self):
+    def test_OPEN_57_perfis_sao_os_quatro_da_baseline_sem_o_cliente(self):
         self.assertEqual(
-            {p.value for p in Perfil},
-            {"Dono", "Operador Financeiro", "Contador", "Cliente", "Administrador"},
+            [p.value for p in Perfil],
+            ["Dono", "Operador Financeiro", "Contador", "Administrador"],
         )
 
     def test_RB_21_estados_implementados_na_spec_006(self):

@@ -7,11 +7,10 @@ from remindme.dominio.operacoes import Operacao
 from remindme.dominio.permissoes import MatrizPermissoes
 from remindme.dominio.usuario import Perfil, Usuario
 
-D, O, C, Cl, A = (
+D, O, C, A = (
     Perfil.DONO,
     Perfil.OPERADOR_FINANCEIRO,
     Perfil.CONTADOR,
-    Perfil.CLIENTE,
     Perfil.ADMINISTRADOR,
 )
 
@@ -85,10 +84,6 @@ class PermissoesFixadas(unittest.TestCase):
                     matriz.retirar(D, operacao)
                 with self.assertRaisesRegex(OperacaoRecusada, regra):
                     matriz.conceder(O, operacao)
-
-    def test_RB_26_o_cliente_nao_ganha_a_consulta_geral_de_titulos(self):
-        with self.assertRaisesRegex(OperacaoRecusada, "RB-26"):
-            MatrizPermissoes.inicial().conceder(Cl, Operacao.CONSULTAR_TITULOS)
 
     def test_RF_03_celula_configuravel_muda_e_volta(self):
         matriz = MatrizPermissoes.inicial().conceder(O, Operacao.CONSULTAR_AUDITORIA)
