@@ -129,7 +129,8 @@ class FornecedoresEContasPelaInterface(Base):
         self.assertRegex(painel, r"1 vencida\(s\), R\$ 30,00")
         self.assertRegex(painel, r"1 a vencer em 15 dias, R\$ 1\.200,00")
         self.assertRegex(painel, r"Saldo previsto em 15 dias.{0,80}-R\$ 1\.130,00")
-        self.assertIn('href="/contas-a-pagar"', painel)
+        self.assertIn('<a href="/titulos">A receber</a>', painel)
+        self.assertIn('<a href="/contas-a-pagar">A pagar</a>', painel)
 
     def test_menu_mostra_contas_e_fornecedores_a_quem_consulta(self):
         for email in ("carla@exemplo.com", "diego@exemplo.com", "helena@exemplo.com", "admin@exemplo.com"):

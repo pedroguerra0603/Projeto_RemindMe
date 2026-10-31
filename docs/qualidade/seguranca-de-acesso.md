@@ -9,7 +9,7 @@ Issue #75. Subcaracterística **Segurança de acesso** (Adequação funcional, I
 
 ## 1. Matriz perfil × operação
 
-Resultado esperado de cada célula. Os perfis são os cinco de `dominio/usuario.py`. "Sem restrição" é o que a Spec 006 define (seção 7: "a autorização geral, inclusive RB-03, é da Spec 002"); a célula está registrada e **não é a regra final**.
+Resultado esperado de cada célula, como registrado antes da Spec 002. *Nota de 2026-10-31: a coluna Cliente é histórica; o perfil foi retirado (OPEN-57, Spec 018), e a linha da RB-26 abaixo também.* Os perfis eram os cinco de `dominio/usuario.py`. "Sem restrição" é o que a Spec 006 define (seção 7: "a autorização geral, inclusive RB-03, é da Spec 002"); a célula está registrada e **não é a regra final**.
 
 | Operação | Dono | Operador Financeiro | Contador | Cliente | Administrador | Regra |
 |---|---|---|---|---|---|---|

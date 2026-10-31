@@ -11,7 +11,7 @@ Este texto é a fonte. O diagrama é uma vista dele e deve ser regerado quando o
 | `Perfil` | Define o papel de acesso de um usuário. | RB-03 |
 | `AlcadaDesconto` | Limita o desconto que um perfil concede sem aprovação. | RB-15 |
 | `Usuario` | Identifica quem opera o sistema e responde por cada operação. | RB-01 |
-| `Cliente` | Identifica quem recebe orçamentos e deve títulos. | RB-26 |
+| `Cliente` | Identifica quem recebe orçamentos e deve títulos. Não é usuário do sistema (OPEN-57). | — |
 | `Orcamento` | Conduz a proposta comercial do rascunho à conversão em título. Calcula seus valores e controla seu estado. | RB-05, RB-15, RB-24 |
 | `ItemOrcamento` | Descreve um produto ou serviço orçado, com quantidade e valor. | RB-24 |
 | `AprovacaoDesconto` | Registra a decisão do Dono sobre um desconto acima da alçada. | RB-15 |

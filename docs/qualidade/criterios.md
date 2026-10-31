@@ -15,7 +15,7 @@ O valor do RemindMe está nas regras: o título tem o estado certo, o saldo bate
 |---|---|---|---|
 | Adequação funcional | Alta | O sistema existe para aplicar regras de estado, saldo e alçada (DA-01). Um saldo errado ou uma baixa indevida fazem cobrar quem já pagou ou deixar de cobrar quem deve | Diego (registra pagamentos), Sérgio (é cobrado) |
 | Confiabilidade | Alta | São operações financeiras. Um pagamento gravado pela metade ou duplicado quebra o saldo e a confiança no sistema (DA-03) | Carla, Diego |
-| Segurança | Alta | O sistema guarda dados financeiros de clientes, e o perfil Cliente acessa o sistema. O critério de sucesso "operação rastreável" depende de auditoria imutável (DA-02, DA-04) | Carla (responde pela empresa), Sérgio (dados próprios) |
+| Segurança | Alta | O sistema guarda dados financeiros de clientes. O cliente não acessa o sistema (OPEN-57). O critério de sucesso "operação rastreável" depende de auditoria imutável (DA-02, DA-04) | Carla (responde pela empresa), Sérgio (dados próprios) |
 | Manutenibilidade | Alta | O sistema é entregue em 16 specs, por três pessoas e com agentes de codificação. A regra precisa ficar em um único ponto e ser testável sem banco e sem interface (DA-09, ADR-001) | A equipe |
 | Usabilidade | Média | Os usuários não são especialistas em finanças nem em sistemas. A recusa precisa explicar o motivo. Pesa mais quando houver interface (OPEN-01) | Diego, Carla, Sérgio |
 | Eficiência de desempenho | Média | O volume de uma pequena empresa é baixo, mas a régua e os alertas rodam em lote e não podem travar o uso (DA-05) | Diego |
@@ -52,7 +52,7 @@ Para cada característica: as subcaracterísticas que mais pesam, os requisitos 
 
 | Subcaracterística | Critério | Origem | Como verificar |
 |---|---|---|---|
-| Confidencialidade | Acesso negado por padrão. Cada perfil só executa o que lhe é permitido. O Cliente só vê os próprios títulos | RNF-01, RNF-02, RNF-25, RB-03, RB-26 | Teste por perfil × operação; teste de acesso a título de outro cliente |
+| Confidencialidade | Acesso negado por padrão. Cada perfil só executa o que lhe é permitido. A resposta a um cliente não revela dados de outro (RNF-25) | RNF-01, RNF-02, RNF-25, RB-03 | Teste por perfil × operação; teste de acesso a título de outro cliente |
 | Confidencialidade | Nenhum nome, documento ou contato vai para o serviço de IA | RNF-22 | Inspeção do conteúdo enviado à IA simulada |
 | Integridade | Permissões e alçadas verificadas no servidor, sem depender da interface | RNF-03, RB-02, RB-15 | Teste chamando a operação sem interface |
 | Responsabilização | Toda mudança de estado tem responsável, data e ação | RB-01, RF-61, RF-62 | Teste de auditoria por operação |

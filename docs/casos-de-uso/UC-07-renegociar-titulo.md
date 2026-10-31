@@ -6,7 +6,7 @@
 | **Atores de apoio** | Serviço de IA, Operador Financeiro, Dono |
 | **Objetivo** | Obter novo prazo para um título vencido, com o combinado registrado. |
 | **Gatilho** | O Cliente envia uma mensagem sobre um título seu. |
-| **Regras de negócio** | RB-11, RB-17, RB-20, RB-26, RB-27, RB-28 |
+| **Regras de negócio** | RB-11, RB-17, RB-20, RB-27, RB-28 |
 | **Requisitos** | RF-28, RF-29, RF-69, RF-72 a RF-76, RNF-22, RNF-24 |
 
 ## Pré-condições
@@ -33,7 +33,7 @@
 
 - **E1 — IA sem dados estruturados válidos.** No passo 2, o serviço de IA falha, excede o tempo limite ou devolve dados incompletos. O sistema encaminha a mensagem para tratamento manual e não altera o título (RB-17).
 - **E2 — Mensagem sem promessa válida.** No passo 3, os dados não formam uma promessa válida. O estado do título não muda.
-- **E3 — Título de outro cliente.** No passo 3, o título não pertence ao cliente. O sistema não revela dados do título e encaminha a mensagem para tratamento manual (RB-26).
+- **E3 — Título de outro cliente.** No passo 3, o título não pertence ao cliente. O sistema não revela dados do título e encaminha a mensagem para tratamento manual (RNF-25).
 
 ## Pós-condições
 

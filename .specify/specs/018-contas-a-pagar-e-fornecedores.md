@@ -17,7 +17,7 @@
 |---|---|
 | RF | RF-87 a RF-94 (novos); RF-69 retirado; RF-09 reescrito |
 | RB | RB-31, RB-32, RB-33 (novas); RB-01; RB-03 (o Contador só consulta); RB-26 retirada |
-| RNF | RNF-02, RNF-09, RNF-14, RNF-15, RNF-19 |
+| RNF | RNF-02, RNF-09, RNF-14, RNF-15, RNF-19; RNF-25 reescrito (sem o perfil Cliente) |
 | UC | [UC-15](../../docs/casos-de-uso/UC-15-gerenciar-contas-a-pagar.md) (novo) |
 | Entidades | `Fornecedor`, `ContaPagar`, `Pagamento` (reaproveitado); `Perfil` sem o valor Cliente |
 | Drivers e ADRs | DA-01, DA-02, DA-04; ADR-001, ADR-004, ADR-007 |
@@ -125,4 +125,40 @@ Toda recusa informa o motivo e não altera nenhum dado.
 
 ## 8. Verificação
 
-*(preenchida após a implementação)*
+Verificada em 2026-10-31, com `python3 -m unittest discover -s tests -t .`: 447 testes, todos passando (6 pulados por dependerem de specs futuras; o teste pendente do acesso do Cliente saiu com OPEN-57). Testes da spec: [`tests/dominio/test_conta_pagar.py`](../../tests/dominio/test_conta_pagar.py), [`tests/aplicacao/test_spec_018_aceite.py`](../../tests/aplicacao/test_spec_018_aceite.py), [`tests/apresentacao/test_spec_018_web.py`](../../tests/apresentacao/test_spec_018_web.py) e `ContasAPagarNoSQLite` em [`tests/infraestrutura/test_sqlite.py`](../../tests/infraestrutura/test_sqlite.py). Plano em [`plans/018-plano.md`](../plans/018-plano.md).
+
+Também verificada num navegador real (Chromium), com celular de 360 px e computador de 1280 px: nenhuma página nova estoura a largura e não há erro no console. Lighthouse nas páginas novas (painel, contas a pagar, nova conta, fornecedores, novo fornecedor), no celular e no computador: desempenho, acessibilidade e boas práticas 100; SEO 66 porque o `robots.txt` bloqueia de propósito as páginas que exigem entrada.
+
+### Critérios de aceitação
+
+| Critério | Teste | Resultado |
+|---|---|---|
+| CA-01 | `Fornecedores.test_CA_01` | Passou |
+| CA-02 | `Fornecedores.test_CA_02` | Passou |
+| CA-03 | `ContasAPagar.test_CA_03` e `test_RF_88` | Passou |
+| CA-04 | `ContasAPagar.test_CA_04` e `test_E2` | Passou |
+| CA-05 | `ContasAPagar.test_CA_05` e `test_RB_31_pagamento_parcial...` | Passou |
+| CA-06 | `ContasAPagar.test_CA_06`, `test_RB_32` e `test_E3` | Passou |
+| CA-07 | `test_RB_31_paga_e_cancelada_nao_aceitam_pagamento` | Passou |
+| CA-08 | `ContasAPagar.test_CA_08` e `test_CA_08_o_agendador_tambem_vence...` | Passou |
+| CA-09 | `ContasAPagar.test_CA_09` e `test_RF_92` | Passou |
+| CA-10 | `ContasAPagar.test_CA_10` e `test_E4_E5` | Passou |
+| CA-11 | `ContasAPagar.test_CA_11` e `test_RF_93` | Passou |
+| CA-12 | `ContasAPagar.test_CA_12` e `test_RF_89_filtro...` (web) | Passou |
+| CA-13 | `test_CA_13` (serviço, fornecedor e web) | Passou |
+| CA-14 | `test_CA_14_painel_mostra_a_pagar_e_o_saldo_previsto` | Passou |
+| CA-15 | `test_CA_15_*` e `test_RNF_14_recusas...` (web) | Passou |
+| CA-16 | `test_CA_16_OPEN_57_*` e `test_OPEN_57_perfis_sao_os_quatro...` | Passou |
+| CA-17 | `test_CA_17_banco_antigo_ganha_tabelas_e_permissoes` | Passou |
+
+### Invariantes
+
+| Invariante | Como foi verificada | Resultado |
+|---|---|---|
+| INV-1 | `test_INV_1_*`, CA-05, CA-06 e CA-09 | Passou |
+| INV-2 | CA-05 e `test_RB_31_*` | Passou |
+| INV-3 | `test_estados_sao_os_da_RB_31`; o repositório só atualiza o estado, nunca o valor | Passou |
+| INV-4 | `test_RF_92_*`: o pagamento estornado continua na conta | Passou |
+| INV-5 | CA-01, CA-03, CA-11 e `test_E6_RNF_09_falha_da_auditoria_desfaz_o_pagamento` | Passou |
+| INV-6 | CA-02 e a restrição `UNIQUE` do banco | Passou |
+| INV-7 | CA-16 | Passou |

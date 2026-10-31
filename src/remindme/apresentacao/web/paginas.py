@@ -432,7 +432,9 @@ def _regua_do_caixa(visoes: Optional[list], nomes_clientes: Dict[str, str], ctx:
     vencidos = [m for m in marcos if m[3] == "vermelho"]
     a_vencer = [m for m in marcos if m[3] != "vermelho"]
     resumo = h(
-        '<p class="regua-resumo"><span class="vermelho">{nv} vencido(s), {sv}</span><span class="laranja">{na} a vencer em 15 dias, {sa}</span></p>',
+        '<p class="regua-resumo">{rotulo}<span class="vermelho">{nv} vencido(s), {sv}</span><span class="laranja">{na} a vencer em 15 dias, {sa}</span></p>',
+        # Com a linha do que há a pagar, cada linha diz de que lado do caixa está.
+        rotulo=Html('<a href="/titulos">A receber</a>') if contas is not None else Html(""),
         nv=len(vencidos), sv=f.moeda(sum((m[2] for m in vencidos), Decimal("0.00"))),
         na=len(a_vencer), sa=f.moeda(sum((m[2] for m in a_vencer), Decimal("0.00"))),
     )
