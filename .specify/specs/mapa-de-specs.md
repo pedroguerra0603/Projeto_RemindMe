@@ -36,6 +36,7 @@ Lista ordenada das unidades implementáveis do sistema. O mapa não é implement
 | 015 | Importação e exportação em CSV | RF-83, RF-84, RF-85 | RB-19 | RNF-09 | UC-14 | `Cliente`, `Titulo`, `LancamentoFinanceiro` | DA-03 | 003, 006, 011, 012 | A escrever |
 | 016 | Painel por perfil | — | RB-13 | RNF-15, RNF-16, RNF-17 | UC-01 | — | — | 006, 010, 011 | A escrever |
 | [017](017-interface-web.md) | Interface web: acesso, clientes, títulos e auditoria | Telas de RF-01 a RF-03, RF-20 a RF-31, RF-64 a RF-67 | — | RNF-01, RNF-02, RNF-03, RNF-05, RNF-06, RNF-09, RNF-14, RNF-16, RNF-21 | UC-01, UC-02, UC-03, UC-06, UC-12 | — | DA-04, DA-05; ADR-006, ADR-007 | 002, 003, 006, 013; OPEN-12, OPEN-38 (decididas) | **Verificada** |
+| [018](018-contas-a-pagar-e-fornecedores.md) | Contas a pagar, fornecedores e retirada do perfil Cliente | RF-87 a RF-94; RF-69 retirado | RB-31, RB-32, RB-33; RB-26 retirada | RNF-02, RNF-09, RNF-14, RNF-15 | UC-15 | `Fornecedor`, `ContaPagar`, `Pagamento` | DA-01, DA-04; ADR-001, ADR-007 | 002, 003, 006, 017; OPEN-56, OPEN-57 (decididas) | **Verificada** |
 
 RNF-07 (disponibilidade) e RNF-08 (backup) são operacionais. Não pertencem a nenhuma spec de comportamento e serão tratados na entrega. As metas foram confirmadas em OPEN-09; a hospedagem ainda depende de OPEN-12.
 

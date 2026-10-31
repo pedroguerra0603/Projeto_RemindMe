@@ -21,6 +21,8 @@ Este texto é a fonte. O diagrama é uma vista dele e deve ser regerado quando o
 | `ReguaCobranca` | Agrupa as etapas de cobrança aplicadas aos títulos. | RB-10 |
 | `EtapaCobranca` | Define quando e como cobrar: prazo em dias em relação ao vencimento, mensagem e ação. | — |
 | `TentativaCobranca` | Registra a execução de uma etapa para um título, com data e resultado. | RB-01 |
+| `Fornecedor` | Identifica de quem a empresa compra, com documento único. | — |
+| `ContaPagar` | Representa um valor a pagar a um fornecedor. Controla saldo, vencimento e estado (Spec 018). | RB-31, RB-32, RB-33 |
 | `Obrigacao` | Representa um compromisso fiscal ou contratual com prazo e responsável. Controla seu estado e gera a próxima ocorrência. | RB-07, RB-13, RB-16, RB-29 |
 | `Evidencia` | Comprova o cumprimento de uma obrigação. | RB-29 |
 | `LancamentoFinanceiro` | Registra uma receita ou despesa para a apuração do resultado. | RB-06, RB-12 |

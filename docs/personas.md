@@ -66,11 +66,11 @@ Os nomes e as empresas são fictícios.
 **Restrições.** Não quer instalar aplicativo nem criar conta complicada. Usa o celular.
 
 **Critérios de sucesso.**
-- Consulta seus títulos com valor, vencimento e estado.
+- Recebe, pelo canal de notificação, os títulos com valor, vencimento e saldo.
 - Uma promessa de pagamento enviada por mensagem suspende a cobrança automática.
 - Recebe respostas claras e padronizadas.
 
-**Perfil no sistema.** Cliente. Casos de uso principais: UC-04 (decisão do orçamento), UC-07.
+**Perfil no sistema.** Nenhum: o cliente não entra no sistema (OPEN-57). Ele recebe orçamentos e cobranças e responde pelo canal de notificação; a decisão do orçamento é registrada por um usuário da empresa. Casos de uso em que participa: UC-04, UC-07, UC-08.
 
 ## Persona 4 — Helena Prado, a Contadora
 
