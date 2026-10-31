@@ -3,6 +3,7 @@
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
@@ -291,7 +292,9 @@ class ContasAPagarNoSQLite(ComBanco):
         self.assertTrue(matriz.permite(Perfil.OPERADOR_FINANCEIRO, Operacao.PAGAR_CONTA))
         self.assertTrue(matriz.permite(Perfil.CONTADOR, Operacao.CONSULTAR_CONTAS_PAGAR))
         self.assertFalse(matriz.permite(Perfil.CONTADOR, Operacao.CADASTRAR_CONTA_PAGAR))
-        perfis = {linha[0] for linha in sqlite3.connect(antigo).execute("SELECT perfil FROM permissoes")}
+        # Fechada logo: no Windows, um arquivo aberto não pode ser apagado com a pasta temporária.
+        with closing(sqlite3.connect(antigo)) as conexao:
+            perfis = {linha[0] for linha in conexao.execute("SELECT perfil FROM permissoes")}
         self.assertNotIn("CLIENTE", perfis)  # OPEN-57
 
     def test_CA_08_o_agendador_tambem_vence_as_contas_a_pagar(self):
