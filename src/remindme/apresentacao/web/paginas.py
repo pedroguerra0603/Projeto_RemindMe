@@ -289,12 +289,12 @@ def _tela_publica(titulo: str, descricao: str, conteudo: Html) -> Html:
     return _documento_html(titulo, corpo, descricao)
 
 
-def pagina_entrar(protecao_da_entrada: str, email: str = "", erro: str = "", aviso: str = "") -> Html:
+def pagina_entrar(protecao_da_entrada: str, email: str = "", erro: str = "", aviso: str = "", volta: str = "") -> Html:
     conteudo = h(
         """<h1>Entrar</h1>
 {aviso}{erro}
 <form class="formulario" method="post" action="/entrar">
-  <input type="hidden" name="protecao" value="{protecao}">
+  <input type="hidden" name="protecao" value="{protecao}">{volta}
   <div class="campo"><label for="email">E-mail</label>
     <input id="email" name="email" type="email" value="{email}" autocomplete="username" required autofocus></div>
   <div class="campo"><label for="senha">Senha</label>
@@ -305,6 +305,7 @@ def pagina_entrar(protecao_da_entrada: str, email: str = "", erro: str = "", avi
         aviso=caixa_de_aviso("info", aviso) if aviso else Html(""),
         erro=caixa_de_aviso("erro", erro) if erro else Html(""),
         protecao=protecao_da_entrada,
+        volta=h('\n  <input type="hidden" name="volta" value="{v}">', v=volta) if volta else Html(""),
         email=email,
     )
     return _tela_publica(
