@@ -7,11 +7,10 @@ from remindme.dominio.operacoes import Operacao
 from remindme.dominio.permissoes import MatrizPermissoes
 from remindme.dominio.usuario import Perfil, Usuario
 
-D, O, C, Cl, A = (
+D, O, C, A = (
     Perfil.DONO,
     Perfil.OPERADOR_FINANCEIRO,
     Perfil.CONTADOR,
-    Perfil.CLIENTE,
     Perfil.ADMINISTRADOR,
 )
 
@@ -36,6 +35,14 @@ TABELA_DA_SPEC = {
     Operacao.EXPORTAR_CSV: {D, O, C},
     Operacao.ADMINISTRAR_USUARIOS: {A},
     Operacao.MANTER_EMPRESA: {D},
+    # Spec 018, seção 4 (RB-03, RB-33).
+    Operacao.MANTER_FORNECEDORES: {D, O},
+    Operacao.CONSULTAR_FORNECEDORES: {D, O, C},
+    Operacao.CADASTRAR_CONTA_PAGAR: {D, O},
+    Operacao.PAGAR_CONTA: {D, O},
+    Operacao.ESTORNAR_PAGAMENTO_CONTA: {D},
+    Operacao.CANCELAR_CONTA_PAGAR: {D},
+    Operacao.CONSULTAR_CONTAS_PAGAR: {D, O, C},
 }
 
 
@@ -85,10 +92,6 @@ class PermissoesFixadas(unittest.TestCase):
                     matriz.retirar(D, operacao)
                 with self.assertRaisesRegex(OperacaoRecusada, regra):
                     matriz.conceder(O, operacao)
-
-    def test_RB_26_o_cliente_nao_ganha_a_consulta_geral_de_titulos(self):
-        with self.assertRaisesRegex(OperacaoRecusada, "RB-26"):
-            MatrizPermissoes.inicial().conceder(Cl, Operacao.CONSULTAR_TITULOS)
 
     def test_RF_03_celula_configuravel_muda_e_volta(self):
         matriz = MatrizPermissoes.inicial().conceder(O, Operacao.CONSULTAR_AUDITORIA)

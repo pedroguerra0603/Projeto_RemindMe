@@ -54,7 +54,7 @@ A data de referência do sistema ("hoje") é a de America/Sao_Paulo, e os horár
 | RF-06 | WHEN um usuário autorizado solicitar um novo orçamento para um cliente cadastrado, THE SYSTEM SHALL criar o orçamento no estado Rascunho. | UC-04 | |
 | RF-07 | WHEN um usuário incluir, alterar ou remover um item de um orçamento em Rascunho, THE SYSTEM SHALL recalcular o valor bruto, o desconto e o valor líquido do orçamento. | UC-04 | RB-24 |
 | RF-08 | WHEN um usuário solicitar o envio de um orçamento em Rascunho com desconto dentro da alçada ou aprovado pelo Dono, THE SYSTEM SHALL disponibilizá-lo ao cliente pelo canal de notificação configurado e mudar o estado para Enviado. | UC-04 | RB-15, RB-24 |
-| RF-09 | WHEN o cliente aprovar ou rejeitar um orçamento Enviado, THE SYSTEM SHALL registrar a decisão com data e mudar o estado para Aprovado ou Rejeitado. | UC-04 | |
+| RF-09 | WHEN um usuário autorizado registrar a aprovação ou a rejeição de um orçamento Enviado pelo cliente (OPEN-57), THE SYSTEM SHALL registrar a decisão com data e mudar o estado para Aprovado ou Rejeitado. | UC-04 | |
 | RF-10 | WHEN um usuário consultar orçamentos, THE SYSTEM SHALL permitir filtrar por cliente, período e estado. | UC-04 | |
 | RF-11 | WHEN um orçamento passar ao estado Aprovado, THE SYSTEM SHALL gerar um título a receber vinculado a ele e mudar o estado do orçamento para Convertido. | UC-04 | RB-05 |
 | RF-12 | IF for solicitada a conversão de um orçamento que não está Aprovado, THEN THE SYSTEM SHALL impedir a conversão e informar o estado atual. | UC-04 | RB-05 |
@@ -88,7 +88,7 @@ A data de referência do sistema ("hoje") é a de America/Sao_Paulo, e os horár
 | RF-30 | WHEN o Dono solicitar o estorno de um pagamento, THE SYSTEM SHALL anular o pagamento, restaurar o saldo e devolver o título ao estado Aberto ou Vencido conforme o vencimento. | UC-06 | RB-02, RB-21 |
 | RF-31 | IF um cancelamento ou estorno for solicitado sem motivo informado, THEN THE SYSTEM SHALL recusar a operação. O valor de um título não muda depois de criado (OPEN-22). | UC-06 | RB-01 |
 | RF-68 | IF o valor de um pagamento for maior que o saldo do título ou menor ou igual a zero, THEN THE SYSTEM SHALL recusar o pagamento. | UC-06 | RB-23 |
-| RF-69 | WHEN um cliente autenticado consultar seus títulos, THE SYSTEM SHALL apresentar somente os títulos desse cliente, com valor, vencimento, saldo e estado. | UC-07 | RB-26 |
+| RF-69 | *Retirado em 2026-10-31 (OPEN-57): o cliente não acessa o sistema; ele recebe e responde mensagens pelo canal de notificação.* | — | — |
 
 ### 1.5 Cobrança automática
 
@@ -167,6 +167,21 @@ A data de referência do sistema ("hoje") é a de America/Sao_Paulo, e os horár
 | RF-63 | *Retirado.* Coberto por RF-05 e RF-18. | | |
 | RF-64 | WHEN um usuário autorizado consultar a auditoria, THE SYSTEM SHALL permitir filtrar por usuário, período e tipo de operação. | UC-12 | |
 
+### 1.12 Contas a pagar e fornecedores
+
+Incluídos em 2026-10-31 (OPEN-56). Spec 018.
+
+| ID | Cláusula | UC | RB |
+|---|---|---|---|
+| RF-87 | WHEN um usuário autorizado submeter o cadastro ou a alteração de um fornecedor com nome, documento válido e contato, THE SYSTEM SHALL criá-lo ou alterá-lo, recusando documento já usado por outro fornecedor. | UC-15 | RB-01 |
+| RF-88 | WHEN um usuário autorizado cadastrar uma conta a pagar com fornecedor existente, descrição, valor e vencimento, THE SYSTEM SHALL criá-la no estado Aberta, com saldo igual ao valor. | UC-15 | RB-31 |
+| RF-89 | WHEN um usuário consultar contas a pagar, THE SYSTEM SHALL permitir filtrar por fornecedor, estado e intervalo de vencimento, e apresentar cada conta com valor, saldo, vencimento e estado, ordenadas por vencimento. | UC-15 | |
+| RF-90 | IF o vencimento de uma conta a pagar Aberta passar, THEN THE SYSTEM SHALL mudar o estado para Vencida. | UC-15 | RB-31 |
+| RF-91 | WHEN um usuário autorizado registrar um pagamento válido de uma conta a pagar, THE SYSTEM SHALL reduzir o saldo e, se ele chegar a zero, mudar o estado para Paga. | UC-15 | RB-31, RB-32 |
+| RF-92 | WHEN o Dono estornar um pagamento de conta a pagar com motivo, THE SYSTEM SHALL anular o pagamento, restaurar o saldo e devolver a conta Paga ao estado Aberta ou Vencida conforme o vencimento. | UC-15 | RB-33 |
+| RF-93 | WHEN o Dono cancelar uma conta a pagar Aberta ou Vencida com motivo, THE SYSTEM SHALL mudar o estado para Cancelada. | UC-15 | RB-33 |
+| RF-94 | WHEN o Dono ou o Operador Financeiro acessar o painel, THE SYSTEM SHALL apresentar o total a pagar vencido e o dos próximos 15 dias, e o saldo previsto entre o que há a receber e a pagar no mesmo período. | UC-15 | |
+
 ### 1.11 Importação e exportação
 
 | ID | Cláusula | UC | RB |
@@ -190,7 +205,7 @@ A data de referência do sistema ("hoje") é a de America/Sao_Paulo, e os horár
 | RNF-05 | THE SYSTEM SHALL trafegar dados entre navegador e servidor somente por HTTPS. | Teste de requisição HTTP sem TLS |
 | RNF-06 | THE SYSTEM SHALL impedir a alteração e a exclusão de registros de auditoria por qualquer perfil. | Teste de tentativa de alteração |
 | RNF-22 | THE SYSTEM SHALL enviar ao serviço de IA apenas a descrição do lançamento ou o texto da mensagem, sem nome, documento ou contato do cliente. | Inspeção do payload enviado |
-| RNF-25 | THE SYSTEM SHALL restringir o perfil Cliente aos dados do próprio cliente. | Teste de acesso a título de outro cliente |
+| RNF-25 | THE SYSTEM SHALL não revelar, na resposta a uma mensagem de um cliente, dados de títulos de outro cliente. Reescrito em 2026-10-31: o cliente não tem perfil de acesso (OPEN-57). | Teste de acesso a título de outro cliente |
 
 ### 2.2 Confiabilidade
 
@@ -262,11 +277,14 @@ Regras de negócio são verdades do domínio que existiriam mesmo sem o sistema.
 | RB-22 | Um título só é Baixado quando a soma dos pagamentos não estornados é igual ao seu valor. | RF-26, RF-27 |
 | RB-23 | Um pagamento tem valor maior que zero e menor ou igual ao saldo do título. | RF-25, RF-68 |
 | RB-24 | Um orçamento só é enviado se tiver ao menos um item. | RF-07, RF-08 |
-| RB-26 | O cliente só vê e só propõe renegociação de títulos em que ele é o devedor. | RF-69 |
+| RB-26 | *Retirada em 2026-10-31 (OPEN-57): sem acesso do cliente ao sistema, não há o que restringir.* | — |
 | RB-27 | A IA extrai e classifica; o sistema decide. Nenhum valor financeiro é produzido pela IA e nenhum texto gerado pela IA chega ao cliente. | RF-72, RF-75 |
 | RB-28 | Uma renegociação altera as condições do título sem apagar as condições originais. Propostas fora dos limites configurados dependem de decisão humana. | RF-28, RF-29, RF-76 |
 | RB-29 | Obrigação que exige evidência só é Cumprida com a evidência anexada. | RF-46 |
 | RB-30 | Registros de auditoria não são alterados nem excluídos. | RNF-06 |
+| RB-31 | Uma conta a pagar está em exatamente um estado: Aberta, Vencida, Paga ou Cancelada. Está Paga se, e somente se, o saldo é zero; Paga e Cancelada não aceitam pagamento. | RF-88, RF-90, RF-91 |
+| RB-32 | O pagamento de uma conta a pagar é maior que zero e menor ou igual ao saldo. | RF-91 |
+| RB-33 | Somente o Dono estorna pagamento de conta a pagar e cancela conta a pagar (o Administrador também, por OPEN-53). | RF-92, RF-93 |
 
 `RB-25` não foi usado.
 

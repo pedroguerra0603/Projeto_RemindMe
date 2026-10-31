@@ -31,6 +31,14 @@ MATRIZ_INICIAL: Dict[Operacao, FrozenSet[Perfil]] = {
     Operacao.EXPORTAR_CSV: frozenset({_D, _O, _C}),
     Operacao.ADMINISTRAR_USUARIOS: frozenset({_A}),
     Operacao.MANTER_EMPRESA: frozenset({_D}),  # OPEN-54
+    # Spec 018: como clientes e títulos; estorno e cancelamento só pelo Dono (RB-33).
+    Operacao.MANTER_FORNECEDORES: frozenset({_D, _O}),
+    Operacao.CONSULTAR_FORNECEDORES: frozenset({_D, _O, _C}),
+    Operacao.CADASTRAR_CONTA_PAGAR: frozenset({_D, _O}),
+    Operacao.PAGAR_CONTA: frozenset({_D, _O}),
+    Operacao.ESTORNAR_PAGAMENTO_CONTA: frozenset({_D}),
+    Operacao.CANCELAR_CONTA_PAGAR: frozenset({_D}),
+    Operacao.CONSULTAR_CONTAS_PAGAR: frozenset({_D, _O, _C}),
 }
 
 

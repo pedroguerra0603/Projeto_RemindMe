@@ -88,6 +88,8 @@ Toda recusa informa o motivo e não altera nenhum dado.
 
 Proposta montada a partir das personas e dos atores dos casos de uso. **P** = permitido; **—** = negado; **F** = fixado por regra de negócio, não alterável pelo Administrador. Operação que não aparece na matriz é negada.
 
+*Nota de 2026-10-31: a coluna Cliente foi retirada com o perfil (OPEN-57, Spec 018). A Spec 018 acrescenta as linhas de fornecedores e contas a pagar.*
+
 | Operação | Caso de uso | Dono | Operador Financeiro | Contador | Cliente | Administrador |
 |---|---|---|---|---|---|---|
 | Cadastrar título, registrar pagamento | UC-06 | P | P | — F (RB-03) | — | — |

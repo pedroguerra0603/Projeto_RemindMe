@@ -10,7 +10,7 @@ Este documento tem duas partes: a segurança do produto ao longo do desenvolvime
 |---|---|---|---|
 | Valores e estados de títulos | Alteração por perfil sem permissão | Negar por padrão; validação no servidor | RNF-02, RNF-03 |
 | Pagamentos | Estorno indevido | Só o Dono estorna, com motivo | RB-02, RF-31 |
-| Dados de um cliente | Acesso por outro cliente | Filtro por cliente dentro da consulta | RNF-25, RB-26 |
+| Dados de um cliente | Acesso por outro cliente | Filtro por cliente dentro da consulta | RNF-25 |
 | Senhas | Vazamento do armazenamento | Hash com salt por algoritmo adaptativo | RNF-04 |
 | Dados em trânsito | Interceptação | Somente HTTPS | RNF-05 |
 | Trilha de auditoria | Adulteração | Somente inclusão | RNF-06, RB-30 |

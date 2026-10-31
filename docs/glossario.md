@@ -10,6 +10,7 @@ Vocabulário do domínio. Os termos abaixo são os únicos usados em requisitos,
 | Canal de notificação | — | Meio pelo qual o sistema envia orçamentos, cobranças e alertas. O padrão é o canal simulado. |
 | Categoria financeira | `CategoriaFinanceira` | Conta do plano de contas da empresa, de receita ou de despesa. |
 | Cliente | `Cliente` | Pessoa ou empresa que recebe orçamentos e deve títulos. |
+| Conta a pagar | `ContaPagar` | Valor que a empresa deve a um fornecedor, com descrição e vencimento (Spec 018). |
 | Demonstração de resultado (DRE) | — | Apresentação de receitas, despesas e resultado por categoria. |
 | Divergência | `SugestaoClassificacao` | Diferença entre a categoria sugerida pela IA e a categoria confirmada por uma pessoa. |
 | Escalonamento | — | Envio de alerta ao Dono quando uma obrigação permanece Atrasada. |
@@ -17,18 +18,19 @@ Vocabulário do domínio. Os termos abaixo são os únicos usados em requisitos,
 | Etapa de cobrança | `EtapaCobranca` | Passo da régua: prazo em dias em relação ao vencimento, mensagem e ação. |
 | Evidência | `Evidencia` | Documento anexado que comprova o cumprimento de uma obrigação. |
 | Fila de revisão | — | Conjunto de lançamentos Pendentes de Classificação que aguardam decisão humana. |
+| Fornecedor | `Fornecedor` | Pessoa ou empresa de quem a empresa compra e a quem deve contas a pagar. |
 | Lançamento financeiro | `LancamentoFinanceiro` | Registro de receita ou despesa usado na apuração do resultado. |
 | Limiar de confiança | — | Valor mínimo de confiança para aceitar automaticamente uma sugestão da IA. |
 | Obrigação | `Obrigacao` | Compromisso fiscal ou contratual com prazo, responsável e periodicidade. |
 | Orçamento | `Orcamento` | Proposta comercial feita a um cliente, composta de itens. |
-| Pagamento | `Pagamento` | Valor recebido de um cliente e associado a um título. |
-| Perfil | `Perfil` | Papel de acesso: Dono, Operador Financeiro, Contador, Cliente ou Administrador. |
+| Pagamento | `Pagamento` | Valor recebido de um cliente para um título, ou pago a um fornecedor para uma conta a pagar. |
+| Perfil | `Perfil` | Papel de acesso: Dono, Operador Financeiro, Contador ou Administrador. O cliente não tem perfil (OPEN-57). |
 | Plano de contas | — | Conjunto das categorias financeiras da empresa. |
 | Promessa de pagamento | `Renegociacao` | Compromisso do cliente de pagar um título em uma data. |
 | Régua de cobrança | `ReguaCobranca` | Sequência ordenada de etapas de cobrança aplicada aos títulos. |
 | Registro de auditoria | `RegistroAuditoria` | Registro imutável de uma operação: quem, quando, o quê e sobre qual registro. |
 | Renegociação | `Renegociacao` | Alteração das condições de um título, com as condições originais preservadas. |
-| Saldo | — | Valor do título menos a soma dos pagamentos não estornados. |
+| Saldo | — | Valor do título, ou da conta a pagar, menos a soma dos pagamentos não estornados. |
 | Sugestão de classificação | `SugestaoClassificacao` | Categoria proposta pela IA para um lançamento, com grau de confiança. |
 | Tentativa de cobrança | `TentativaCobranca` | Registro do envio de uma etapa da régua para um título, com data e resultado. |
 | Título | `Titulo` | Valor a receber de um cliente, com vencimento. |
@@ -41,6 +43,7 @@ Vocabulário do domínio. Os termos abaixo são os únicos usados em requisitos,
 | Orçamento | Rascunho, Pendente de Alçada, Enviado, Aprovado, Rejeitado, Convertido, Cancelado |
 | Título | Aberto, Vencido, Em Renegociação, Baixado, Cancelado |
 | Obrigação | Pendente, Aguardando Evidência, Atrasada, Cumprida |
+| Conta a pagar | Aberta, Vencida, Paga, Cancelada |
 | Lançamento | Pendente de Classificação, Classificado |
 
 "Próximo do vencimento" não é estado do título. É uma sinalização calculada sobre títulos Abertos (RF-23).

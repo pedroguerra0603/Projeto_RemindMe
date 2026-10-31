@@ -240,3 +240,68 @@ class Spec017Persistencia(ComBanco):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ContasAPagarNoSQLite(ComBanco):
+    """Spec 018: fornecedores e contas a pagar no banco, e a migração de um banco anterior (CA-17)."""
+
+    def test_fornecedor_e_conta_com_pagamentos_ida_e_volta(self):
+        from remindme.dominio.conta_pagar import ContaPagar, EstadoContaPagar
+        from remindme.dominio.fornecedor import Fornecedor
+
+        conta = ContaPagar.cadastrar("cp1", "f1", "20 pneus", Decimal("300.00"), HOJE, "Boleto")
+        conta.registrar_pagamento("p1", Decimal("100.00"), HOJE, hoje=HOJE, pedido_id="x")
+        conta.registrar_pagamento("p2", Decimal("200.00"), HOJE, hoje=HOJE)
+        conta.estornar_pagamento("p1", "Erro", HOJE)
+        with self.uow as uow:
+            uow.fornecedores.salvar(Fornecedor("f1", "Distribuidora", "11222333000181", "v@d.example"))
+            uow.contas_pagar.salvar(conta)
+        with self.uow as uow:
+            self.assertEqual(uow.fornecedores.obter_por_documento("11222333000181").nome, "Distribuidora")
+            self.assertTrue(uow.fornecedores.existe("f1"))
+            self.assertFalse(uow.fornecedores.existe("f2"))
+            lida = uow.contas_pagar.obter("cp1")
+            self.assertEqual(lida, conta)
+            self.assertEqual((lida.estado, lida.saldo), (EstadoContaPagar.ABERTA, Decimal("100.00")))
+            self.assertEqual(uow.contas_pagar.listar(), [conta])
+
+    def test_conta_exige_fornecedor_existente_no_banco(self):
+        from remindme.dominio.conta_pagar import ContaPagar
+
+        with self.assertRaises(sqlite3.IntegrityError):
+            with self.uow as uow:
+                uow.contas_pagar.salvar(ContaPagar.cadastrar("cp1", "nao-existe", "x", Decimal("1.00"), HOJE))
+
+    def test_CA_17_banco_antigo_ganha_tabelas_e_permissoes(self):
+        antigo = str(Path(self._pasta.name) / "versao3.db")
+        conexao = sqlite3.connect(antigo, isolation_level=None)
+        try:
+            for script in MIGRACOES[:3]:
+                for comando in _comandos(script):
+                    conexao.execute(comando)
+            conexao.execute("INSERT INTO permissoes VALUES ('CONSULTAR_TITULOS', 'CLIENTE')")
+            conexao.execute("PRAGMA user_version = 3")
+        finally:
+            conexao.close()
+        preparar_banco(antigo)
+        with UnidadeDeTrabalhoSQLite(antigo) as uow:
+            matriz = uow.permissoes.obter()
+            self.assertEqual(uow.contas_pagar.listar(), [])
+            self.assertEqual(uow.fornecedores.listar(), [])
+        self.assertTrue(matriz.permite(Perfil.OPERADOR_FINANCEIRO, Operacao.PAGAR_CONTA))
+        self.assertTrue(matriz.permite(Perfil.CONTADOR, Operacao.CONSULTAR_CONTAS_PAGAR))
+        self.assertFalse(matriz.permite(Perfil.CONTADOR, Operacao.CADASTRAR_CONTA_PAGAR))
+        perfis = {linha[0] for linha in sqlite3.connect(antigo).execute("SELECT perfil FROM permissoes")}
+        self.assertNotIn("CLIENTE", perfis)  # OPEN-57
+
+    def test_CA_08_o_agendador_tambem_vence_as_contas_a_pagar(self):
+        from remindme.inicializacao import montar
+
+        sistema = montar(self.caminho, RelogioFixo(datetime(2026, 10, 3, 15, 0, tzinfo=timezone.utc)), CIFRADOR_DE_TESTE)
+        acesso = sistema.servicos.acesso
+        acesso.criar_primeiro_administrador("Ana", "ana@exemplo.com", SENHA)
+        admin = acesso.entrar("ana@exemplo.com", SENHA).identificador
+        fornecedor = sistema.servicos.fornecedores.cadastrar_fornecedor(admin, "Distribuidora", "11222333000181", "v@d.example")
+        conta = sistema.servicos.contas_pagar.cadastrar_conta(admin, fornecedor.id, "Pneus", Decimal("10.00"), HOJE - timedelta(days=1))
+        self.assertEqual(sistema.agendador.executar_uma_vez(), [conta.id])
+        self.assertEqual(sistema.agendador.executar_uma_vez(), [])

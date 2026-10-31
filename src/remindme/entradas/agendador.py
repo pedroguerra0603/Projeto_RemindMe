@@ -10,6 +10,7 @@ from datetime import timedelta
 from typing import List, Optional
 
 from remindme.aplicacao.portas import Relogio
+from remindme.aplicacao.servico_contas_pagar import ServicoContasPagar
 from remindme.aplicacao.servico_titulos import ServicoTitulos
 from remindme.aplicacao.tempo import data_local
 
@@ -17,16 +18,28 @@ INTERVALO_PADRAO = timedelta(hours=1)
 
 
 class AgendadorDeVencimentos:
-    def __init__(self, titulos: ServicoTitulos, relogio: Relogio, intervalo: timedelta = INTERVALO_PADRAO):
+    def __init__(
+        self,
+        titulos: ServicoTitulos,
+        relogio: Relogio,
+        intervalo: timedelta = INTERVALO_PADRAO,
+        contas: Optional[ServicoContasPagar] = None,
+    ):
         self._titulos = titulos
+        self._contas = contas
         self._relogio = relogio
         self._intervalo = intervalo
         self._parar = threading.Event()
         self._linha: Optional[threading.Thread] = None
 
     def executar_uma_vez(self) -> List[str]:
-        """Marca como Vencidos os títulos Abertos com vencimento anterior à data de referência (RF-24)."""
-        return self._titulos.verificar_vencimentos_automaticamente(data_local(self._relogio.agora()))
+        """Marca como Vencidos os títulos Abertos (RF-24) e como Vencidas as contas a pagar Abertas (RF-90, Spec 018)
+        com vencimento anterior à data de referência. Devolve os identificadores dos dois."""
+        hoje = data_local(self._relogio.agora())
+        vencidos = self._titulos.verificar_vencimentos_automaticamente(hoje)
+        if self._contas is not None:
+            vencidos += self._contas.verificar_vencimentos_automaticamente(hoje)
+        return vencidos
 
     def iniciar(self) -> None:
         self._parar.clear()
@@ -43,7 +56,7 @@ class AgendadorDeVencimentos:
             try:
                 vencidos = self.executar_uma_vez()
                 if vencidos:
-                    logging.getLogger("remindme").info("Verificação de vencimento: %d título(s) vencido(s).", len(vencidos))
+                    logging.getLogger("remindme").info("Verificação de vencimento: %d título(s) ou conta(s) vencido(s).", len(vencidos))
             except Exception:
                 # O erro já foi registrado com o identificador de correlação (RNF-21); a rotina continua.
                 pass

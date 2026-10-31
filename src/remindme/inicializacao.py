@@ -25,7 +25,9 @@ from remindme.aplicacao.portas import CifradorDeSenha, RegistroErros, Relogio
 from remindme.aplicacao.servico_acesso import ServicoAcesso
 from remindme.aplicacao.servico_auditoria import ServicoAuditoria
 from remindme.aplicacao.servico_clientes import ServicoClientes
+from remindme.aplicacao.servico_contas_pagar import ServicoContasPagar
 from remindme.aplicacao.servico_empresa import ServicoEmpresa
+from remindme.aplicacao.servico_fornecedores import ServicoFornecedores
 from remindme.aplicacao.servico_orcamentos import ServicoOrcamentos
 from remindme.aplicacao.servico_titulos import ServicoTitulos
 from remindme.apresentacao.web.aplicacao_web import AplicacaoWeb, Servicos
@@ -71,8 +73,10 @@ def montar(
         auditoria=ServicoAuditoria(uow, relogio, erros, autorizacao),
         orcamentos=ServicoOrcamentos(uow, relogio, erros, autorizacao),
         empresa=ServicoEmpresa(uow, relogio, erros, autorizacao),
+        fornecedores=ServicoFornecedores(uow, relogio, erros, autorizacao),
+        contas_pagar=ServicoContasPagar(uow, relogio, erros, autorizacao),
     )
-    agendador = AgendadorDeVencimentos(servicos.titulos, relogio)
+    agendador = AgendadorDeVencimentos(servicos.titulos, relogio, contas=servicos.contas_pagar)
     return Sistema(servicos, AplicacaoWeb(servicos, relogio, erros), agendador, uow, relogio)
 
 

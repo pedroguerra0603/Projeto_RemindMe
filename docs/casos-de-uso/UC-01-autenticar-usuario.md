@@ -6,7 +6,7 @@
 | **Atores de apoio** | — |
 | **Objetivo** | Acessar o sistema e ver apenas as funcionalidades do próprio perfil. |
 | **Gatilho** | O usuário abre o sistema sem sessão ativa. |
-| **Regras de negócio** | RB-03, RB-26 |
+| **Regras de negócio** | RB-03 |
 | **Requisitos** | RF-65, RF-66, RF-67, RNF-01, RNF-02, RNF-04, RNF-05, RNF-17, RNF-25 |
 
 ## Pré-condições

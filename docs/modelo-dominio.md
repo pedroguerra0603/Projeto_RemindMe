@@ -11,7 +11,7 @@ Este texto é a fonte. O diagrama é uma vista dele e deve ser regerado quando o
 | `Perfil` | Define o papel de acesso de um usuário. | RB-03 |
 | `AlcadaDesconto` | Limita o desconto que um perfil concede sem aprovação. | RB-15 |
 | `Usuario` | Identifica quem opera o sistema e responde por cada operação. | RB-01 |
-| `Cliente` | Identifica quem recebe orçamentos e deve títulos. | RB-26 |
+| `Cliente` | Identifica quem recebe orçamentos e deve títulos. Não é usuário do sistema (OPEN-57). | — |
 | `Orcamento` | Conduz a proposta comercial do rascunho à conversão em título. Calcula seus valores e controla seu estado. | RB-05, RB-15, RB-24 |
 | `ItemOrcamento` | Descreve um produto ou serviço orçado, com quantidade e valor. | RB-24 |
 | `AprovacaoDesconto` | Registra a decisão do Dono sobre um desconto acima da alçada. | RB-15 |
@@ -21,6 +21,8 @@ Este texto é a fonte. O diagrama é uma vista dele e deve ser regerado quando o
 | `ReguaCobranca` | Agrupa as etapas de cobrança aplicadas aos títulos. | RB-10 |
 | `EtapaCobranca` | Define quando e como cobrar: prazo em dias em relação ao vencimento, mensagem e ação. | — |
 | `TentativaCobranca` | Registra a execução de uma etapa para um título, com data e resultado. | RB-01 |
+| `Fornecedor` | Identifica de quem a empresa compra, com documento único. | — |
+| `ContaPagar` | Representa um valor a pagar a um fornecedor. Controla saldo, vencimento e estado (Spec 018). | RB-31, RB-32, RB-33 |
 | `Obrigacao` | Representa um compromisso fiscal ou contratual com prazo e responsável. Controla seu estado e gera a próxima ocorrência. | RB-07, RB-13, RB-16, RB-29 |
 | `Evidencia` | Comprova o cumprimento de uma obrigação. | RB-29 |
 | `LancamentoFinanceiro` | Registra uma receita ou despesa para a apuração do resultado. | RB-06, RB-12 |

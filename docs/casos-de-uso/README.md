@@ -8,7 +8,7 @@ Cada caso de uso descreve uma interação que entrega valor a um ator. Cada um t
 |---|---|---|
 | Dono | Pessoa | Decide exceções: desconto fora de alçada, estorno, obrigação atrasada. Consulta resultado e auditoria. |
 | Operador Financeiro | Pessoa | Executa a rotina de orçamentos, títulos, pagamentos, classificação e obrigações, dentro da sua alçada. |
-| Cliente | Pessoa | Decide orçamentos, consulta seus títulos e propõe renegociação. |
+| Cliente | Pessoa | Decide orçamentos e propõe renegociação pelo canal de notificação. Não é usuário do sistema (OPEN-57). |
 | Contador | Pessoa | Consulta e exporta dados consolidados. Somente leitura. |
 | Administrador | Pessoa | Mantém usuários, perfis e configurações. Pode ser acumulado pelo Dono (OPEN-10). |
 | Agendador | Sistema | Dispara verificações periódicas de vencimentos, régua e prazos de obrigações. |
@@ -41,6 +41,7 @@ O UC-05 estende o UC-04: só ocorre quando o desconto ultrapassa a alçada. O UC
 | [UC-12](UC-12-consultar-auditoria.md) | Consultar auditoria | Dono | Contador, Administrador |
 | [UC-13](UC-13-configurar-regras.md) | Configurar regras | Administrador | Dono |
 | [UC-14](UC-14-importar-e-exportar-csv.md) | Importar e exportar CSV | Operador Financeiro | Contador, Administrador |
+| [UC-15](UC-15-gerenciar-contas-a-pagar.md) | Gerenciar contas a pagar | Operador Financeiro | Dono, Agendador |
 
 O **fluxo principal do sistema** é a sequência UC-04 → UC-08 → UC-06: o orçamento vira título, o título é cobrado e o pagamento o baixa. Os diagramas de sequência cobrem o UC-04 e o UC-06.
 

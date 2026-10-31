@@ -19,7 +19,7 @@ Nem todo requisito é driver. Os itens abaixo são os que mudam a estrutura do s
 | DA-01 | As transições de estado de título, orçamento e obrigação são invariantes de domínio, válidas para qualquer chamador. | RB-21, RB-05, RB-22, RF-12, RF-24 |
 | DA-02 | Toda mudança de estado é auditada, e a auditoria é imutável. | RB-01, RB-30, RNF-06 |
 | DA-03 | Operações financeiras são atômicas. | RNF-09, RB-19 |
-| DA-04 | O acesso é negado por padrão, por perfil, e o Cliente só alcança os próprios dados. | RNF-02, RNF-03, RNF-25, RB-03, RB-26 |
+| DA-04 | O acesso é negado por padrão, por perfil. O cliente não acessa o sistema (OPEN-57), e a resposta a uma mensagem dele não revela dados de outro cliente. | RNF-02, RNF-03, RNF-25, RB-03 |
 | DA-05 | Há processamento disparado por tempo, que não pode degradar o uso interativo. | RF-24, RF-33, RF-34, RF-44, RF-48, RNF-12, RNF-13 |
 | DA-06 | A IA é falível e nunca decide. | RB-08, RB-14, RB-17, RB-27, RNF-24 |
 | DA-07 | A suíte de testes roda sem credencial externa. | RNF-23, RB-18 |

@@ -403,7 +403,7 @@ class Demonstracao(unittest.TestCase):
         with tempfile.TemporaryDirectory() as pasta:
             sistema = montar(str(Path(pasta).joinpath("demo.db")), RelogioFixo(AGORA), CIFRADOR_DE_TESTE, RegistroErrosEmMemoria())
             usuarios = preparar_demonstracao(sistema, SENHA)
-            self.assertEqual({perfil for _, _, perfil in usuarios}, {p.value for p in Perfil if p is not Perfil.CLIENTE})
+            self.assertEqual({perfil for _, _, perfil in usuarios}, {p.value for p in Perfil})
             with sistema.uow as uow:
                 estados = {t.estado for t in uow.titulos.listar()}
                 self.assertEqual(len(uow.clientes.listar()), 5)

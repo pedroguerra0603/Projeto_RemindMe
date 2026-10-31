@@ -24,14 +24,15 @@ A causa não é falta de sistema contábil. É falta de rotina com regra: sequê
 
 Micro e pequenas empresas de serviços ou comércio que vendem a prazo para clientes recorrentes e hoje controlam recebíveis em planilha ou de memória.
 
-O sistema tem quatro perfis de negócio, descritos em [personas](personas.md), e o perfil Administrador, que mantém usuários, permissões e configurações (OPEN-10):
+O sistema tem três perfis de negócio, descritos em [personas](personas.md), e o perfil Administrador, que mantém usuários, permissões e configurações (OPEN-10):
 
 | Perfil | O que busca | O que faz no sistema |
 |---|---|---|
 | Dono | Receber rápido e manter controle | Decide exceções, aprova descontos fora de alçada, recebe alertas escalonados |
 | Operador Financeiro | Executar a rotina sem ambiguidade | Elabora orçamentos, registra pagamentos, trata cobranças e obrigações dentro da sua alçada |
-| Cliente | Prazo e transparência | Decide orçamentos, consulta seus títulos, propõe renegociação |
 | Contador | Classificação correta | Consulta e exporta dados consolidados, somente leitura |
+
+O cliente da empresa não é usuário do sistema: ele recebe orçamentos e cobranças e responde pelo canal de notificação (OPEN-57).
 
 Esses interesses entram em conflito: a empresa quer receber rápido, o cliente quer prazo, o contador quer classificação correta. O RemindMe resolve essas tensões por regra, e não por conversa.
 
@@ -51,6 +52,7 @@ O sistema acompanha o dinheiro a receber do começo ao fim, com mudanças de est
 ### Frentes de apoio
 
 - **Calendário de obrigações.** Reúne compromissos fiscais e contratuais recorrentes, avisa com antecedência, exige evidência de cumprimento e escala o alerta ao Dono quando o prazo estoura.
+- **Contas a pagar.** Registra o que a empresa deve aos fornecedores, com vencimento, pagamentos e saldo, e mostra no painel o saldo previsto entre o que entra e o que sai (OPEN-56, Spec 018).
 - **Apuração do resultado.** Montada a partir dos lançamentos que o próprio ciclo de cobrança gera. A demonstração de resultado passa a refletir a operação, em vez de chegar meses depois.
 
 ## 5. Papel da inteligência artificial
@@ -83,7 +85,6 @@ Nenhum valor financeiro é produzido pela IA, e nenhum texto gerado pela IA cheg
 | Folha de pagamento e RH | É um domínio inteiro e independente. |
 | Recomendação de investimento ou de corte de gastos | Seria opinião, e não regra. |
 | Canal real de WhatsApp | O canal de notificação é uma peça substituível. O MVP usa o canal simulado, o que permite rodar toda a suíte de testes sem credencial externa. |
-| Contas a pagar | O núcleo do MVP é o recebível. As despesas entram na apuração por cadastro manual de lançamento de despesa e por importação CSV (RF-86, RF-83; OPEN-07). |
 
 ## 7. Critérios de sucesso
 

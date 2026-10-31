@@ -23,7 +23,7 @@ A senha é a mesma para todos e aparece no terminal. Para escolher a senha, use 
 
 Se aparecer "A porta 8000 já está em uso", outro RemindMe ainda está aberto (por exemplo, em outro terminal, ou suspenso com `Ctrl+Z`): encerre-o com `Ctrl+C` ou use `--porta 8001`. O banco não é tocado nesse caso.
 
-A demonstração tem clientes e títulos em todos os estados: Aberto, Vencido (pela verificação automática), Baixado, Cancelado, com pagamento parcial e com estorno, além da trilha de auditoria de cada operação.
+A demonstração tem clientes e títulos em todos os estados: Aberto, Vencido (pela verificação automática), Baixado, Cancelado, com pagamento parcial e com estorno, além da trilha de auditoria de cada operação. Tem também fornecedores e contas a pagar (Spec 018) em todos os estados: Aberta, Vencida, Paga e Cancelada, com pagamento parcial e estorno. O painel mostra, na régua do caixa, o que há a receber, o que há a pagar e o saldo previsto dos próximos 15 dias.
 
 ## Uso com dados reais
 
