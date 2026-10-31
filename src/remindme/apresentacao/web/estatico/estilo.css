@@ -206,6 +206,12 @@ main > * + * { margin-top: 28px; }
 .regua-resumo { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 0 0 8px; font-weight: 600; }
 .regua-resumo span { color: var(--cor); }
 .regua-resumo .laranja { color: var(--alerta); } /* texto precisa de 4,5:1; o laranja do gráfico só tem 3,5:1 */
+/* Spec 018: a linha do que há a pagar, abaixo da régua, e o saldo previsto do período. */
+.regua-pagar { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--borda); align-items: baseline; }
+.regua-pagar > a { min-width: 4.5rem; }
+.regua-resumo .saldo-previsto { color: var(--texto-suave); font-weight: 400; }
+.regua-resumo .saldo-previsto.negativo strong { color: var(--perigo); }
+.regua-resumo .saldo-previsto.positivo strong { color: var(--sucesso); }
 .regua { display: block; width: 100%; height: auto; overflow: visible; }
 .regua .haste { stroke: var(--borda-forte); stroke-width: 0.4; }
 .regua .eixo { stroke: var(--borda-forte); stroke-width: 0.6; }

@@ -38,6 +38,13 @@ CLIENTES = (
 )
 
 
+FORNECEDORES = (
+    ("Distribuidora de Pneus Rota Ltda", _documento("223344550001"), "vendas@pneusrota.example"),
+    ("Auto Peças Silva", _documento("987654321"), "(11) 97654-3210"),
+    ("Imobiliária Centro Ltda", _documento("556677880001"), "aluguel@imobcentro.example"),
+)
+
+
 def preparar_demonstracao(sistema, senha: str) -> List[Tuple[str, str, str]]:
     servicos = sistema.servicos
     hoje = data_local(sistema.relogio.agora())
@@ -104,6 +111,28 @@ def preparar_demonstracao(sistema, senha: str) -> List[Tuple[str, str, str]]:
         endereco="Rua das Palmeiras, 120, sala 4, São Paulo, SP",
     )
     acesso.criar_conta("Bruno Lima", "bruno@demo.example", Perfil.OPERADOR_FINANCEIRO, senha)
+
+    # Contas a pagar (Spec 018): uma borracharia comprando pneus, peças e o aluguel, em todos os estados.
+    fornecedores, contas = servicos.fornecedores, servicos.contas_pagar
+    pneus, pecas, imobiliaria = (
+        fornecedores.cadastrar_fornecedor(operador, nome, documento, contato) for nome, documento, contato in FORNECEDORES
+    )
+
+    def conta(fornecedor, descricao: str, reais: str, dias: int, condicao: str = ""):
+        return contas.cadastrar_conta(operador, fornecedor.id, descricao, Decimal(reais), hoje + timedelta(days=dias), condicao)
+
+    def quitar(c, reais: str, dias_atras: int = 0):
+        return contas.registrar_pagamento(operador, c.id, Decimal(reais), hoje - timedelta(days=dias_atras))
+
+    conta(pneus, "20 pneus aro 14", "3600.00", 6, "Boleto, 30 dias")
+    quitar(conta(pneus, "Câmaras de ar e válvulas", "840.00", 12, "Boleto"), "300.00", 2)
+    conta(pecas, "Kit de balanceamento", "1290.00", -4, "Pix")
+    quitar(conta(pecas, "Calibrador digital", "460.00", -15, "Pix"), "460.00", 15)
+    devolvida = quitar(conta(imobiliaria, "Aluguel do galpão", "2500.00", 2, "Boleto"), "2500.00", 1)
+    contas.estornar_pagamento(dona, devolvida.id, devolvida.pagamentos[0].id, "Boleto pago em duplicidade, estornado pelo banco", hoje)
+    cancelada = conta(pecas, "Elevador hidráulico", "7800.00", 20, "Boleto, 3 parcelas")
+    contas.cancelar_conta(dona, cancelada.id, "Pedido cancelado com o fornecedor")
+    contas.verificar_vencimentos_automaticamente(hoje)
 
     for sessao in (admin, dona, operador):
         acesso.sair(sessao)

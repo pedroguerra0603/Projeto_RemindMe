@@ -9,6 +9,7 @@ from typing import Dict, FrozenSet, Iterable, List, Optional, Sequence, Tuple
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import graficos as g
 from remindme.apresentacao.web.html import Html, e, h, juntar
+from remindme.dominio.conta_pagar import EstadoContaPagar
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.orcamento import EstadoOrcamento
 from remindme.dominio.titulo import EstadoTitulo
@@ -37,6 +38,8 @@ MENU = (
     ("titulos", "/titulos", "Títulos", "▤", Operacao.CONSULTAR_TITULOS),
     ("orcamentos", "/orcamentos", "Orçamentos", "◇", Operacao.CONDUZIR_ORCAMENTO),
     ("clientes", "/clientes", "Clientes", "◉", Operacao.CONSULTAR_CLIENTES),
+    ("contas", "/contas-a-pagar", "Contas a pagar", "▥", Operacao.CONSULTAR_CONTAS_PAGAR),
+    ("fornecedores", "/fornecedores", "Fornecedores", "◍", Operacao.CONSULTAR_FORNECEDORES),
     ("auditoria", "/auditoria", "Auditoria", "⌕", Operacao.CONSULTAR_AUDITORIA),
     ("usuarios", "/usuarios", "Usuários", "◎", Operacao.ADMINISTRAR_USUARIOS),
     ("permissoes", "/permissoes", "Permissões", "▦", Operacao.ADMINISTRAR_USUARIOS),
@@ -357,6 +360,7 @@ def pagina_painel(
     pendentes: Optional[list] = None,
     pagamentos: Optional[list] = None,
     orcamentos: Optional[list] = None,
+    contas: Optional[list] = None,
 ) -> Html:
     partes: List[Html] = []
     acoes = []
@@ -368,8 +372,8 @@ def pagina_painel(
         acoes.append(botao_link("/clientes/novo", "Novo cliente", "secundario"))
     primeiro_nome = ctx.usuario.nome.split()[0] if ctx.usuario.nome else ""
     partes.append(cabecalho(f"Olá, {primeiro_nome}", f.data_por_extenso(ctx.hoje).capitalize(), juntar(acoes)))
-    if visoes is not None:
-        partes.append(_regua_do_caixa(visoes, nomes_clientes, ctx))
+    if visoes is not None or contas is not None:
+        partes.append(_regua_do_caixa(visoes, nomes_clientes, ctx, contas))
 
     if pendentes:
         partes.append(_cartao_pendentes(pendentes, nomes_clientes))
@@ -397,7 +401,7 @@ def pagina_painel(
                 lista=h('<ul class="historico">{i}</ul>', i=juntar(itens)) if itens else h('<p class="vazio">{t}</p>', t="Nenhuma operação registrada ainda."),
             )
         )
-    if visoes is None and usuarios is None and registros is None:
+    if visoes is None and usuarios is None and registros is None and contas is None:
         partes.append(caixa_de_aviso("info", "O seu perfil ainda não tem funcionalidades nesta versão."))
     return layout("Painel", juntar(partes), ctx, "painel", aviso)
 
@@ -407,8 +411,14 @@ def pagina_painel(
 MESES = ("jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez")
 
 
-def _regua_do_caixa(visoes: list, nomes_clientes: Dict[str, str], ctx: Contexto) -> Html:
-    """O destaque do painel: vencidos à esquerda do hoje e os próximos 15 dias à direita."""
+def _regua_do_caixa(visoes: Optional[list], nomes_clientes: Dict[str, str], ctx: Contexto, contas: Optional[list] = None) -> Html:
+    """O destaque do painel: vencidos à esquerda do hoje e os próximos 15 dias à direita. Com as contas a pagar
+    (Spec 018, RF-94), uma linha do que sai do caixa no mesmo período e o saldo previsto."""
+    if visoes is None:
+        return h(
+            '<section class="regua-do-caixa" aria-labelledby="t-regua"><h2 id="t-regua">Régua do caixa</h2>{p}</section>',
+            p=_a_pagar(contas or [], ctx, None),
+        )
     marcos = []
     for v in visoes:
         dias = (v.vencimento - ctx.hoje).days
@@ -426,9 +436,34 @@ def _regua_do_caixa(visoes: list, nomes_clientes: Dict[str, str], ctx: Contexto)
         nv=len(vencidos), sv=f.moeda(sum((m[2] for m in vencidos), Decimal("0.00"))),
         na=len(a_vencer), sa=f.moeda(sum((m[2] for m in a_vencer), Decimal("0.00"))),
     )
+    a_receber = sum((m[2] for m in marcos), Decimal("0.00"))
     return h(
-        '<section class="regua-do-caixa" aria-labelledby="t-regua"><h2 id="t-regua">Régua do caixa</h2>{r}{g}</section>',
+        '<section class="regua-do-caixa" aria-labelledby="t-regua"><h2 id="t-regua">Régua do caixa</h2>{r}{g}{p}</section>',
         r=resumo, g=g.regua(marcos, f.moeda_curta, f.data(ctx.hoje)[:5]),
+        p=_a_pagar(contas, ctx, a_receber) if contas is not None else Html(""),
+    )
+
+
+def _a_pagar(contas: list, ctx: Contexto, a_receber: Optional[Decimal]) -> Html:
+    """RF-94: o que vence para pagar (vencidas e próximos 15 dias) e, com os títulos, o saldo previsto."""
+    limite = ctx.hoje + timedelta(days=g.DIAS_DEPOIS)
+    vencidas = [c for c in contas if c.estado is EstadoContaPagar.VENCIDA]
+    a_vencer = [c for c in contas if c.estado is EstadoContaPagar.ABERTA and c.vencimento <= limite]
+    total_vencidas = sum((c.saldo for c in vencidas), Decimal("0.00"))
+    total_a_vencer = sum((c.saldo for c in a_vencer), Decimal("0.00"))
+    saldo = (
+        h(
+            '<span class="saldo-previsto {sinal}">Saldo previsto em 15 dias: <strong>{v}</strong></span>',
+            sinal="negativo" if a_receber - total_vencidas - total_a_vencer < 0 else "positivo",
+            v=f.moeda(a_receber - total_vencidas - total_a_vencer),
+        )
+        if a_receber is not None
+        else Html("")
+    )
+    return h(
+        '<p class="regua-resumo regua-pagar"><a href="/contas-a-pagar">A pagar</a>'
+        '<span class="vermelho">{nv} vencida(s), {sv}</span><span class="laranja">{na} a vencer em 15 dias, {sa}</span>{saldo}</p>',
+        nv=len(vencidas), sv=f.moeda(total_vencidas), na=len(a_vencer), sa=f.moeda(total_a_vencer), saldo=saldo,
     )
 
 
@@ -1225,6 +1260,10 @@ def _descrever(registro: str) -> Tuple[str, Optional[str]]:
         return "Dados da empresa", "/empresa"
     if tipo == "orcamento":
         return ("Item do orçamento " if len(partes) > 1 else "Orçamento ") + chave[:8], f"/orcamentos/{chave}"
+    if tipo == "fornecedor":
+        return "Fornecedor " + chave[:8], f"/fornecedores/{chave}"
+    if tipo == "conta_pagar":
+        return ("Pagamento da conta " if len(partes) > 1 else "Conta a pagar ") + chave[:8], f"/contas-a-pagar/{chave}"
     if tipo == "usuario":
         return "Usuário " + chave[:8], f"/usuarios/{chave}"
     return registro, "/permissoes" if registro == "permissões" else None

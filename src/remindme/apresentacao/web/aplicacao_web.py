@@ -21,7 +21,7 @@ from remindme.aplicacao.portas import RegistroErro, RegistroErros, Relogio
 from remindme.aplicacao.servico_acesso import ServicoAcesso
 from remindme.aplicacao.servico_auditoria import FiltroAuditoria, ServicoAuditoria
 from remindme.aplicacao.servico_clientes import ServicoClientes
-from remindme.aplicacao.servico_contas_pagar import ServicoContasPagar
+from remindme.aplicacao.servico_contas_pagar import FiltroContas, ServicoContasPagar
 from remindme.aplicacao.servico_empresa import ServicoEmpresa
 from remindme.aplicacao.servico_fornecedores import ServicoFornecedores
 from remindme.aplicacao.servico_orcamentos import FiltroOrcamentos, ServicoOrcamentos
@@ -29,7 +29,9 @@ from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroT
 from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
+from remindme.apresentacao.web import paginas_pagar as pp
 from remindme.apresentacao.web.html import Html
+from remindme.dominio.conta_pagar import EstadoContaPagar
 from remindme.dominio.erros import OperacaoNegada, OperacaoRecusada
 from remindme.dominio.empresa import CAMPOS as CAMPOS_DA_EMPRESA
 from remindme.dominio.operacoes import Operacao
@@ -82,6 +84,12 @@ AVISOS = {
     "decisao": ("sucesso", "Decisão registrada. O orçamento voltou a Rascunho."),
     "orcamento-cancelado": ("sucesso", "Orçamento cancelado."),
     "empresa": ("sucesso", "Dados da empresa salvos."),
+    "fornecedor": ("sucesso", "Fornecedor cadastrado."),
+    "fornecedor-alterado": ("sucesso", "Dados do fornecedor atualizados."),
+    "conta": ("sucesso", "Conta a pagar cadastrada em Aberta."),
+    "pagamento-conta": ("sucesso", "Pagamento registrado."),
+    "estorno-conta": ("sucesso", "Pagamento estornado."),
+    "cancelamento-conta": ("sucesso", "Conta a pagar cancelada."),
     "ativacao": ("sucesso", "Usuário ativado. Ele já pode entrar."),
 }
 
@@ -208,6 +216,22 @@ class AplicacaoWeb:
         r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/decisao", self._decisao, protegida))
         r.append(("GET", f"/orcamentos/(?P<orcamento_id>{ID})/cancelamento", self._orcamento_cancelamento_pagina, protegida))
         r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/cancelamento", self._orcamento_cancelamento, protegida))
+        r.append(("GET", "/fornecedores", self._fornecedores, protegida))
+        r.append(("GET", "/fornecedores/novo", self._fornecedor_novo_pagina, protegida))
+        r.append(("POST", "/fornecedores/novo", self._fornecedor_novo, protegida))
+        r.append(("GET", f"/fornecedores/(?P<fornecedor_id>{ID})", self._fornecedor, protegida))
+        r.append(("GET", f"/fornecedores/(?P<fornecedor_id>{ID})/editar", self._fornecedor_editar_pagina, protegida))
+        r.append(("POST", f"/fornecedores/(?P<fornecedor_id>{ID})/editar", self._fornecedor_editar, protegida))
+        r.append(("GET", "/contas-a-pagar", self._contas, protegida))
+        r.append(("GET", "/contas-a-pagar/nova", self._conta_nova_pagina, protegida))
+        r.append(("POST", "/contas-a-pagar/nova", self._conta_nova, protegida))
+        r.append(("GET", f"/contas-a-pagar/(?P<conta_id>{ID})", self._conta, protegida))
+        r.append(("POST", f"/contas-a-pagar/(?P<conta_id>{ID})/pagamentos", self._conta_pagamento, protegida))
+        conta_estorno = f"/contas-a-pagar/(?P<conta_id>{ID})/pagamentos/(?P<pagamento_id>{ID})/estorno"
+        r.append(("GET", conta_estorno, self._conta_estorno_pagina, protegida))
+        r.append(("POST", conta_estorno, self._conta_estorno, protegida))
+        r.append(("GET", f"/contas-a-pagar/(?P<conta_id>{ID})/cancelamento", self._conta_cancelamento_pagina, protegida))
+        r.append(("POST", f"/contas-a-pagar/(?P<conta_id>{ID})/cancelamento", self._conta_cancelamento, protegida))
         r.append(("GET", "/empresa", self._empresa, protegida))
         r.append(("POST", "/empresa", self._empresa_salvar, protegida))
         r.append(("GET", "/auditoria", self._auditoria, protegida))
@@ -381,8 +405,14 @@ class AplicacaoWeb:
             if self._s.orcamentos and ctx.usuario.perfil is Perfil.OPERADOR_FINANCEIRO
             else None
         )
+        contas = (
+            self._s.contas_pagar.consultar_contas(sessao)
+            if self._s.contas_pagar and ctx.pode(Operacao.CONSULTAR_CONTAS_PAGAR)
+            else None
+        )
         pagina = p.pagina_painel(
-            ctx, visoes, self._nomes_clientes(sessao, ctx), registros, usuarios, _aviso(req), pendentes, pagamentos, orcamentos
+            ctx, visoes, self._nomes_clientes(sessao, ctx), registros, usuarios, _aviso(req), pendentes, pagamentos, orcamentos,
+            contas,
         )
         return Resposta.pagina(pagina)
 
@@ -863,7 +893,194 @@ class AplicacaoWeb:
             return self._permissoes(req, sessao, ctx, ("erro", recusa.motivo), 400)
         return Resposta.redirecionar("/permissoes?aviso=permissao")
 
+    # Fornecedores (Spec 018)
+
+    def _fornecedores(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        termo = req.consulta.get("q", "").strip()
+        fornecedores = self._s.fornecedores.consultar_fornecedores(sessao, termo)
+        return Resposta.pagina(pp.pagina_fornecedores(ctx, fornecedores, termo, _aviso(req)))
+
+    def _fornecedor_novo_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        self._s.acesso.exigir(sessao, Operacao.MANTER_FORNECEDORES)
+        return Resposta.pagina(pp.pagina_fornecedor_formulario(ctx, {}, {}))
+
+    def _fornecedor_novo(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        valores = _valores(req, "nome", "documento", "contato")
+        try:
+            fornecedor = self._s.fornecedores.cadastrar_fornecedor(sessao, valores["nome"], valores["documento"], valores["contato"])
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return Resposta.pagina(pp.pagina_fornecedor_formulario(ctx, valores, _erros(recusa)), 400)
+        return Resposta.redirecionar(f"/fornecedores/{fornecedor.id}?aviso=fornecedor")
+
+    def _fornecedor(self, req: Requisicao, sessao: str, ctx: p.Contexto, fornecedor_id: str) -> Resposta:
+        fornecedor = self._s.fornecedores.obter_fornecedor(sessao, fornecedor_id)
+        visoes = (
+            self._s.contas_pagar.consultar_contas(sessao, FiltroContas(fornecedor_id=fornecedor.id))
+            if ctx.pode(Operacao.CONSULTAR_CONTAS_PAGAR)
+            else []
+        )
+        historico = self._historico(sessao, ctx, f"fornecedor {fornecedor.id}")
+        return Resposta.pagina(pp.pagina_fornecedor(ctx, fornecedor, visoes, historico, _aviso(req)))
+
+    def _fornecedor_editar_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto, fornecedor_id: str) -> Resposta:
+        self._s.acesso.exigir(sessao, Operacao.MANTER_FORNECEDORES)
+        x = self._s.fornecedores.obter_fornecedor(sessao, fornecedor_id)
+        valores = {"nome": x.nome, "documento": f.documento(x.documento), "contato": f.contato(x.contato)}
+        return Resposta.pagina(pp.pagina_fornecedor_formulario(ctx, valores, {}, x.id))
+
+    def _fornecedor_editar(self, req: Requisicao, sessao: str, ctx: p.Contexto, fornecedor_id: str) -> Resposta:
+        valores = _valores(req, "nome", "documento", "contato")
+        try:
+            self._s.fornecedores.alterar_fornecedor(sessao, fornecedor_id, valores["nome"], valores["documento"], valores["contato"])
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return Resposta.pagina(pp.pagina_fornecedor_formulario(ctx, valores, _erros(recusa), fornecedor_id), 400)
+        return Resposta.redirecionar(f"/fornecedores/{fornecedor_id}?aviso=fornecedor-alterado")
+
+    # Contas a pagar (Spec 018)
+
+    def _contas(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        valores = {chave: req.consulta.get(chave, "").strip() for chave in ("fornecedor", "estado", "de", "ate")}
+        erros: Dict[str, str] = {}
+        de = _data_do_filtro(valores, "de", erros)
+        ate = _data_do_filtro(valores, "ate", erros)
+        estado = EstadoContaPagar[valores["estado"]] if valores["estado"] in EstadoContaPagar.__members__ else None
+        filtro = FiltroContas(fornecedor_id=valores["fornecedor"] or None, estado=estado, vencimento_de=de, vencimento_ate=ate)
+        visoes = self._s.contas_pagar.consultar_contas(sessao, filtro)
+        return Resposta.pagina(pp.pagina_contas(ctx, visoes, self._nomes_fornecedores(sessao, ctx), valores, erros, _aviso(req)))
+
+    def _conta_nova_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        self._s.acesso.exigir(sessao, Operacao.CADASTRAR_CONTA_PAGAR)
+        valores = {"fornecedor": req.consulta.get("fornecedor", "")}
+        return Resposta.pagina(pp.pagina_conta_formulario(ctx, self._nomes_fornecedores(sessao, ctx), valores, {}))
+
+    def _conta_nova(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        valores = _valores(req, "fornecedor", "descricao", "valor", "vencimento", "condicao")
+        erros: Dict[str, str] = {}
+        valor = _valor_do_formulario(valores, erros)
+        vencimento = f.ler_data(valores["vencimento"]) if valores["vencimento"] else None
+        if valores["vencimento"] and vencimento is None:
+            erros["vencimento"] = "Informe uma data válida."
+        if not valores["descricao"]:
+            erros["descricao"] = "Informe o que foi comprado ou o motivo da conta."
+        if not erros:
+            try:
+                conta = self._s.contas_pagar.cadastrar_conta(
+                    sessao, valores["fornecedor"], valores["descricao"], valor, vencimento, valores["condicao"]
+                )
+                return Resposta.redirecionar(f"/contas-a-pagar/{conta.id}?aviso=conta")
+            except OperacaoNegada:
+                raise
+            except OperacaoRecusada as recusa:
+                erros = _erros(recusa)
+        pagina = pp.pagina_conta_formulario(ctx, self._nomes_fornecedores(sessao, ctx), valores, erros)
+        return Resposta.pagina(pagina, 400)
+
+    def _conta(
+        self, req: Requisicao, sessao: str, ctx: p.Contexto, conta_id: str,
+        valores: Optional[Dict[str, str]] = None, erros: Optional[Dict[str, str]] = None, pedido: str = "",
+    ) -> Resposta:
+        conta = self._s.contas_pagar.obter_conta(sessao, conta_id)
+        pagina = pp.pagina_conta(
+            ctx,
+            conta,
+            self._nomes_fornecedores(sessao, ctx).get(conta.fornecedor_id, "Fornecedor"),
+            pedido or secrets.token_urlsafe(16),
+            valores if valores is not None else {"data": ctx.hoje.isoformat()},
+            erros or {},
+            self._historico(sessao, ctx, f"conta_pagar {conta.id}"),
+            None if erros else _aviso(req),
+        )
+        return Resposta.pagina(pagina, 400 if erros else 200)
+
+    def _conta_pagamento(self, req: Requisicao, sessao: str, ctx: p.Contexto, conta_id: str) -> Resposta:
+        """OPEN-25: o identificador do pedido nasce com o formulário e acompanha o envio."""
+        valores = _valores(req, "valor", "data", "pedido")
+        erros: Dict[str, str] = {}
+        valor = _valor_do_formulario(valores, erros)
+        data = f.ler_data(valores["data"]) if valores["data"] else None
+        if valores["data"] and data is None:
+            erros["data"] = "Informe uma data válida."
+        if not erros:
+            try:
+                self._s.contas_pagar.registrar_pagamento(sessao, conta_id, valor, data, pedido_id=valores["pedido"] or None)
+                return Resposta.redirecionar(f"/contas-a-pagar/{conta_id}?aviso=pagamento-conta")
+            except OperacaoNegada:
+                raise
+            except OperacaoRecusada as recusa:
+                erros = _erros(recusa)
+        return self._conta(req, sessao, ctx, conta_id, valores, erros, valores["pedido"])
+
+    def _conta_estorno_pagina(
+        self, req: Requisicao, sessao: str, ctx: p.Contexto, conta_id: str, pagamento_id: str,
+        valores: Optional[Dict[str, str]] = None, erros: Optional[Dict[str, str]] = None,
+    ) -> Resposta:
+        self._s.acesso.exigir(sessao, Operacao.ESTORNAR_PAGAMENTO_CONTA)
+        conta = self._s.contas_pagar.obter_conta(sessao, conta_id)
+        pagamento = next((pg for pg in conta.pagamentos if pg.id == pagamento_id), None)
+        if pagamento is None:
+            return self._erro(404, "Pagamento não encontrado", "O pagamento não existe nesta conta.")
+        pagina = p.pagina_motivo(
+            ctx,
+            "Estornar pagamento",
+            f"Pagamento de {f.moeda(pagamento.valor)} em {f.data(pagamento.data)}. O estorno restaura o saldo da conta.",
+            f"/contas-a-pagar/{conta_id}/pagamentos/{pagamento_id}/estorno",
+            f"/contas-a-pagar/{conta_id}",
+            "Estornar pagamento",
+            valores or {},
+            erros or {},
+            secao="contas",
+        )
+        return Resposta.pagina(pagina, 400 if erros else 200)
+
+    def _conta_estorno(self, req: Requisicao, sessao: str, ctx: p.Contexto, conta_id: str, pagamento_id: str) -> Resposta:
+        valores = _valores(req, "motivo")
+        try:
+            self._s.contas_pagar.estornar_pagamento(sessao, conta_id, pagamento_id, valores["motivo"], ctx.hoje)
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return self._conta_estorno_pagina(req, sessao, ctx, conta_id, pagamento_id, valores, _erros(recusa))
+        return Resposta.redirecionar(f"/contas-a-pagar/{conta_id}?aviso=estorno-conta")
+
+    def _conta_cancelamento_pagina(
+        self, req: Requisicao, sessao: str, ctx: p.Contexto, conta_id: str,
+        valores: Optional[Dict[str, str]] = None, erros: Optional[Dict[str, str]] = None,
+    ) -> Resposta:
+        self._s.acesso.exigir(sessao, Operacao.CANCELAR_CONTA_PAGAR)
+        conta = self._s.contas_pagar.obter_conta(sessao, conta_id)
+        pagina = p.pagina_motivo(
+            ctx,
+            "Cancelar conta a pagar",
+            f"{conta.descricao}: {f.moeda(conta.valor)}, com vencimento em {f.data(conta.vencimento)}. O cancelamento é definitivo.",
+            f"/contas-a-pagar/{conta_id}/cancelamento",
+            f"/contas-a-pagar/{conta_id}",
+            "Cancelar conta",
+            valores or {},
+            erros or {},
+            secao="contas",
+        )
+        return Resposta.pagina(pagina, 400 if erros else 200)
+
+    def _conta_cancelamento(self, req: Requisicao, sessao: str, ctx: p.Contexto, conta_id: str) -> Resposta:
+        valores = _valores(req, "motivo")
+        try:
+            self._s.contas_pagar.cancelar_conta(sessao, conta_id, valores["motivo"])
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return self._conta_cancelamento_pagina(req, sessao, ctx, conta_id, valores, _erros(recusa))
+        return Resposta.redirecionar(f"/contas-a-pagar/{conta_id}?aviso=cancelamento-conta")
+
     # Apoio
+
+    def _nomes_fornecedores(self, sessao: str, ctx: p.Contexto) -> Dict[str, str]:
+        if not ctx.pode(Operacao.CONSULTAR_FORNECEDORES):
+            return {}
+        return {x.id: x.nome for x in self._s.fornecedores.consultar_fornecedores(sessao)}
 
     def _nomes_clientes(self, sessao: str, ctx: p.Contexto) -> Dict[str, str]:
         if not ctx.pode(Operacao.CONSULTAR_CLIENTES):
