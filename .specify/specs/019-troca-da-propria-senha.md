@@ -8,8 +8,8 @@
 | **Nome** | Troca da própria senha |
 | **Objetivo** | Permitir que cada usuário ativo e autenticado substitua a própria senha, informando a atual, sem depender do Administrador. |
 | **Valor entregue** | O Operador Financeiro que recebeu a senha provisória do Administrador (OPEN-35) passa a usar uma senha que só ele conhece. Quem desconfia que a senha vazou troca-a e encerra, na hora, as sessões abertas em outros navegadores. |
-| **Situação** | Proposta |
-| **Aprovada por** | *(nomes e data)* |
+| **Situação** | **Aprovada** |
+| **Aprovada por** | Bernardo Sanches, em 2026-11-06, na conversa com o agente: escolheu só a troca pelo próprio usuário, com o encerramento das outras sessões; deixou a redefinição pelo Administrador e a troca obrigatória em aberto (OPEN-59, OPEN-60); aprovou o design, a spec e autorizou seguir até a implementação. A revisão do conteúdo fica no PR. |
 
 ## 2. Rastreabilidade
 
