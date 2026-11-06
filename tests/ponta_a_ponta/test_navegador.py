@@ -119,6 +119,22 @@ class FluxoCriticoNoNavegador(unittest.TestCase):
             finally:
                 navegador.close()
 
+    def test_RNF_16_marca_das_paginas_publicas_nao_muda_no_celular(self):
+        """RNF-16: o ajuste do topo não encolhe a marca das páginas públicas (`.marca-clara`) em 360 px."""
+        with sync_playwright() as playwright:
+            navegador = playwright.chromium.launch()
+            try:
+                medidas = {}
+                for largura in (1200, 360):
+                    pagina = navegador.new_context(locale="pt-BR", viewport={"width": largura, "height": 740}).new_page()
+                    pagina.goto(self.base + "/entrar")
+                    medidas[largura] = pagina.evaluate(
+                        "(() => { const e = document.querySelector('.marca-clara'); const c = getComputedStyle(e); return [c.fontSize, c.columnGap]; })()"
+                    )
+                self.assertEqual(medidas[360], medidas[1200])
+            finally:
+                navegador.close()
+
 
 if __name__ == "__main__":
     unittest.main()

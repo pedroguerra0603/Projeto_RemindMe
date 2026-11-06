@@ -401,10 +401,9 @@ td.numero form.em-linha button { margin-left: 4px; }
   .menu { min-width: 0; padding: 8px 12px; overflow-x: auto; }
   .menu ul { grid-auto-flow: column; grid-auto-columns: max-content; }
   main { padding: 24px 16px 40px; }
-  .topo { padding: 10px 16px; }
+  .topo { padding: 10px 16px; gap: 8px; }
   .quem .nome-completo, .perfil { display: none; }
-  .topo { gap: 8px; }
-  .marca { font-size: 1rem; gap: 6px; }
+  .topo .marca { font-size: 1rem; gap: 6px; }
   .quem { gap: 6px; }
   .quem .botao.discreto, .quem button.discreto { padding: 6px 8px; font-size: 0.8125rem; white-space: nowrap; }
   .historico li { grid-template-columns: 1fr; gap: 2px; }
