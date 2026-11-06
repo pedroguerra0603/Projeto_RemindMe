@@ -116,6 +116,7 @@ def layout(titulo: str, conteudo: Html, ctx: Contexto, secao: str = "", aviso: O
     <span class="nome-completo"><strong>{nome}</strong></span>
     <span class="perfil">{perfil}</span>
     <button id="trocar-tema" class="discreto botao-tema" type="button" hidden aria-label="Trocar entre tema claro e escuro" title="Tema claro/escuro">Tema</button>
+    <a class="botao discreto" href="/trocar-senha">Trocar senha</a>
     <form method="post" action="/sair">{protecao}<button class="discreto" type="submit">Sair</button></form>
   </div>
 </header>
@@ -1404,6 +1405,26 @@ def pagina_usuario_formulario(ctx: Contexto, valores: Valores, erros: Erros) -> 
     )
     conteudo = juntar([cabecalho("Novo usuário"), h('<section class="cartao">{f}</section>', f=formulario)])
     return layout("Novo usuário", conteudo, ctx, "usuarios")
+
+
+def pagina_trocar_senha(ctx: Contexto, erros: Erros) -> Html:
+    """RF-95: os campos nunca levam valor, nem depois de um erro."""
+    formulario = h(
+        """<form class="formulario" method="post" action="/trocar-senha" novalidate>
+{protecao}{geral}
+{atual}
+{nova}
+{confirmacao}
+<div class="acoes"><button type="submit">Trocar senha</button><a class="botao secundario" href="/painel">Cancelar</a></div>
+</form>""",
+        protecao=protecao(ctx),
+        geral=erro_geral(erros),
+        atual=campo("senha_atual", "Senha atual", {}, erros, tipo="password", extra='autocomplete="current-password"'),
+        nova=campo("nova_senha", "Nova senha", {}, erros, tipo="password", ajuda="Pelo menos 8 caracteres.", extra='autocomplete="new-password"'),
+        confirmacao=campo("confirmacao", "Repita a nova senha", {}, erros, tipo="password", extra='autocomplete="new-password"'),
+    )
+    conteudo = juntar([cabecalho("Trocar senha"), h('<section class="cartao">{f}</section>', f=formulario)])
+    return layout("Trocar senha", conteudo, ctx, "")
 
 
 def pagina_usuario(ctx: Contexto, usuario: Usuario, valores: Valores, erros: Erros, aviso=None) -> Html:

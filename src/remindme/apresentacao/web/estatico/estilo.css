@@ -296,8 +296,8 @@ td.numero form.em-linha button { margin-left: 4px; }
 .botao.perigo, button.perigo { background: var(--perigo); border-color: var(--perigo); }
 .botao.perigo:hover, button.perigo:hover { filter: brightness(0.92); }
 .botao.pequeno, button.pequeno { padding: 4px 10px; font-size: 0.8125rem; }
-button.discreto { background: transparent; color: var(--texto-suave); border-color: var(--borda); padding: 6px 12px; font-size: 0.875rem; }
-button.discreto:hover { background: var(--superficie-2); color: var(--tinta); }
+.botao.discreto, button.discreto { background: transparent; color: var(--texto-suave); border-color: var(--borda); padding: 6px 12px; font-size: 0.875rem; }
+.botao.discreto:hover, button.discreto:hover { background: var(--superficie-2); color: var(--tinta); }
 
 /* Matriz de permissões */
 
@@ -401,8 +401,11 @@ button.discreto:hover { background: var(--superficie-2); color: var(--tinta); }
   .menu { min-width: 0; padding: 8px 12px; overflow-x: auto; }
   .menu ul { grid-auto-flow: column; grid-auto-columns: max-content; }
   main { padding: 24px 16px 40px; }
-  .topo { padding: 10px 16px; }
+  .topo { padding: 10px 16px; gap: 4px 8px; flex-wrap: wrap; }
   .quem .nome-completo, .perfil { display: none; }
+  .topo .marca { font-size: 1rem; gap: 6px; }
+  .quem { gap: 6px; }
+  .quem .botao.discreto, .quem button.discreto { padding: 6px 8px; font-size: 0.8125rem; white-space: nowrap; }
   .historico li { grid-template-columns: 1fr; gap: 2px; }
   .indicadores { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .indicador:nth-child(odd) { border-left: 0; padding-left: 0; }

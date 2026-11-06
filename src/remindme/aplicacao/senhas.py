@@ -41,10 +41,12 @@ class CifradorScrypt:
         )
 
 
-def motivo_da_senha(senha: object) -> str:
-    """OPEN-44, decidida em 2026-10-23: pelo menos 8 caracteres, sem regra de composição."""
+def motivo_da_senha(senha: object, ausente: str = "Informe a senha provisória.") -> str:
+    """OPEN-44, decidida em 2026-10-23: pelo menos 8 caracteres, sem regra de composição.
+
+    `ausente` é a mensagem de quando a senha não foi informada; o tamanho tem sempre a mesma regra."""
     if not isinstance(senha, str) or not senha:
-        return "Informe a senha provisória."
+        return ausente
     if len(senha) < TAMANHO_MINIMO:
         return f"A senha deve ter pelo menos {TAMANHO_MINIMO} caracteres."
     if len(senha) > TAMANHO_MAXIMO:

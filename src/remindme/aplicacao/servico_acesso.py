@@ -95,6 +95,43 @@ class ServicoAcesso:
         with self._execucao.operacao("conferir permissão", sessao, operacao):
             pass
 
+    def trocar_senha(self, sessao: Optional[str], senha_atual: object, nova_senha: object, confirmacao: object) -> None:
+        """RF-95, RF-96, OPEN-58: o usuário da sessão troca a própria senha (INV-5: não recebe o usuário).
+
+        Sem permissão da matriz: toda sessão válida pode. As demais sessões do usuário deixam de valer e a
+        auditoria não leva senha alguma (RNF-04, INV-3). Tudo na mesma transação (RNF-09)."""
+        encontrada: List[Sessao] = []
+
+        def identificar(uow: UnidadeDeTrabalho) -> Usuario:
+            dados, usuario = self._autorizacao.sessao(uow, sessao)
+            encontrada.append(dados)
+            return usuario
+
+        with self._execucao.do_usuario("trocar senha", identificar) as op:
+            campos: Dict[str, str] = {}
+            atual_confere = False
+            if not isinstance(senha_atual, str) or not senha_atual:
+                campos["senha_atual"] = "Informe a senha atual."
+            else:
+                guardado = op.uow.usuarios.hash_de(op.usuario.id)
+                atual_confere = guardado is not None and self._cifrador.conferir(senha_atual, guardado)
+                if not atual_confere:
+                    campos["senha_atual"] = "A senha atual não confere."
+            motivo = motivo_da_senha(nova_senha, ausente="Informe a nova senha.")
+            if motivo:
+                campos["nova_senha"] = motivo
+            elif atual_confere and nova_senha == senha_atual:
+                campos["nova_senha"] = "A nova senha deve ser diferente da atual."
+            if not isinstance(confirmacao, str) or not confirmacao:
+                campos["confirmacao"] = "Repita a nova senha."
+            elif confirmacao != nova_senha:
+                campos["confirmacao"] = "A confirmação não é igual à nova senha."
+            recusar_campos(campos)
+            op.uow.usuarios.guardar_hash(op.usuario.id, self._cifrador.gerar(nova_senha))
+            op.uow.sessoes.remover_do_usuario(op.usuario.id)
+            op.uow.sessoes.salvar(encontrada[0])
+            op.registrar(_ref(op.usuario), "senha", None, "alterada")
+
     # UC-02
 
     def cadastrar_usuario(

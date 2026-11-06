@@ -62,6 +62,84 @@ class FluxoCriticoNoNavegador(unittest.TestCase):
             finally:
                 navegador.close()
 
+    def _entrar(self, pagina, senha):
+        pagina.goto(self.base + "/entrar")
+        pagina.fill("#email", "diego@demo.example")
+        pagina.fill("#senha", senha)
+        pagina.click("button[type=submit]")
+
+    def test_CA_18_trocar_senha_sair_e_entrar_com_a_nova(self):
+        """CA-18: troca a senha pelo link do topo, sai, a antiga falha, a nova entra e a outra sessão é encerrada."""
+        nova = "outra-senha-9"
+        with sync_playwright() as playwright:
+            navegador = playwright.chromium.launch()
+            try:
+                pagina_b = navegador.new_context(locale="pt-BR").new_page()
+                self._entrar(pagina_b, SENHA)
+                pagina_b.wait_for_url(self.base + "/painel")
+
+                pagina_a = navegador.new_context(locale="pt-BR").new_page()
+                self._entrar(pagina_a, SENHA)
+                pagina_a.wait_for_url(self.base + "/painel")
+                pagina_a.click("text=Trocar senha")
+                pagina_a.wait_for_url(self.base + "/trocar-senha")
+                pagina_a.fill("#senha_atual", SENHA)
+                pagina_a.fill("#nova_senha", nova)
+                pagina_a.fill("#confirmacao", nova)
+                pagina_a.click("button:has-text('Trocar senha')")
+                pagina_a.wait_for_url(self.base + "/painel?aviso=senha")
+                self.assertIn("Senha alterada.", pagina_a.inner_text("main"))
+
+                pagina_a.click("text=Sair")
+                pagina_a.wait_for_url(self.base + "/entrar*")
+                self._entrar(pagina_a, SENHA)
+                pagina_a.wait_for_selector("text=E-mail ou senha incorretos.")
+                self._entrar(pagina_a, nova)
+                pagina_a.wait_for_url(self.base + "/painel")
+
+                pagina_b.goto(self.base + "/painel")
+                pagina_b.wait_for_url(self.base + "/entrar*")
+                self.assertIn("Sua sessão terminou", pagina_b.inner_text("body"))
+            finally:
+                navegador.close()
+
+    def test_foco_1_topo_com_o_link_nao_estoura_no_celular(self):
+        """Foco de revisão 1 do plano: com o link "Trocar senha", o topo cabe em 360 e em 320 px."""
+        with sync_playwright() as playwright:
+            navegador = playwright.chromium.launch()
+            try:
+                for largura in (360, 320):
+                    pagina = navegador.new_context(locale="pt-BR", viewport={"width": largura, "height": 740}).new_page()
+                    self._entrar(pagina, SENHA)
+                    pagina.wait_for_url(self.base + "/painel")
+                    for caminho in ("/painel", "/trocar-senha"):
+                        pagina.goto(self.base + caminho)
+                        self.assertTrue(pagina.locator("a[href='/trocar-senha']").first.is_visible())
+                        borda = pagina.evaluate("document.querySelector('.quem').getBoundingClientRect().right")
+                        self.assertLessEqual(borda, largura, f"{caminho} a {largura} px: o topo passa da borda ({borda})")
+                        # A 320 px o /painel já estourava no commit-base, por conteúdo alheio a esta spec.
+                        if largura == 360 or caminho == "/trocar-senha":
+                            medidas = pagina.evaluate("[document.documentElement.scrollWidth, window.innerWidth]")
+                            self.assertLessEqual(medidas[0], medidas[1], f"{caminho} a {largura} px estoura: {medidas}")
+            finally:
+                navegador.close()
+
+    def test_foco_1_topo_nao_altera_a_marca_das_paginas_publicas(self):
+        """Foco de revisão 1 do plano: o ajuste do topo não encolhe a marca das páginas públicas (`.marca-clara`) em 360 px."""
+        with sync_playwright() as playwright:
+            navegador = playwright.chromium.launch()
+            try:
+                medidas = {}
+                for largura in (1200, 360):
+                    pagina = navegador.new_context(locale="pt-BR", viewport={"width": largura, "height": 740}).new_page()
+                    pagina.goto(self.base + "/entrar")
+                    medidas[largura] = pagina.evaluate(
+                        "(() => { const e = document.querySelector('.marca-clara'); const c = getComputedStyle(e); return [c.fontSize, c.columnGap]; })()"
+                    )
+                self.assertEqual(medidas[360], medidas[1200])
+            finally:
+                navegador.close()
+
 
 if __name__ == "__main__":
     unittest.main()
