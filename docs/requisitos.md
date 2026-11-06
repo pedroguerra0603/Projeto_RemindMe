@@ -46,6 +46,8 @@ A data de referência do sistema ("hoje") é a de America/Sao_Paulo, e os horár
 | RF-65 | WHEN um usuário submeter credenciais corretas, THE SYSTEM SHALL iniciar a sessão e apresentar apenas as funcionalidades do seu perfil. | UC-01 | |
 | RF-66 | IF as credenciais submetidas forem inválidas, THEN THE SYSTEM SHALL recusar o acesso com mensagem que não revele qual campo está incorreto. | UC-01 | |
 | RF-67 | IF um usuário solicitar uma operação que seu perfil não permite, THEN THE SYSTEM SHALL negar a operação e informar o motivo. | UC-01 | RB-03 |
+| RF-95 | WHEN um usuário autenticado submeter a troca da própria senha com a senha atual correta e uma nova senha válida, igual à confirmação e diferente da atual, THE SYSTEM SHALL substituir a senha guardada pela nova, manter a sessão em uso e encerrar as demais sessões desse usuário. | UC-16 | |
+| RF-96 | IF a senha atual informada na troca da própria senha estiver incorreta, THEN THE SYSTEM SHALL recusar a troca sem alterar a senha nem as sessões do usuário. | UC-16 | |
 
 ### 1.2 Orçamentos
 

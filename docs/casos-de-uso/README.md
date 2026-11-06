@@ -42,6 +42,7 @@ O UC-05 estende o UC-04: só ocorre quando o desconto ultrapassa a alçada. O UC
 | [UC-13](UC-13-configurar-regras.md) | Configurar regras | Administrador | Dono |
 | [UC-14](UC-14-importar-e-exportar-csv.md) | Importar e exportar CSV | Operador Financeiro | Contador, Administrador |
 | [UC-15](UC-15-gerenciar-contas-a-pagar.md) | Gerenciar contas a pagar | Operador Financeiro | Dono, Agendador |
+| [UC-16](UC-16-trocar-a-propria-senha.md) | Trocar a própria senha | Usuário de qualquer perfil | — |
 
 O **fluxo principal do sistema** é a sequência UC-04 → UC-08 → UC-06: o orçamento vira título, o título é cobrado e o pagamento o baixa. Os diagramas de sequência cobrem o UC-04 e o UC-06.
 
@@ -69,6 +70,8 @@ O **fluxo principal do sistema** é a sequência UC-04 → UC-08 → UC-06: o or
 | RF-53 a RF-57, RF-82 | UC-11 |
 | RF-65 a RF-67 | UC-01 |
 | RF-83 a RF-85 | UC-14 |
+| RF-87 a RF-94 | UC-15 |
+| RF-95, RF-96 | UC-16 |
 
 RF-60 e RF-63 foram retirados; ver [requisitos](../requisitos.md).
 

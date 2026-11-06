@@ -45,7 +45,7 @@ Divergências que esta spec trata: DV-04 (cinco perfis) e DV-11 (Contador cadast
 | Tela de login, painel do perfil (RNF-17) e HTTPS (RNF-05) | Primeira spec com interface (OPEN-01, OPEN-12) |
 | Bloqueio após tentativas erradas e expiração de sessão | Fora desta spec (OPEN-34) |
 | Encerramento de sessão pelo próprio usuário (logout) | Não há requisito. Fica para a primeira spec com interface |
-| Recuperação e troca de senha | Não há requisito. A senha inicial é provisória e informada pelo Administrador (OPEN-35) |
+| Recuperação e troca de senha | Não há requisito. A senha inicial é provisória e informada pelo Administrador (OPEN-35). *Nota de 2026-11-06: a troca da própria senha entrou na Spec 019 (OPEN-58); a redefinição pelo Administrador e a troca obrigatória seguem em aberto (OPEN-59, OPEN-60).* |
 | Permissões das operações das specs ainda não escritas | Cada spec aplica a sua linha da matriz da seção 4 |
 
 ## 4. Comportamento
