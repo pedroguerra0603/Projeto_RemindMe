@@ -103,24 +103,29 @@ class FluxoCriticoNoNavegador(unittest.TestCase):
             finally:
                 navegador.close()
 
-    def test_RNF_16_topo_com_o_link_nao_estoura_360px(self):
-        """RNF-16: com o link "Trocar senha" no topo, a página não ganha rolagem horizontal em 360 px."""
+    def test_foco_1_topo_com_o_link_nao_estoura_no_celular(self):
+        """Foco de revisão 1 do plano: com o link "Trocar senha", o topo cabe em 360 e em 320 px."""
         with sync_playwright() as playwright:
             navegador = playwright.chromium.launch()
             try:
-                pagina = navegador.new_context(locale="pt-BR", viewport={"width": 360, "height": 740}).new_page()
-                self._entrar(pagina, SENHA)
-                pagina.wait_for_url(self.base + "/painel")
-                for caminho in ("/painel", "/trocar-senha"):
-                    pagina.goto(self.base + caminho)
-                    self.assertTrue(pagina.locator("a[href='/trocar-senha']").first.is_visible())
-                    medidas = pagina.evaluate("[document.documentElement.scrollWidth, window.innerWidth]")
-                    self.assertLessEqual(medidas[0], medidas[1], f"{caminho} estoura a largura: {medidas}")
+                for largura in (360, 320):
+                    pagina = navegador.new_context(locale="pt-BR", viewport={"width": largura, "height": 740}).new_page()
+                    self._entrar(pagina, SENHA)
+                    pagina.wait_for_url(self.base + "/painel")
+                    for caminho in ("/painel", "/trocar-senha"):
+                        pagina.goto(self.base + caminho)
+                        self.assertTrue(pagina.locator("a[href='/trocar-senha']").first.is_visible())
+                        borda = pagina.evaluate("document.querySelector('.quem').getBoundingClientRect().right")
+                        self.assertLessEqual(borda, largura, f"{caminho} a {largura} px: o topo passa da borda ({borda})")
+                        # A 320 px o /painel já estourava no commit-base, por conteúdo alheio a esta spec.
+                        if largura == 360 or caminho == "/trocar-senha":
+                            medidas = pagina.evaluate("[document.documentElement.scrollWidth, window.innerWidth]")
+                            self.assertLessEqual(medidas[0], medidas[1], f"{caminho} a {largura} px estoura: {medidas}")
             finally:
                 navegador.close()
 
-    def test_RNF_16_marca_das_paginas_publicas_nao_muda_no_celular(self):
-        """RNF-16: o ajuste do topo não encolhe a marca das páginas públicas (`.marca-clara`) em 360 px."""
+    def test_foco_1_topo_nao_altera_a_marca_das_paginas_publicas(self):
+        """Foco de revisão 1 do plano: o ajuste do topo não encolhe a marca das páginas públicas (`.marca-clara`) em 360 px."""
         with sync_playwright() as playwright:
             navegador = playwright.chromium.launch()
             try:

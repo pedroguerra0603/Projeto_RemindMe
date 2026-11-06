@@ -101,12 +101,16 @@ class Spec019(Base):
         antes = self.hash_do_diego()
         vencida = self.entrar()
         self.relogio.momento = self.relogio.momento + DURACAO_DA_SESSAO
+        # Os casos com o usuário ainda ativo vêm antes da inativação, para que a sessão vencida
+        # seja recusada pelo vencimento e não pela inativação.
+        for caso, sessao in {"nula": None, "desconhecida": "desconhecida", "vencida": vencida}.items():
+            with self.subTest(caso=caso), self.assertRaises(SessaoInvalida):
+                self.acesso.trocar_senha(sessao, ANTIGA, NOVA, NOVA)
         inativada = self.entrar()
         usuario = self.uow.usuarios.obter(self.diego.id)
         self.uow.usuarios.salvar(usuario.inativado())
-        for caso, sessao in {"nula": None, "desconhecida": "desconhecida", "vencida": vencida, "usuario inativado": inativada}.items():
-            with self.subTest(caso=caso), self.assertRaises(SessaoInvalida):
-                self.acesso.trocar_senha(sessao, ANTIGA, NOVA, NOVA)
+        with self.subTest(caso="usuario inativado"), self.assertRaises(SessaoInvalida):
+            self.acesso.trocar_senha(inativada, ANTIGA, NOVA, NOVA)
         self.assertEqual(self.hash_do_diego(), antes)
 
     def test_CA_10_hash_e_salt_novos_e_auditoria_sem_senha(self):
@@ -125,7 +129,7 @@ class Spec019(Base):
         self.assertEqual(registro.valor_novo, "alterada")
         for r in self.uow.auditoria.registros:
             texto = f"{r.valor_anterior} {r.valor_novo} {r.motivo} {r.registro_afetado}"
-            self.assertFalse(ANTIGA in texto and NOVA in texto)
+            self.assertNotIn(ANTIGA, texto)
             self.assertNotIn(NOVA, texto)
 
     def test_CA_11_falha_na_auditoria_desfaz_tudo(self):
