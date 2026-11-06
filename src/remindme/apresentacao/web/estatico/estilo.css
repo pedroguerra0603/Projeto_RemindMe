@@ -296,8 +296,8 @@ td.numero form.em-linha button { margin-left: 4px; }
 .botao.perigo, button.perigo { background: var(--perigo); border-color: var(--perigo); }
 .botao.perigo:hover, button.perigo:hover { filter: brightness(0.92); }
 .botao.pequeno, button.pequeno { padding: 4px 10px; font-size: 0.8125rem; }
-button.discreto { background: transparent; color: var(--texto-suave); border-color: var(--borda); padding: 6px 12px; font-size: 0.875rem; }
-button.discreto:hover { background: var(--superficie-2); color: var(--tinta); }
+.botao.discreto, button.discreto { background: transparent; color: var(--texto-suave); border-color: var(--borda); padding: 6px 12px; font-size: 0.875rem; }
+.botao.discreto:hover, button.discreto:hover { background: var(--superficie-2); color: var(--tinta); }
 
 /* Matriz de permissões */
 

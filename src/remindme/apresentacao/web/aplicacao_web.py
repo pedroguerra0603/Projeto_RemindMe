@@ -64,6 +64,7 @@ AVISOS = {
         "Sua sessão terminou: ela venceu, foi encerrada em outra aba ou o servidor foi reiniciado com um banco novo. "
         "Entre de novo para continuar de onde parou.",
     ),
+    "senha": ("sucesso", "Senha alterada. As outras sessões abertas com o seu usuário foram encerradas."),
     "cliente": ("sucesso", "Cliente cadastrado."),
     "cliente-alterado": ("sucesso", "Dados do cliente atualizados."),
     "titulo": ("sucesso", "Título cadastrado em Aberto."),
@@ -186,6 +187,8 @@ class AplicacaoWeb:
         r.append(("POST", "/criar-conta", self._criar_conta, publica))
         r.append(("GET", "/robots.txt", self._robots, publica))
         r.append(("POST", "/sair", self._sair, protegida))
+        r.append(("GET", "/trocar-senha", self._trocar_senha_pagina, protegida))
+        r.append(("POST", "/trocar-senha", self._trocar_senha, protegida))
         r.append(("GET", "/painel", self._painel, protegida))
         r.append(("GET", "/clientes", self._clientes, protegida))
         r.append(("GET", "/clientes/novo", self._cliente_novo_pagina, protegida))
@@ -422,6 +425,20 @@ class AplicacaoWeb:
         termo = req.consulta.get("q", "").strip()
         clientes = self._s.clientes.consultar_clientes(sessao, termo)
         return Resposta.pagina(p.pagina_clientes(ctx, clientes, termo, _aviso(req)))
+
+    def _trocar_senha_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto, erros: Optional[Dict[str, str]] = None) -> Resposta:
+        return Resposta.pagina(p.pagina_trocar_senha(ctx, erros or {}), 400 if erros else 200)
+
+    def _trocar_senha(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        """RF-95: lê as senhas como digitadas (sem aparar) e nunca as devolve à página."""
+        senhas = [req.formulario.get(nome, "") for nome in ("senha_atual", "nova_senha", "confirmacao")]
+        try:
+            self._s.acesso.trocar_senha(sessao, *senhas)
+        except SessaoInvalida:
+            raise
+        except OperacaoRecusada as recusa:
+            return self._trocar_senha_pagina(req, sessao, ctx, _erros(recusa))
+        return Resposta.redirecionar("/painel?aviso=senha")
 
     def _cliente_novo_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         self._s.acesso.exigir(sessao, Operacao.MANTER_CLIENTES)
