@@ -62,6 +62,63 @@ class FluxoCriticoNoNavegador(unittest.TestCase):
             finally:
                 navegador.close()
 
+    def _entrar(self, pagina, senha):
+        pagina.goto(self.base + "/entrar")
+        pagina.fill("#email", "diego@demo.example")
+        pagina.fill("#senha", senha)
+        pagina.click("button[type=submit]")
+
+    def test_CA_18_trocar_senha_sair_e_entrar_com_a_nova(self):
+        """CA-18: troca a senha pelo link do topo, sai, a antiga falha, a nova entra e a outra sessão é encerrada."""
+        nova = "outra-senha-9"
+        with sync_playwright() as playwright:
+            navegador = playwright.chromium.launch()
+            try:
+                pagina_b = navegador.new_context(locale="pt-BR").new_page()
+                self._entrar(pagina_b, SENHA)
+                pagina_b.wait_for_url(self.base + "/painel")
+
+                pagina_a = navegador.new_context(locale="pt-BR").new_page()
+                self._entrar(pagina_a, SENHA)
+                pagina_a.wait_for_url(self.base + "/painel")
+                pagina_a.click("text=Trocar senha")
+                pagina_a.wait_for_url(self.base + "/trocar-senha")
+                pagina_a.fill("#senha_atual", SENHA)
+                pagina_a.fill("#nova_senha", nova)
+                pagina_a.fill("#confirmacao", nova)
+                pagina_a.click("button:has-text('Trocar senha')")
+                pagina_a.wait_for_url(self.base + "/painel?aviso=senha")
+                self.assertIn("Senha alterada.", pagina_a.inner_text("main"))
+
+                pagina_a.click("text=Sair")
+                pagina_a.wait_for_url(self.base + "/entrar*")
+                self._entrar(pagina_a, SENHA)
+                pagina_a.wait_for_selector("text=E-mail ou senha incorretos.")
+                self._entrar(pagina_a, nova)
+                pagina_a.wait_for_url(self.base + "/painel")
+
+                pagina_b.goto(self.base + "/painel")
+                pagina_b.wait_for_url(self.base + "/entrar*")
+                self.assertIn("Sua sessão terminou", pagina_b.inner_text("body"))
+            finally:
+                navegador.close()
+
+    def test_RNF_16_topo_com_o_link_nao_estoura_360px(self):
+        """RNF-16: com o link "Trocar senha" no topo, a página não ganha rolagem horizontal em 360 px."""
+        with sync_playwright() as playwright:
+            navegador = playwright.chromium.launch()
+            try:
+                pagina = navegador.new_context(locale="pt-BR", viewport={"width": 360, "height": 740}).new_page()
+                self._entrar(pagina, SENHA)
+                pagina.wait_for_url(self.base + "/painel")
+                for caminho in ("/painel", "/trocar-senha"):
+                    pagina.goto(self.base + caminho)
+                    self.assertTrue(pagina.locator("a[href='/trocar-senha']").first.is_visible())
+                    medidas = pagina.evaluate("[document.documentElement.scrollWidth, window.innerWidth]")
+                    self.assertLessEqual(medidas[0], medidas[1], f"{caminho} estoura a largura: {medidas}")
+            finally:
+                navegador.close()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -403,6 +403,10 @@ td.numero form.em-linha button { margin-left: 4px; }
   main { padding: 24px 16px 40px; }
   .topo { padding: 10px 16px; }
   .quem .nome-completo, .perfil { display: none; }
+  .topo { gap: 8px; }
+  .marca { font-size: 1rem; gap: 6px; }
+  .quem { gap: 6px; }
+  .quem .botao.discreto, .quem button.discreto { padding: 6px 8px; font-size: 0.8125rem; white-space: nowrap; }
   .historico li { grid-template-columns: 1fr; gap: 2px; }
   .indicadores { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .indicador:nth-child(odd) { border-left: 0; padding-left: 0; }
