@@ -8,7 +8,7 @@
 | **Nome** | Troca da própria senha |
 | **Objetivo** | Permitir que cada usuário ativo e autenticado substitua a própria senha, informando a atual, sem depender do Administrador. |
 | **Valor entregue** | O Operador Financeiro que recebeu a senha provisória do Administrador (OPEN-35) passa a usar uma senha que só ele conhece. Quem desconfia que a senha vazou troca-a e encerra, na hora, as sessões abertas em outros navegadores. |
-| **Situação** | **Aprovada** |
+| **Situação** | **Verificada** — todos os critérios de aceitação passaram (seção 8). |
 | **Aprovada por** | Bernardo Sanches, em 2026-11-06, na conversa com o agente: escolheu só a troca pelo próprio usuário, com o encerramento das outras sessões; deixou a redefinição pelo Administrador e a troca obrigatória em aberto (OPEN-59, OPEN-60); aprovou o design, a spec e autorizou seguir até a implementação. A revisão do conteúdo fica no PR. |
 
 ## 2. Rastreabilidade
@@ -134,4 +134,49 @@ Os testes automatizados levam no nome o identificador do critério, por exemplo 
 
 ## 8. Verificação
 
-A preencher depois da implementação.
+Verificada em 2026-11-06, com `python3 -m unittest discover -s tests -t .`: 478 testes, todos passando (5 pulados por dependerem de specs futuras). Testes da spec: [`tests/aplicacao/test_senhas.py`](../../tests/aplicacao/test_senhas.py), [`tests/aplicacao/test_spec_019_aceite.py`](../../tests/aplicacao/test_spec_019_aceite.py), [`tests/integracao/test_spec_019_sqlite.py`](../../tests/integracao/test_spec_019_sqlite.py), [`tests/apresentacao/test_spec_019_web.py`](../../tests/apresentacao/test_spec_019_web.py) e [`tests/ponta_a_ponta/test_navegador.py`](../../tests/ponta_a_ponta/test_navegador.py).
+
+Os testes de navegador rodaram com Playwright 1.63.0 e Chromium: `python3 -m unittest tests.ponta_a_ponta.test_navegador -v`, 4 testes, todos passando.
+
+### Critérios de aceitação
+
+| Critério | Teste | Resultado |
+|---|---|---|
+| CA-01 | `test_CA_01_troca_aceita_e_so_a_nova_entra` | Passou |
+| CA-02 | `test_CA_02_senha_atual_errada_nao_muda_nada` | Passou |
+| CA-03 | `test_CA_03_nova_senha_com_7_ou_257_caracteres` e `test_OPEN_44_limites_de_tamanho` | Passou |
+| CA-04 | `test_CA_04_confirmacao_diferente` | Passou |
+| CA-05 | `test_CA_05_nova_igual_a_atual` | Passou |
+| CA-06 | `test_CA_06_tres_campos_vazios_indicados_de_uma_vez` | Passou |
+| CA-07 | `test_CA_07_outras_sessoes_sao_encerradas` | Passou |
+| CA-08 | `test_CA_08_sessoes_de_outro_usuario_continuam` | Passou |
+| CA-09 | `test_CA_09_sem_sessao_valida_e_recusada` | Passou |
+| CA-10 | `test_CA_10_hash_e_salt_novos_e_auditoria_sem_senha` e `test_CifradorScrypt_gera_salt_novo_e_confere` | Passou |
+| CA-11 | `test_CA_11_falha_na_auditoria_desfaz_tudo` | Passou |
+| CA-12 | `test_CA_12_todos_os_perfis_trocam_sem_permissao_da_matriz` e `test_CA_12_contador_sem_nenhuma_permissao_da_matriz_troca_a_senha` | Passou |
+| CA-13 | `test_CA_13_sem_sessao_get_e_post_levam_a_entrada` | Passou |
+| CA-14 | `test_CA_14_todos_os_perfis_veem_o_link` | Passou |
+| CA-15 | `test_CA_15_erros_voltam_com_400_por_campo_sem_as_senhas` | Passou |
+| CA-16 | `test_CA_16_sem_protecao_e_recusado` | Passou |
+| CA-17 | `test_CA_17_troca_leva_ao_painel_e_derruba_o_outro_navegador` | Passou |
+| CA-18 | `test_CA_18_trocar_senha_sair_e_entrar_com_a_nova` (navegador) | Passou |
+| CA-19 | `test_CA_19_troca_persiste_depois_de_reabrir_o_banco` | Passou |
+
+### Invariantes
+
+| Invariante | Como foi verificada | Resultado |
+|---|---|---|
+| INV-1 | CA-10, CA-15 e `test_auditoria_mostra_a_troca_sem_a_senha` | Passou |
+| INV-2 | CA-02 e CA-01 | Passou |
+| INV-3 | CA-07, CA-08 e CA-17 | Passou |
+| INV-4 | CA-11 e `test_RNF_09_INV_4_falha_na_auditoria_desfaz_no_banco` (SQLite) | Passou |
+| INV-5 | `test_INV_5_trocar_senha_nao_recebe_usuario` e CA-08 | Passou |
+
+### Divergências e limitações
+
+| Item | Descrição |
+|---|---|
+| Topo a 360 px | Os testes de navegador (`test_RNF_16_topo_com_o_link_nao_estoura_360px`) mostraram que o topo estourava 360 px (`scrollWidth` 406) com o novo link. O CSS do topo foi apertado dentro de `@media (max-width: 860px)`, limitado a `.topo .marca`, de modo que a marca das páginas públicas não muda (`test_RNF_16_marca_das_paginas_publicas_nao_muda_no_celular`). |
+| Testes de navegador | Rodam só com o Playwright instalado (OPEN-29). Aqui rodaram com Playwright 1.63.0 e Chromium. |
+| Fora do escopo | A redefinição pelo Administrador (OPEN-59) e a troca obrigatória no primeiro acesso (OPEN-60) continuam em aberto. |
+| Lighthouse | Não foi executado para esta spec. |
