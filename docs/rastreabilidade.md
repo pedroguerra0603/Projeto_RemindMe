@@ -63,7 +63,7 @@ Requisitos da Spec 006 e os RNF verificados na rodada de qualidade de outubro (#
 | RNF-19 | DA-09 | DT-01 | Regras somente em `dominio/` | `test_RNF_19_regras_do_titulo_ficam_somente_no_dominio` | Implementado |
 | RNF-23 | DA-07 | DT-02 | Somente a biblioteca padrão | `test_OPEN_01_codigo_usa_somente_a_biblioteca_padrao` | Parcial: simuladores pendentes |
 | RF-95 | DA-04 | DT-06 | `ServicoAcesso.trocar_senha`; `motivo_da_senha` | `test_CA_01_*` a `test_CA_12_*` (Spec 019); `test_CA_17_*`; `test_CA_18_*` | Implementado |
-| RF-96 | DA-04 | DT-06 | `ServicoAcesso.trocar_senha`; `motivo_da_senha` | `test_CA_02_senha_atual_errada_nao_muda_nada`; `test_INV_5_*` | Implementado |
+| RF-96 | DA-04 | DT-06 | `ServicoAcesso.trocar_senha`; `motivo_da_senha` | `test_CA_02_senha_atual_errada_nao_muda_nada`; `test_CA_15_*` | Implementado |
 
 ## 4. Requisitos ainda sem implementação
 

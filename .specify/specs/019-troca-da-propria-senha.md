@@ -134,7 +134,7 @@ Os testes automatizados levam no nome o identificador do critério, por exemplo 
 
 ## 8. Verificação
 
-Verificada em 2026-11-06, com `python3 -m unittest discover -s tests -t .`: 478 testes, todos passando (5 pulados por dependerem de specs futuras). Testes da spec: [`tests/aplicacao/test_senhas.py`](../../tests/aplicacao/test_senhas.py), [`tests/aplicacao/test_spec_019_aceite.py`](../../tests/aplicacao/test_spec_019_aceite.py), [`tests/integracao/test_spec_019_sqlite.py`](../../tests/integracao/test_spec_019_sqlite.py), [`tests/apresentacao/test_spec_019_web.py`](../../tests/apresentacao/test_spec_019_web.py) e [`tests/ponta_a_ponta/test_navegador.py`](../../tests/ponta_a_ponta/test_navegador.py).
+Verificada em 2026-11-06, com `python3 -m unittest discover -s tests -t .`: 478 testes, todos passando (5 pulados por dependerem de specs ou decisões futuras). Testes da spec: [`tests/aplicacao/test_senhas.py`](../../tests/aplicacao/test_senhas.py), [`tests/aplicacao/test_spec_019_aceite.py`](../../tests/aplicacao/test_spec_019_aceite.py), [`tests/integracao/test_spec_019_sqlite.py`](../../tests/integracao/test_spec_019_sqlite.py), [`tests/apresentacao/test_spec_019_web.py`](../../tests/apresentacao/test_spec_019_web.py) e [`tests/ponta_a_ponta/test_navegador.py`](../../tests/ponta_a_ponta/test_navegador.py).
 
 Os testes de navegador rodaram com Playwright 1.63.0 e Chromium: `python3 -m unittest tests.ponta_a_ponta.test_navegador -v`, 4 testes, todos passando.
 
@@ -176,7 +176,7 @@ Os testes de navegador rodaram com Playwright 1.63.0 e Chromium: `python3 -m uni
 
 | Item | Descrição |
 |---|---|
-| Topo a 360 px | Os testes de navegador (`test_RNF_16_topo_com_o_link_nao_estoura_360px`) mostraram que o topo estourava 360 px (`scrollWidth` 406) com o novo link. O CSS do topo foi apertado dentro de `@media (max-width: 860px)`, limitado a `.topo .marca`, de modo que a marca das páginas públicas não muda (`test_RNF_16_marca_das_paginas_publicas_nao_muda_no_celular`). |
+| Topo a 360 e 320 px | Os testes de navegador (`test_foco_1_topo_com_o_link_nao_estoura_no_celular`) mostraram que o topo estourava 360 px (`scrollWidth` 406) com o novo link, e que a 320 px a borda direita de `.quem` ia a 337 px, cortando "Sair". O CSS do topo foi ajustado dentro de `@media (max-width: 860px)` (`.topo` agora quebra a linha), sem tocar a marca das páginas públicas (`test_foco_1_topo_nao_altera_a_marca_das_paginas_publicas`). O teste confere, a 360 e a 320 px, em `/painel` e em `/trocar-senha`, que `.quem` termina dentro da janela (337 px antes, 216 px depois a 320 px), e que não há rolagem horizontal da página a 360 px nas duas telas e a 320 px em `/trocar-senha`. A 320 px o `/painel` já estourava no commit-base por conteúdo alheio a esta spec, fora do escopo dela. |
 | Testes de navegador | Rodam só com o Playwright instalado (OPEN-29). Aqui rodaram com Playwright 1.63.0 e Chromium. |
 | Fora do escopo | A redefinição pelo Administrador (OPEN-59) e a troca obrigatória no primeiro acesso (OPEN-60) continuam em aberto. |
 | Lighthouse | Não foi executado para esta spec. |

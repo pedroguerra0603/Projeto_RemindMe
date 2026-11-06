@@ -48,7 +48,7 @@ O **fluxo principal do sistema** é a sequência UC-04 → UC-08 → UC-06: o or
 
 ## Regras que valem para todos os casos de uso
 
-1. Todo caso de uso iniciado por pessoa exige sessão ativa (RNF-01) e permissão do perfil (RNF-02).
+1. Todo caso de uso iniciado por pessoa exige sessão ativa (RNF-01) e permissão do perfil (RNF-02), exceto a troca da própria senha (UC-16), que exige só a sessão (OPEN-58).
 2. Toda mudança de estado é auditada (RB-01).
 3. A IA extrai e classifica; o sistema decide (RB-27).
 4. Falha em operação financeira não deixa dado parcialmente gravado (RNF-09).

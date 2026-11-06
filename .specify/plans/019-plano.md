@@ -21,7 +21,7 @@
 
 ## Foco de revisão
 
-1. Topo da página num celular de 360 px: o link novo não pode criar rolagem horizontal. Teste e2e: `test_RNF_16_topo_com_o_link_nao_estoura_360px` (tarefa 3).
+1. Topo da página num celular de 360 e de 320 px: o link novo não pode criar rolagem horizontal nem empurrar "Sair" para fora da tela. Teste e2e: `test_foco_1_topo_com_o_link_nao_estoura_no_celular` (tarefa 3).
 2. Senha com espaços nas pontas, acentos e emoji: precisa ser guardada exatamente como digitada e entrar depois. Teste web: `test_senha_com_espacos_e_acentos_e_guardada_como_digitada` (tarefa 2).
 3. Formulário enviado duas vezes (duplo clique): o primeiro troca; o segundo é recusado com "A senha atual não confere.", e a sessão continua válida. Teste web: `test_envio_repetido_nao_derruba_a_sessao` (tarefa 2).
 4. Tela de Auditoria do Administrador: mostra a troca como "senha: — → alterada", sem a senha. Teste web: `test_auditoria_mostra_a_troca_sem_a_senha` (tarefa 2).
@@ -126,7 +126,8 @@
     - Contexto A entra como Diego, clica em "Trocar senha", preenche os três campos e envia. Espera `/painel` com "Senha alterada.".
     - A clica em "Sair". Entrar com a senha antiga mostra "E-mail ou senha incorretos."; com a nova, chega ao `/painel`.
     - B abre `/painel` e cai em `/entrar` com "Sua sessão terminou".
-  - `test_RNF_16_topo_com_o_link_nao_estoura_360px`: página com `viewport={"width": 360, "height": 740}`, logada. Em `/painel` e em `/trocar-senha`, `document.documentElement.scrollWidth <= window.innerWidth`.
+  - `test_foco_1_topo_com_o_link_nao_estoura_no_celular`: página logada com `viewport` de 360 e de 320 px de largura. Em `/painel` e em `/trocar-senha`, a borda direita de `.quem` fica dentro de `window.innerWidth`; a 360 px (e a 320 px em `/trocar-senha`), `document.documentElement.scrollWidth <= window.innerWidth`.
+  - `test_foco_1_topo_nao_altera_a_marca_das_paginas_publicas`: a `.marca-clara` de `/entrar` tem o mesmo tamanho de fonte e espaçamento em 1200 e 360 px.
 - [ ] **Passo 3: rodar** `python3 -m unittest tests.ponta_a_ponta.test_navegador -v`. Esperado: o CA-23 antigo e os dois novos passam. Se o 360 px estourar, ajustar o CSS do topo (`.quem` com espaçamento menor no `@media (max-width: 860px)`) até passar.
 - [ ] **Passo 4: commit** `test: troca de senha de ponta a ponta no navegador (Spec 019, CA-18)`.
 

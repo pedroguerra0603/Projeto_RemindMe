@@ -14,6 +14,7 @@ Incluído em 2026-11-06 (OPEN-58). Spec 019.
 ## Pré-condições
 
 - O usuário está autenticado (UC-01) e ativo.
+- Nenhuma permissão da matriz é exigida: a troca vale para todo usuário ativo (OPEN-58).
 
 ## Fluxo principal
 

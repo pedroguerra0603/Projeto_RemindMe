@@ -119,7 +119,7 @@ Nesta spec, a matriz é aplicada às operações das Specs 002 e 006. As demais 
 | ID | Invariante | Origem |
 |---|---|---|
 | INV-1 | Todo usuário tem exatamente um perfil. | RF-02; modelo de domínio, relação 1 |
-| INV-2 | Nenhuma operação da camada de aplicação executa sem sessão válida de usuário ativo e sem permissão explícita do perfil. | RNF-01, RNF-02 |
+| INV-2 | Nenhuma operação da camada de aplicação executa sem sessão válida de usuário ativo e sem permissão explícita do perfil. *Nota de 2026-11-06: a troca da própria senha exige só a sessão, como entrar e sair (Spec 019, OPEN-58).* | RNF-01, RNF-02 |
 | INV-3 | A senha nunca é armazenada, auditada nem devolvida em claro. | RNF-04 |
 | INV-4 | As permissões marcadas com F não mudam por configuração. | RB-02, RB-03, RB-15, RB-26, OPEN-16 |
 | INV-5 | A autorização é verificada na camada de aplicação, em um único ponto, antes de chamar o domínio. | DT-06, RNF-03 |
