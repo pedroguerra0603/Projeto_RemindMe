@@ -13,6 +13,7 @@ Vocabulário do domínio. Os termos abaixo são os únicos usados em requisitos,
 | Conta a pagar | `ContaPagar` | Valor que a empresa deve a um fornecedor, com descrição e vencimento (Spec 018). |
 | Demonstração de resultado (DRE) | — | Apresentação de receitas, despesas e resultado por categoria. |
 | Divergência | `SugestaoClassificacao` | Diferença entre a categoria sugerida pela IA e a categoria confirmada por uma pessoa. |
+| Empresa | `Empresa` | A empresa que usa o sistema, com razão social, nome fantasia, CNPJ, telefone, e-mail e endereço. Há um único registro, mantido pelo Dono (OPEN-54). |
 | Escalonamento | — | Envio de alerta ao Dono quando uma obrigação permanece Atrasada. |
 | Estorno | — | Anulação de um pagamento registrado. Só o Dono estorna. |
 | Etapa de cobrança | `EtapaCobranca` | Passo da régua: prazo em dias em relação ao vencimento, mensagem e ação. |

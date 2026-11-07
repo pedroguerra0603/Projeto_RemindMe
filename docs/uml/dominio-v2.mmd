@@ -44,6 +44,7 @@ classDiagram
         estado
         saldo()
         registrarPagamento()
+        estornarPagamento()
         marcarVencido()
         cancelar()
     }
@@ -51,7 +52,7 @@ classDiagram
         valor
         data
         estornado
-        estornar()
+        motivoEstorno
     }
     class Renegociacao {
         vencimentoAnterior
@@ -108,6 +109,31 @@ classDiagram
         valorNovo
         motivo
     }
+    class Fornecedor {
+        nome
+        documento
+        contato
+    }
+    class ContaPagar {
+        descricao
+        valor
+        vencimento
+        condicaoPagamento
+        estado
+        saldo()
+        registrarPagamento()
+        estornarPagamento()
+        marcarVencida()
+        cancelar()
+    }
+    class Empresa {
+        razaoSocial
+        nomeFantasia
+        cnpj
+        telefone
+        email
+        endereco
+    }
 
     Perfil "1" -- "0..*" Usuario : atribuído a
     Perfil "1" -- "0..1" AlcadaDesconto : limitado por
@@ -118,6 +144,8 @@ classDiagram
     Usuario "1" -- "0..*" AprovacaoDesconto : decide
     Orcamento "0..1" -- "0..1" Titulo : origina
     Cliente "1" -- "0..*" Titulo : deve
+    Fornecedor "1" -- "0..*" ContaPagar : recebe
+    ContaPagar "1" *-- "0..*" Pagamento : recebe
     Titulo "1" *-- "0..*" Pagamento : recebe
     Titulo "1" -- "0..*" Renegociacao : sofre
     ReguaCobranca "1" *-- "1..*" EtapaCobranca : composta de
