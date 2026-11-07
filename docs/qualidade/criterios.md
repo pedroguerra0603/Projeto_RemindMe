@@ -5,7 +5,7 @@ Issue #60. Seleciona as características de qualidade do produto relevantes para
 - **Data:** 2026-10-16.
 - **Referência:** características de qualidade do produto da ISO/IEC 25010, as mesmas do [relatório de qualidade](relatorio-de-qualidade.md). A seção 4 traz a correspondência com a ISO/IEC 9126, que a disciplina também usa.
 - **Fontes dos critérios:** [visão](../visao.md) (problema e critérios de sucesso), [personas](../personas.md), [requisitos](../requisitos.md) (RNF e RB) e [drivers arquiteturais](../arquitetura.md#2-drivers-arquiteturais).
-- **Regra seguida:** toda meta numérica vem da baseline. Onde a baseline não define meta, o critério diz isso e não inventa um valor (regra 2 do [`CLAUDE.md`](../../CLAUDE.md)).
+- **Regra seguida:** toda meta numérica vem da baseline. Onde a baseline não define meta, o critério diz isso e não inventa um valor (regra 2 do [`SPECS.md`](../../SPECS.md)).
 
 ## 1. Seleção e prioridade
 
@@ -65,7 +65,7 @@ Para cada característica: as subcaracterísticas que mais pesam, os requisitos 
 
 | Subcaracterística | Critério | Origem | Como verificar |
 |---|---|---|---|
-| Modularidade | O domínio não importa aplicação, infraestrutura, framework, banco, canal nem IA | ADR-001; `CLAUDE.md`, regra 9 | Teste de dependência entre camadas |
+| Modularidade | O domínio não importa aplicação, infraestrutura, framework, banco, canal nem IA | ADR-001; `SPECS.md`, regra 9 | Teste de dependência entre camadas |
 | Analisabilidade | Cada regra de negócio em um único ponto, com teste nomeado pelo identificador | RNF-19; DA-09 | Revisão de código; busca pelo identificador |
 | Testabilidade | A suíte inteira roda sem credencial externa | RNF-23; DA-07 | Execução em ambiente limpo |
 | Modificabilidade | Tipos de obrigação, categorias e etapas da régua criados por configuração | RNF-20 | Teste de cadastro e uso (Specs 007, 010, 014) |

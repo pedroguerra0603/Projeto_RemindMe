@@ -60,11 +60,11 @@ Percentuais sobre os 193 testes dos quatro níveis (199 menos os 6 transversais)
 4. **Sem medição de cobertura.** A pirâmide mede quantidade de testes, e não o que eles exercitam. A decisão sobre medir cobertura é OPEN-27.
 5. **Não há cone de sorvete.** Nenhum teste passa pela interface, e os testes de aceite usam o serviço com repositórios em memória, rápidos (a suíte inteira roda em cerca de 3,5 s).
 
-Esta seção é proposta de alteração da baseline (regra 4 do CLAUDE.md) e aguarda aprovação da equipe no PR.
+Esta seção é proposta de alteração da baseline (regra 4 do SPECS.md) e aguarda aprovação da equipe no PR.
 
 ## Testes de API e de ponta a ponta (planejamento)
 
-Issue #83. Esta seção foi escrita como plano; a Spec 017 implementou os testes de API, o fluxo "Registrar pagamento integral e ver o título Baixado" no navegador e a recusa de rede sem TLS (OPEN-38). O fluxo do orçamento depende da Spec 004. Nenhum código de teste é escrito antes de existir spec aprovada com interface (regra 1 do CLAUDE.md). Todo o plano está **condicionado à decisão de OPEN-01** (framework web) e, para o ambiente de execução, de OPEN-12 (hospedagem).
+Issue #83. Esta seção foi escrita como plano; a Spec 017 implementou os testes de API, o fluxo "Registrar pagamento integral e ver o título Baixado" no navegador e a recusa de rede sem TLS (OPEN-38). O fluxo do orçamento depende da Spec 004. Nenhum código de teste é escrito antes de existir spec aprovada com interface (regra 1 do SPECS.md). Todo o plano está **condicionado à decisão de OPEN-01** (framework web) e, para o ambiente de execução, de OPEN-12 (hospedagem).
 
 ### Fluxos críticos candidatos a ponta a ponta
 
@@ -97,7 +97,7 @@ Comparação para subsidiar a decisão; **a escolha é da equipe** (OPEN-29). As
 |---|---|---|---|
 | API | Postman com Newman (citadas na aula) | Coleções com interface gráfica; Newman roda no terminal e na integração contínua | Ferramenta externa ao repositório de código; coleções em JSON são difíceis de revisar em PR; exige Node.js |
 | API | Testes em Python com a biblioteca padrão (`urllib`, `unittest`) | Sem dependência nova (RNF-23); versionado junto do código | Mais verboso; sem recursos prontos de coleção |
-| API | Testes em Python com `requests` ou o cliente de teste do framework | Concisos; o cliente de teste do framework dispensa subir o servidor | Instala dependência (pergunta antes, CLAUDE.md); o cliente de teste depende da escolha de OPEN-01 |
+| API | Testes em Python com `requests` ou o cliente de teste do framework | Concisos; o cliente de teste do framework dispensa subir o servidor | Instala dependência (pergunta antes, SPECS.md); o cliente de teste depende da escolha de OPEN-01 |
 | Navegador | Selenium (citado na aula) | Maduro; vários navegadores; documentação ampla | Esperas explícitas e testes mais frágeis; exige driver do navegador |
 | Navegador | Playwright | Espera automática de elementos; Chromium já disponível neste ambiente de agente | Dependência nova; ecossistema menos conhecido pela equipe, a confirmar |
 | Navegador | Cypress | Boa experiência de depuração | Exige Node.js; limitações com várias abas |
@@ -111,7 +111,7 @@ Comparação para subsidiar a decisão; **a escolha é da equipe** (OPEN-29). As
 
 ## Simuladores do canal de notificação e do serviço de IA
 
-Issue #79. Dublês de teste para que a suíte rode sem credencial externa (RNF-23) e cubra os casos de borda. Lições: Nubank (2021), e-mails de encerramento de conta enviados por engano, e Taco Bell (2025), falhas de IA em casos de borda. **Ainda não há código**: a regra 1 do CLAUDE.md manda escrevê-lo junto da primeira spec aprovada que usar a porta (Specs 008, 009 e 011). O que esta seção fixa é o contrato que cada simulador deve cumprir.
+Issue #79. Dublês de teste para que a suíte rode sem credencial externa (RNF-23) e cubra os casos de borda. Lições: Nubank (2021), e-mails de encerramento de conta enviados por engano, e Taco Bell (2025), falhas de IA em casos de borda. **Ainda não há código**: a regra 1 do SPECS.md manda escrevê-lo junto da primeira spec aprovada que usar a porta (Specs 008, 009 e 011). O que esta seção fixa é o contrato que cada simulador deve cumprir.
 
 Comum aos dois:
 
@@ -161,7 +161,7 @@ Uma issue de implementação está pronta quando:
 
 ## Registro da verificação
 
-A verificação de cada spec é registrada na seção 8 da própria spec, com um resultado por critério de aceite: passou, não passou ou não verificado (passo 6 do fluxo do [`CLAUDE.md`](../CLAUDE.md)). Critério que não puder ser automatizado é verificado manualmente e registrado no mesmo lugar.
+A verificação de cada spec é registrada na seção 8 da própria spec, com um resultado por critério de aceite: passou, não passou ou não verificado (passo 6 do fluxo do [`SPECS.md`](../SPECS.md)). Critério que não puder ser automatizado é verificado manualmente e registrado no mesmo lugar.
 
 A [matriz de critérios](qualidade/matriz-criterios-de-aceite.md) liga cada critério ao teste.
 

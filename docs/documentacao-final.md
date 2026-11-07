@@ -4,7 +4,7 @@ Documento consolidado de requisitos, modelagem e arquitetura do RemindMe, na sit
 
 - **Disciplina:** Modelagem de Software — Mackenzie, 2026-2.
 - **Equipe:** João Pedro Silva Guerra, Bernardo Sanches e Renan Ribeiro Gandolpho ([combinados](combinados.md)).
-- **Método:** Spec-Driven Development, descrito no [`CLAUDE.md`](../CLAUDE.md).
+- **Método:** Spec-Driven Development, descrito no [`SPECS.md`](../SPECS.md).
 
 ## 1. Problema e visão
 
