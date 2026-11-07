@@ -11,7 +11,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import List, Optional
 
-from remindme.aplicacao.portas import Sessao
+from remindme.aplicacao.portas import Mensagem, Sessao
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.cliente import Cliente
 from remindme.dominio.conta_pagar import ContaPagar, EstadoContaPagar
@@ -186,7 +186,29 @@ _OPERACOES_DA_SPEC_018 = (
     Operacao.CONSULTAR_CONTAS_PAGAR,
 )
 
-MIGRACOES = [_ESQUEMA_1, _ESQUEMA_2, _ESQUEMA_3, _ESQUEMA_4]
+# Spec 005: prazo e decisão do orçamento, vínculo do título com o orçamento e caixa de saída.
+_ESQUEMA_5 = """
+ALTER TABLE orcamentos ADD COLUMN prazo_pagamento_dias INTEGER;
+ALTER TABLE orcamentos ADD COLUMN enviado_em TEXT;
+ALTER TABLE orcamentos ADD COLUMN decidido_em TEXT;
+ALTER TABLE orcamentos ADD COLUMN motivo_rejeicao TEXT;
+ALTER TABLE orcamentos ADD COLUMN titulo_id TEXT;
+ALTER TABLE titulos ADD COLUMN orcamento_id TEXT;
+CREATE UNIQUE INDEX titulo_por_orcamento ON titulos (orcamento_id) WHERE orcamento_id IS NOT NULL;
+CREATE TABLE mensagens (
+    id TEXT PRIMARY KEY,
+    cliente_id TEXT NOT NULL REFERENCES clientes (id),
+    contato TEXT NOT NULL,
+    assunto TEXT NOT NULL,
+    texto TEXT NOT NULL,
+    enviada_em TEXT NOT NULL,
+    resultado TEXT NOT NULL,
+    origem TEXT NOT NULL
+);
+CREATE INDEX mensagens_por_data ON mensagens (enviada_em);
+"""
+
+MIGRACOES = [_ESQUEMA_1, _ESQUEMA_2, _ESQUEMA_3, _ESQUEMA_4, _ESQUEMA_5]
 
 
 def preparar_banco(caminho: str) -> None:
@@ -214,6 +236,15 @@ def preparar_banco(caminho: str) -> None:
                     conexao.executemany(
                         "INSERT OR IGNORE INTO permissoes (operacao, perfil) VALUES (?, ?)",
                         [(o.name, p.name) for o, p in MatrizPermissoes.inicial().concedidas if o in _OPERACOES_DA_SPEC_018],
+                    )
+                if numero == 5:
+                    conexao.executemany(
+                        "INSERT OR IGNORE INTO permissoes (operacao, perfil) VALUES (?, ?)",
+                        [
+                            (o.name, p.name)
+                            for o, p in MatrizPermissoes.inicial().concedidas
+                            if o is Operacao.CONSULTAR_MENSAGENS
+                        ],
                     )
                 conexao.execute(f"PRAGMA user_version = {numero}")
                 conexao.execute("COMMIT")
@@ -255,6 +286,7 @@ class UnidadeDeTrabalhoSQLite:
         self.usuarios = RepositorioUsuariosSQLite(self)
         self.sessoes = RepositorioSessoesSQLite(self)
         self.permissoes = RepositorioPermissoesSQLite(self)
+        self.mensagens = RepositorioMensagensSQLite(self)
 
     def conexao(self) -> sqlite3.Connection:
         conexao = getattr(self._local, "conexao", None)
@@ -304,8 +336,8 @@ class RepositorioTitulosSQLite(_Repositorio):
 
     def salvar(self, titulo: Titulo) -> None:
         self._executar(
-            """INSERT INTO titulos (id, cliente_id, valor, vencimento, origem, condicao_pagamento, estado)
-               VALUES (?, ?, ?, ?, ?, ?, ?)
+            """INSERT INTO titulos (id, cliente_id, valor, vencimento, origem, condicao_pagamento, estado, orcamento_id)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                ON CONFLICT (id) DO UPDATE SET estado = excluded.estado,
                    condicao_pagamento = excluded.condicao_pagamento""",
             (
@@ -316,6 +348,7 @@ class RepositorioTitulosSQLite(_Repositorio):
                 titulo.origem,
                 titulo.condicao_pagamento,
                 titulo.estado.name,
+                titulo.orcamento_id,
             ),
         )
         for ordem, pagamento in enumerate(titulo.pagamentos):
@@ -373,6 +406,7 @@ class RepositorioTitulosSQLite(_Repositorio):
             condicao_pagamento=linha["condicao_pagamento"],
             estado=EstadoTitulo[linha["estado"]],
             pagamentos=pagamentos,
+            orcamento_id=linha["orcamento_id"],
         )
 
     def _executar(self, comando: str, parametros=()):
@@ -522,15 +556,21 @@ class RepositorioOrcamentosSQLite(_Repositorio):
         pendencia = orcamento.pendencia
         self._executar(
             """INSERT INTO orcamentos (id, cliente_id, elaborado_por, criado_em, estado, condicao_pagamento,
-                   percentual_desconto, pendente_percentual, pendente_solicitado_por, pendente_alcada, motivo_cancelamento)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                   percentual_desconto, pendente_percentual, pendente_solicitado_por, pendente_alcada, motivo_cancelamento,
+                   prazo_pagamento_dias, enviado_em, decidido_em, motivo_rejeicao, titulo_id)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                ON CONFLICT (id) DO UPDATE SET estado = excluded.estado,
                    condicao_pagamento = excluded.condicao_pagamento,
                    percentual_desconto = excluded.percentual_desconto,
                    pendente_percentual = excluded.pendente_percentual,
                    pendente_solicitado_por = excluded.pendente_solicitado_por,
                    pendente_alcada = excluded.pendente_alcada,
-                   motivo_cancelamento = excluded.motivo_cancelamento""",
+                   motivo_cancelamento = excluded.motivo_cancelamento,
+                   prazo_pagamento_dias = excluded.prazo_pagamento_dias,
+                   enviado_em = excluded.enviado_em,
+                   decidido_em = excluded.decidido_em,
+                   motivo_rejeicao = excluded.motivo_rejeicao,
+                   titulo_id = excluded.titulo_id""",
             (
                 orcamento.id,
                 orcamento.cliente_id,
@@ -543,6 +583,11 @@ class RepositorioOrcamentosSQLite(_Repositorio):
                 pendencia.solicitado_por if pendencia else None,
                 str(pendencia.alcada) if pendencia else None,
                 orcamento.motivo_cancelamento,
+                orcamento.prazo_pagamento_dias,
+                _iso(orcamento.enviado_em),
+                _iso(orcamento.decidido_em),
+                orcamento.motivo_rejeicao,
+                orcamento.titulo_id,
             ),
         )
         self._executar("DELETE FROM itens_orcamento WHERE orcamento_id = ?", (orcamento.id,))
@@ -608,12 +653,54 @@ class RepositorioOrcamentosSQLite(_Repositorio):
             pendencia=pendencia,
             decisoes=list(decisoes),
             motivo_cancelamento=linha["motivo_cancelamento"],
+            prazo_pagamento_dias=linha["prazo_pagamento_dias"],
+            enviado_em=_data(linha["enviado_em"]),
+            decidido_em=_data(linha["decidido_em"]),
+            motivo_rejeicao=linha["motivo_rejeicao"],
+            titulo_id=linha["titulo_id"],
         )
 
     def _executar(self, comando: str, parametros=()):
         cursor = super()._executar(comando, parametros)
         cursor.row_factory = sqlite3.Row
         return cursor
+
+
+class RepositorioMensagensSQLite(_Repositorio):
+    """Caixa de saída (Spec 005): só acrescenta."""
+
+    def registrar(self, mensagem: Mensagem) -> None:
+        self._executar(
+            """INSERT INTO mensagens (id, cliente_id, contato, assunto, texto, enviada_em, resultado, origem)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                mensagem.id, mensagem.cliente_id, mensagem.contato, mensagem.assunto, mensagem.texto,
+                mensagem.enviada_em.isoformat(), mensagem.resultado, mensagem.origem,
+            ),
+        )
+
+    def listar(self) -> List[Mensagem]:
+        linhas = self._executar("SELECT * FROM mensagens ORDER BY enviada_em, rowid").fetchall()
+        return [
+            Mensagem(
+                l["id"], l["cliente_id"], l["contato"], l["assunto"], l["texto"],
+                datetime.fromisoformat(l["enviada_em"]), l["resultado"], l["origem"],
+            )
+            for l in linhas
+        ]
+
+    def _executar(self, comando: str, parametros=()):
+        cursor = super()._executar(comando, parametros)
+        cursor.row_factory = sqlite3.Row
+        return cursor
+
+
+def _iso(dia: Optional[date]) -> Optional[str]:
+    return None if dia is None else dia.isoformat()
+
+
+def _data(texto: Optional[str]) -> Optional[date]:
+    return None if texto is None else date.fromisoformat(texto)
 
 
 class AuditoriaSQLite(_Repositorio):

@@ -308,3 +308,88 @@ class ContasAPagarNoSQLite(ComBanco):
         conta = sistema.servicos.contas_pagar.cadastrar_conta(admin, fornecedor.id, "Pneus", Decimal("10.00"), HOJE - timedelta(days=1))
         self.assertEqual(sistema.agendador.executar_uma_vez(), [conta.id])
         self.assertEqual(sistema.agendador.executar_uma_vez(), [])
+
+
+class Spec005NoSQLite(ComBanco):
+    """Migração 5: prazo e decisão do orçamento, vínculo do título e caixa de saída (Spec 005)."""
+
+    def orcamento_convertido(self):
+        from remindme.dominio.orcamento import Orcamento
+
+        o = Orcamento.criar("o1", "c1", "u1", date(2026, 11, 2), "Boleto")
+        o.incluir_item("i1", "Revisão", Decimal("1"), Decimal("900.00"))
+        o.alterar_prazo(30)
+        o.marcar_enviado(date(2026, 11, 2))
+        o.registrar_decisao(True, date(2026, 11, 7), date(2026, 11, 7))
+        titulo = Titulo.gerar_de_orcamento("t1", o)
+        o.converter("t1")
+        return o, titulo
+
+    def test_spec_005_orcamento_e_titulo_guardam_os_campos_novos(self):
+        o, titulo = self.orcamento_convertido()
+        rejeitado = replace(o, id="o2", estado=o.estado.REJEITADO, titulo_id=None, motivo_rejeicao="Achou caro", itens=[])
+        with self.uow as uow:
+            uow.usuarios.salvar(Usuario("u1", "Diego", Perfil.OPERADOR_FINANCEIRO))
+            uow.titulos.salvar(titulo)
+            uow.orcamentos.salvar(o)
+            uow.orcamentos.salvar(rejeitado)
+        with self.uow as uow:
+            lido = uow.orcamentos.obter("o1")
+            self.assertEqual(
+                (lido.prazo_pagamento_dias, lido.enviado_em, lido.decidido_em, lido.titulo_id, lido.motivo_rejeicao),
+                (30, date(2026, 11, 2), date(2026, 11, 7), "t1", None),
+            )
+            self.assertEqual(uow.orcamentos.obter("o2").motivo_rejeicao, "Achou caro")
+            lido_titulo = uow.titulos.obter("t1")
+            self.assertEqual((lido_titulo.origem, lido_titulo.orcamento_id), ("orcamento", "o1"))
+
+    def test_INV_1_indice_unico_barra_segundo_titulo_do_orcamento(self):
+        _, titulo = self.orcamento_convertido()
+        with self.uow as uow:
+            uow.titulos.salvar(titulo)
+        with self.assertRaises(sqlite3.IntegrityError):
+            with self.uow as uow:
+                uow.titulos.salvar(replace(titulo, id="t2"))
+        with self.uow as uow:
+            self.assertEqual([t.id for t in uow.titulos.listar()], ["t1"])
+
+    def test_spec_005_mensagens_ida_e_volta(self):
+        from remindme.aplicacao.portas import Mensagem
+
+        enviada = Mensagem("m1", "c1", "a@b.com", "Assunto", "Linha 1\nLinha 2", datetime(2026, 11, 7, 12, 0), "enviada", "orcamento o1")
+        falhou = replace(enviada, id="m2", resultado="falhou", enviada_em=datetime(2026, 11, 7, 13, 0))
+        with self.uow as uow:
+            uow.mensagens.registrar(enviada)
+            uow.mensagens.registrar(falhou)
+        with self.uow as uow:
+            self.assertEqual(uow.mensagens.listar(), [enviada, falhou])
+
+    def test_spec_005_banco_da_versao_4_ganha_colunas_tabela_e_permissao(self):
+        antigo = str(Path(self._pasta.name) / "versao4.db")
+        with closing(sqlite3.connect(antigo, isolation_level=None)) as conexao:
+            for script in MIGRACOES[:4]:
+                for comando in _comandos(script):
+                    conexao.execute(comando)
+            conexao.execute("INSERT INTO clientes VALUES ('c9', 'Cliente Antigo', '52998224725', 'a@b.com')")
+            conexao.execute(
+                "INSERT INTO titulos VALUES ('t9', 'c9', '10.00', '2026-10-10', 'manual', NULL, 'ABERTO')"
+            )
+            conexao.execute(
+                "INSERT INTO orcamentos VALUES ('o9', 'c9', 'u9', '2026-10-01', 'RASCUNHO', NULL, '0.00', NULL, NULL, NULL, NULL)"
+            )
+            conexao.execute("PRAGMA user_version = 4")
+        preparar_banco(antigo)
+        with UnidadeDeTrabalhoSQLite(antigo) as uow:
+            orcamento = uow.orcamentos.obter("o9")
+            titulo = uow.titulos.obter("t9")
+            matriz = uow.permissoes.obter()
+            self.assertEqual(uow.mensagens.listar(), [])
+        self.assertEqual(
+            (orcamento.prazo_pagamento_dias, orcamento.enviado_em, orcamento.titulo_id, titulo.orcamento_id),
+            (None, None, None, None),
+        )
+        self.assertTrue(matriz.permite(Perfil.OPERADOR_FINANCEIRO, Operacao.CONSULTAR_MENSAGENS))
+        self.assertTrue(matriz.permite(Perfil.DONO, Operacao.CONSULTAR_MENSAGENS))
+        self.assertFalse(matriz.permite(Perfil.CONTADOR, Operacao.CONSULTAR_MENSAGENS))
+        with closing(sqlite3.connect(antigo)) as conexao:
+            self.assertEqual(conexao.execute("PRAGMA user_version").fetchone()[0], 5)
