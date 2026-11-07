@@ -41,7 +41,7 @@ Fonte: [`requisitos.md`](requisitos.md). RF e RNF em EARS; RB em forma declarati
 
 | Tipo | Identificadores | Retirados | Ativos | Grupos |
 |---|---|---|---|---|
-| RF | RF-01 a RF-96 | RF-60, RF-63, RF-69 | 93 | Acesso; orçamentos; descontos e alçadas; títulos e pagamentos; cobrança; renegociação; obrigações; lançamentos e IA; apuração; auditoria; importação e exportação; contas a pagar |
+| RF | RF-01 a RF-96 | RF-60, RF-63, RF-69, RF-71 | 92 | Acesso; orçamentos; descontos e alçadas; títulos e pagamentos; cobrança; renegociação; obrigações; lançamentos e IA; apuração; auditoria; importação e exportação; contas a pagar |
 | RNF | RNF-01 a RNF-26 | RNF-10 | 25 | Segurança e privacidade; confiabilidade; desempenho; usabilidade; manutenibilidade e evolução |
 | RB | RB-01 a RB-33 | RB-26 (RB-25 não foi usado) | 31 | Estados, valores, alçadas, auditoria, IA, régua, obrigações e contas a pagar |
 
@@ -120,18 +120,19 @@ Fonte: [mapa de specs](../.specify/specs/mapa-de-specs.md), aprovado em 2026-11-
 
 | Situação | Specs |
 |---|---|
+| Proposta | [005](../.specify/specs/005-envio-decisao-e-conversao-em-titulo.md) envio, decisão do cliente e conversão em título |
 | Verificadas | [001](../.specify/specs/001-fundacao-camadas-e-auditoria.md) fundação e auditoria; [002](../.specify/specs/002-autenticacao-e-autorizacao.md) autenticação e autorização; [003](../.specify/specs/003-cadastro-de-clientes.md) clientes; [004](../.specify/specs/004-orcamento-itens-valores-e-alcada.md) orçamento e alçada; [006](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md) título, pagamento, baixa e estorno; [013](../.specify/specs/013-consulta-de-auditoria.md) consulta de auditoria; [017](../.specify/specs/017-interface-web.md) interface web; [018](../.specify/specs/018-contas-a-pagar-e-fornecedores.md) contas a pagar e fornecedores; [019](../.specify/specs/019-troca-da-propria-senha.md) troca da própria senha |
-| A escrever | 005 conversão em título; 007 e 008 régua de cobrança; 009 renegociação; 010 obrigações; 011 lançamentos e IA; 012 apuração; 014 configuração de regras; 015 CSV; 016 painel por perfil |
+| A escrever | 007 e 008 régua de cobrança; 009 renegociação; 010 obrigações; 011 lançamentos e IA; 012 apuração; 014 configuração de regras; 015 CSV; 016 painel por perfil |
 
 Tecnologia adotada (OPEN-01): Python 3.11 ou mais recente, somente a biblioteca padrão, com interface web sobre WSGI (ADR-006), banco SQLite (ADR-007) e testes com `unittest`. A suíte tem 478 testes, todos passando, com 9 pulados: 4 de navegador, que dependem do Playwright, opcional (OPEN-29), e 5 marcadores de testes ainda não escritos. Para ver a aplicação: `python3 iniciar.py demonstracao`. Como executar: [`execucao.md`](execucao.md). Estratégia de testes: [`testes.md`](testes.md). Avaliação de qualidade: [`qualidade/`](qualidade/README.md).
 
 ## 6. Decisões em aberto
 
-Fonte: [`.specify/open.md`](../.specify/open.md). São 60 questões registradas.
+Fonte: [`.specify/open.md`](../.specify/open.md). São 62 questões registradas.
 
 | Situação | Questões |
 |---|---|
-| Decididas | 58. As decididas "por delegação" ao agente, em 2026-10-23, tiveram autorização prévia de João Pedro Silva Guerra. As OPEN-49 a OPEN-52 foram decididas em 2026-11-07 por Renan Gandolpho |
+| Decididas | 60. As decididas "por delegação" ao agente, em 2026-10-23, tiveram autorização prévia de João Pedro Silva Guerra. As OPEN-49 a OPEN-52, OPEN-61 e OPEN-62 foram decididas em 2026-11-07 por Renan Gandolpho |
 | Abertas | OPEN-59 (o Administrador redefine a senha de outro usuário?) e OPEN-60 (troca obrigatória da senha provisória no primeiro acesso?), ambas deixadas fora da Spec 019 |
 
 ## 7. Rastreabilidade

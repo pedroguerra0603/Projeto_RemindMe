@@ -7,7 +7,7 @@
 | **Objetivo** | Cobrar cada título no momento definido pela régua, sem ação manual. |
 | **Gatilho** | O agendador inicia o ciclo periódico de verificação dos títulos. |
 | **Regras de negócio** | RB-10, RB-11, RB-18, RB-21 |
-| **Requisitos** | RF-23, RF-24, RF-32 a RF-39, RF-70, RF-71, RNF-12, RNF-13 |
+| **Requisitos** | RF-23, RF-24, RF-32 a RF-39, RF-70, RNF-12, RNF-13 |
 
 ## Pré-condições
 

@@ -64,7 +64,7 @@ O **fluxo principal do sistema** é a sequência UC-04 → UC-08 → UC-06: o or
 | RF-14 a RF-18 | UC-05, UC-13 |
 | RF-20 a RF-27, RF-30, RF-31, RF-68 | UC-06 |
 | RF-28, RF-29, RF-72 a RF-76 | UC-07 |
-| RF-32 a RF-39, RF-70, RF-71 | UC-08, UC-13 |
+| RF-32 a RF-39, RF-70 | UC-08, UC-13 |
 | RF-40 a RF-50, RF-77 | UC-09 |
 | RF-51, RF-52, RF-58, RF-59, RF-78 a RF-81, RF-86 | UC-10 |
 | RF-53 a RF-57, RF-82 | UC-11 |
@@ -73,7 +73,7 @@ O **fluxo principal do sistema** é a sequência UC-04 → UC-08 → UC-06: o or
 | RF-87 a RF-94 | UC-15 |
 | RF-95, RF-96 | UC-16 |
 
-RF-60, RF-63 e RF-69 foram retirados; ver [requisitos](../requisitos.md).
+RF-60, RF-63, RF-69 e RF-71 foram retirados; ver [requisitos](../requisitos.md).
 
 ## Fora do escopo
 

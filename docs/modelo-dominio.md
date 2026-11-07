@@ -262,7 +262,7 @@ classDiagram
 | RF-14 a RF-18 | `AlcadaDesconto`, `AprovacaoDesconto`, `Orcamento` |
 | RF-19 a RF-27, RF-30, RF-31, RF-68 | `Titulo`, `Pagamento` |
 | RF-28, RF-29, RF-72 a RF-76 | `Renegociacao`, `Titulo` |
-| RF-32 a RF-39, RF-70, RF-71 | `ReguaCobranca`, `EtapaCobranca`, `TentativaCobranca` |
+| RF-32 a RF-39, RF-70 | `ReguaCobranca`, `EtapaCobranca`, `TentativaCobranca` |
 | RF-40 a RF-50, RF-77 | `Obrigacao`, `Evidencia` |
 | RF-51, RF-52, RF-58, RF-59, RF-78 a RF-81, RF-86 | `LancamentoFinanceiro`, `CategoriaFinanceira`, `SugestaoClassificacao` |
 | RF-53 a RF-57, RF-82 | `LancamentoFinanceiro`, `CategoriaFinanceira` |

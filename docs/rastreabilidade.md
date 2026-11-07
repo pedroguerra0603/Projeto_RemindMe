@@ -17,7 +17,7 @@ O identificador é o elo da cadeia. Ele aparece no requisito, na spec, na docstr
 
 ### Como as tabelas foram montadas
 
-1. Os requisitos ativos vêm de [`requisitos.md`](requisitos.md); os retirados (RF-60, RF-63, RF-69, RNF-10, RB-26) ficam de fora.
+1. Os requisitos ativos vêm de [`requisitos.md`](requisitos.md); os retirados (RF-60, RF-63, RF-69, RF-71, RNF-10, RB-26) ficam de fora.
 2. As specs de cada requisito vêm das colunas RF, RB e RNF do mapa. Um requisito está **Implementado** quando todas as specs que o citam estão Verificadas; **Parcial** quando só parte delas está; **Sem implementação** quando nenhuma está.
 3. O código é a lista de módulos que citam o identificador; os testes são as funções cujo nome contém o identificador (`test_*RF_24*`) e os arquivos de teste das specs verificadas (`test_spec_NNN_*`).
 4. A situação foi corrigida à mão quando a regra do item 2 não refletia o código, com o motivo na própria linha: RB-01, RB-21, RF-61, RNF-23 (parciais), RNF-11, RNF-25 (parciais, ver lacuna 4) e RF-28, RF-29 (sem implementação, ver lacuna 3).
@@ -120,9 +120,9 @@ Todo requisito ativo aparece em ao menos uma spec do mapa, exceto RNF-07 e RNF-0
 
 | Spec | Requisitos | Situação da spec |
 |---|---|---|
-| 005 | RF-08, RF-09, RF-11, RF-12, RF-19, RB-05, RB-18 | A escrever |
+| 005 | RF-08, RF-09, RF-11, RF-12, RF-19, RB-05, RB-18 | Proposta |
 | 007 | RF-32, RF-36, RNF-18, RNF-20, RB-10 | A escrever |
-| 008 | RF-33, RF-34, RF-35, RF-37, RF-38, RF-39, RF-70, RF-71, RNF-12, RNF-13, RB-10, RB-11, RB-18 | A escrever |
+| 008 | RF-33, RF-34, RF-35, RF-37, RF-38, RF-39, RF-70, RNF-12, RNF-13, RB-10, RB-11, RB-18 | A escrever |
 | 009 | RF-28, RF-29, RF-72, RF-73, RF-74, RF-75, RF-76, RNF-22, RNF-24, RB-11, RB-17, RB-20, RB-27, RB-28 | A escrever |
 | 010 | RF-40, RF-41, RF-42, RF-43, RF-44, RF-45, RF-46, RF-47, RF-48, RF-49, RF-50, RF-77, RB-04, RB-07, RB-13, RB-16, RB-29 | A escrever |
 | 011 | RF-51, RF-52, RF-58, RF-59, RF-78, RF-79, RF-80, RF-81, RF-86, RNF-22, RNF-24, RNF-26, RB-08, RB-09, RB-12, RB-14, RB-27 | A escrever |
@@ -136,10 +136,10 @@ Todo requisito ativo aparece em ao menos uma spec do mapa, exceto RNF-07 e RNF-0
 
 | Tipo | Ativos | Implementados | Parciais | Sem implementação | Operacionais |
 |---|---|---|---|---|---|
-| RF | 93 | 37 | 4 | 52 | — |
+| RF | 92 | 37 | 4 | 51 | — |
 | RB | 31 | 10 | 2 | 19 | — |
 | RNF | 25 | 9 | 6 | 8 | 2 |
-| **Total** | **149** | **56** | **12** | **79** | **2** |
+| **Total** | **148** | **56** | **12** | **78** | **2** |
 | Drivers | 10 | 4 (DA-02, DA-03, DA-04, DA-09) | 3 (DA-01, DA-05, DA-07) | 3 (DA-06, DA-08, DA-10) | — |
 
 DA-03 conta como implementado, embora o teste de concorrência real ainda seja um marcador (lacuna 5).

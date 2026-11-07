@@ -127,7 +127,7 @@ Casos de teste que os simuladores habilitam, a escrever com as specs:
 
 | Caso | Requisito |
 |---|---|
-| Mensagem da régua vai ao destinatário certo, com o conteúdo certo | RF-34, RF-71 |
+| Mensagem da régua vai ao destinatário certo, com o conteúdo certo | RF-34, RB-18 |
 | Falha do canal não repete etapa nem perde o registro de tentativa | DA-08 |
 | Confiança exatamente igual ao limiar é aceita; um centésimo abaixo é decidida por pessoa | RB-08, RB-14, OPEN-05 |
 | Categoria que não existe no plano de contas é recusada | RB-08 |
