@@ -1,8 +1,8 @@
 # ADR-001 — Monólito em camadas com domínio isolado
 
-- **Situação:** Proposto, aguardando aprovação da equipe
+- **Situação:** Aceito em 2026-11-07
 - **Data:** 2026-10-03
-- **Decisores:** a definir pela equipe
+- **Decisores:** Renan Gandolpho
 - **Drivers:** DA-01, DA-09
 - **Requisitos e regras:** RB-05, RB-21, RB-22, RB-23, RNF-19
 

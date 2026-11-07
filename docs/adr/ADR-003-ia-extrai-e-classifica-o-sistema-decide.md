@@ -1,8 +1,8 @@
 # ADR-003 — A IA extrai e classifica; o sistema decide
 
-- **Situação:** Proposto, aguardando aprovação da equipe
+- **Situação:** Aceito em 2026-11-07
 - **Data:** 2026-10-03
-- **Decisores:** a definir pela equipe
+- **Decisores:** Renan Gandolpho
 - **Drivers:** DA-06, DA-07
 - **Requisitos e regras:** RB-08, RB-09, RB-14, RB-17, RB-27, RF-72 a RF-81, RNF-22, RNF-24, RNF-26
 

@@ -269,7 +269,7 @@ Regras de negócio são verdades do domínio que existiriam mesmo sem o sistema.
 | RB-12 | Lançamento sem classificação confirmada não entra na apuração do resultado. | RF-58, RF-53, RF-54, RF-55, RF-82, RF-86 |
 | RB-13 | Obrigação Aguardando Evidência permanece como pendência visível do Operador Financeiro. | RF-77 |
 | RB-14 | Sugestão da IA que não atende à RB-08 é decidida por uma pessoa. | RF-80 |
-| RB-15 | Cada perfil tem um percentual máximo de desconto (alçada). Desconto acima da alçada de quem elaborou o orçamento depende de aprovação do Dono. O Dono não tem limite. | RF-14, RF-15, RF-16, RF-17 |
+| RB-15 | Cada perfil tem um percentual máximo de desconto (alçada). Desconto acima da alçada de quem informa o desconto depende de aprovação do Dono (OPEN-50). O Dono não tem limite. | RF-14, RF-15, RF-16, RF-17 |
 | RB-16 | Obrigação Atrasada é escalada ao Dono. A tolerância padrão é de 0 dias e pode ser configurada. | RF-49 |
 | RB-17 | Mensagem de cliente da qual não se extrai intenção válida é tratada por uma pessoa. | RF-74 |
 | RB-18 | O canal de notificação é substituível. O canal padrão é o simulado. | RF-71 |

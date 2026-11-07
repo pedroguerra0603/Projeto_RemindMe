@@ -8,8 +8,8 @@
 | **Nome** | Orçamento: itens, valores e alçada de desconto |
 | **Objetivo** | Montar o orçamento de um cliente, com itens, valores calculados e desconto controlado pela alçada de cada perfil, até ele ficar pronto para envio. |
 | **Valor entregue** | O Operador Financeiro monta o orçamento e vê o valor líquido na hora. A Dona sabe que nenhum desconto acima da alçada passa sem a decisão dela, e vê no painel o que espera por ela. |
-| **Situação** | **Proposta** — implementada e verificada em 2026-10-29 a pedido de Renan Gandolpho; aguarda a aprovação da equipe na revisão do PR (seção 8). |
-| **Aprovada por** | *(aguardando)* |
+| **Situação** | **Verificada** — implementada e verificada em 2026-10-29; todos os critérios de aceite passaram (seção 8). |
+| **Aprovada por** | Renan Gandolpho, em 2026-11-07 |
 
 ## 2. Rastreabilidade
 
@@ -21,7 +21,7 @@
 | UC | [UC-04](../../docs/casos-de-uso/UC-04-conduzir-orcamento-ate-o-titulo.md) (passos 1 a 4, A1, A3), [UC-05](../../docs/casos-de-uso/UC-05-aprovar-desconto-fora-de-alcada.md) |
 | Entidades | `Orcamento`, `ItemOrcamento`, `AlcadaDesconto`, `AprovacaoDesconto` |
 | Drivers e ADRs | DA-01, DA-02, DA-03, DA-04, DA-09; ADR-001, ADR-004 |
-| Depende de | Specs 001, 002 e 003. Questões OPEN-49 a OPEN-52, abertas nesta spec. |
+| Depende de | Specs 001, 002 e 003. Questões OPEN-49 a OPEN-52, abertas nesta spec e decididas em 2026-11-07. |
 
 ## 3. Escopo
 
@@ -124,12 +124,12 @@ Os testes levam no nome o critério ou a regra, como `test_CA_09_RNF_03_...` e `
 
 ## 7. Questões em aberto
 
-| ID | Questão | Bloqueia a implementação? |
+| ID | Questão | Situação |
 |---|---|---|
-| OPEN-49 | Qual a alçada de cada perfil até a Spec 014? | Não. Provisório: Operador Financeiro 10%; demais perfis 0%; Dono sem limite. |
-| OPEN-50 | A alçada é a de quem elaborou (RB-15) ou a de quem informa o desconto (RF-15)? | Não. Provisório: a de quem informa, que é quem elaborou no fluxo normal. |
-| OPEN-51 | Precisão da quantidade e do percentual, e arredondamento? | Não. Provisório: até duas casas; centavo arredondado metade para cima. |
-| OPEN-52 | O filtro "período" do RF-10 é sobre a data de criação? | Não. Provisório: data de criação. |
+| OPEN-49 | Qual a alçada de cada perfil até a Spec 014? | Decidida em 2026-11-07 por Renan Gandolpho: Operador Financeiro 10%; demais perfis 0%; Dono sem limite. |
+| OPEN-50 | A alçada é a de quem elaborou (RB-15) ou a de quem informa o desconto (RF-15)? | Decidida em 2026-11-07 por Renan Gandolpho: a de quem informa, que é quem elaborou no fluxo normal. RB-15 ajustada. |
+| OPEN-51 | Precisão da quantidade e do percentual, e arredondamento? | Decidida em 2026-11-07 por Renan Gandolpho: até duas casas; centavo arredondado metade para cima. |
+| OPEN-52 | O filtro "período" do RF-10 é sobre a data de criação? | Decidida em 2026-11-07 por Renan Gandolpho: data de criação. |
 
 ## 8. Verificação
 
