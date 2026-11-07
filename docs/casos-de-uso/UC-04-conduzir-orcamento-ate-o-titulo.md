@@ -22,14 +22,14 @@
 4. O sistema compara o desconto com a alçada do perfil do Operador Financeiro (RB-15).
 5. O Operador Financeiro solicita o envio.
 6. O sistema envia o orçamento ao cliente pelo canal de notificação e muda o estado para Enviado.
-7. O Cliente aprova o orçamento.
+7. O Cliente aprova o orçamento respondendo pelo canal de notificação, e o Operador Financeiro registra a decisão no sistema (RF-09, OPEN-57).
 8. O sistema muda o estado para Aprovado, gera o título a receber com o cliente, o valor líquido e a condição de pagamento, e muda o estado do orçamento para Convertido (RB-05).
 9. O sistema registra cada mudança de estado na auditoria.
 
 ## Fluxos alternativos
 
 - **A1 — Desconto acima da alçada.** No passo 4, o sistema muda o orçamento para Pendente de Alçada e segue para o UC-05. Com a decisão do Dono, o orçamento volta a Rascunho e o fluxo retoma no passo 5.
-- **A2 — Cliente rejeita.** No passo 7, o Cliente rejeita. O sistema muda o estado para Rejeitado e nenhum título é gerado.
+- **A2 — Cliente rejeita.** No passo 7, o Cliente rejeita, e o Operador Financeiro registra a rejeição. O sistema muda o estado para Rejeitado e nenhum título é gerado.
 - **A3 — Cancelamento.** Antes do passo 8, um usuário autorizado cancela o orçamento informando o motivo. O sistema muda o estado para Cancelado (RF-13).
 
 ## Exceções

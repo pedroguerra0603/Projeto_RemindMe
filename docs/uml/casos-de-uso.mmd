@@ -19,7 +19,9 @@ flowchart LR
         UC12(["UC-12 Consultar auditoria"])
         UC14(["UC-14 Importar e exportar CSV"])
         UC08(["UC-08 Executar régua de cobrança"])
+        UC15(["UC-15 Gerenciar contas a pagar"])
         UC01(["UC-01 Autenticar usuário (todos os perfis)"])
+        UC16(["UC-16 Trocar a própria senha (todos os perfis)"])
     end
 
     IA([Serviço de IA])
@@ -33,13 +35,14 @@ flowchart LR
     Operador --- UC04
     Operador --- UC06
     Operador --- UC09
-    Cliente --- UC04
+    Operador --- UC15
     Cliente --- UC07
     Dono --- UC06
     Dono --- UC05
     Dono --- UC09
     Dono --- UC11
     Dono --- UC12
+    Dono --- UC15
     Contador --- UC11
     Contador --- UC12
     Contador --- UC14
@@ -49,4 +52,5 @@ flowchart LR
     UC08 --- Canal
     UC08 --- Agendador
     UC09 --- Agendador
+    UC15 --- Agendador
     UC05 -. "«extend»" .-> UC04
