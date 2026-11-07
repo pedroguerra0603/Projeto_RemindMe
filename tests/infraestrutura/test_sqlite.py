@@ -393,3 +393,36 @@ class Spec005NoSQLite(ComBanco):
         self.assertFalse(matriz.permite(Perfil.CONTADOR, Operacao.CONSULTAR_MENSAGENS))
         with closing(sqlite3.connect(antigo)) as conexao:
             self.assertEqual(conexao.execute("PRAGMA user_version").fetchone()[0], 5)
+
+
+class Spec005ConversaoAtomicaNoSQLite(ComBanco):
+    def test_CA_12_RNF_09_falha_na_auditoria_da_conversao_nao_deixa_titulo_no_banco(self):
+        """Spec 005, E5: o rollback do SQLite desfaz o título já salvo quando a auditoria da conversão falha."""
+        from unittest import mock
+
+        from remindme.aplicacao.servico_orcamentos import ServicoOrcamentos
+        from remindme.dominio.orcamento import EstadoOrcamento
+        from remindme.infraestrutura.canal import CanalSimulado
+        from tests.apoio import abrir_sessao
+
+        relogio = RelogioFixo(datetime(2026, 11, 7, 12, 0))
+        servico = ServicoOrcamentos(self.uow, relogio, canal=CanalSimulado())
+        with self.uow as uow:
+            sessao = abrir_sessao(uow, Usuario("u1", "Diego", Perfil.OPERADOR_FINANCEIRO))
+        o = servico.criar_orcamento(sessao, "c1", "Pix")
+        servico.incluir_item(sessao, o.id, "Revisão", Decimal("1"), Decimal("900.00"))
+        servico.alterar_prazo(sessao, o.id, 30)
+        servico.enviar_orcamento(sessao, o.id)
+        registrar = self.uow.auditoria.registrar
+
+        def falhar_na_conversao(registro):
+            if registro.valor_novo == "Convertido":
+                raise RuntimeError("Falha simulada na auditoria da conversão.")
+            registrar(registro)
+
+        with mock.patch.object(self.uow.auditoria, "registrar", side_effect=falhar_na_conversao):
+            with self.assertRaises(RuntimeError):
+                servico.registrar_decisao_do_cliente(sessao, o.id, True, date(2026, 11, 7))
+        with self.uow as uow:
+            self.assertIs(uow.orcamentos.obter(o.id).estado, EstadoOrcamento.ENVIADO)
+            self.assertEqual([t for t in uow.titulos.listar() if t.orcamento_id], [])

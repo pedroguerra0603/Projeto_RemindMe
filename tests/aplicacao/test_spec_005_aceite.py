@@ -186,6 +186,28 @@ class Spec005(Base):
         self.assertIs(self.uow.orcamentos.obter(o.id).estado, EstadoOrcamento.ENVIADO)
         self.assertEqual(self.uow.titulos.listar(), [])
 
+    def test_CA_12_E5_falha_na_auditoria_da_conversao_desfaz_o_titulo_ja_salvo(self):
+        """A falha vem na última gravação, a auditoria de Aprovado → Convertido, depois de o título ser salvo."""
+        o = self.enviado()
+        registrar = self.uow.auditoria.registrar
+        titulos_no_momento_da_falha = []
+
+        def falhar_na_conversao(registro):
+            if registro.valor_novo == "Convertido":
+                titulos_no_momento_da_falha.append(len(self.uow.titulos.listar()))
+                raise RuntimeError("Falha simulada na auditoria da conversão.")
+            registrar(registro)
+
+        self.uow.auditoria.registrar = falhar_na_conversao
+        try:
+            with self.assertRaises(RuntimeError):
+                self.servico.registrar_decisao_do_cliente(self.operador, o.id, True, HOJE)
+        finally:
+            self.uow.auditoria.registrar = registrar
+        self.assertEqual(titulos_no_momento_da_falha, [1])  # o título já estava salvo quando a falha veio
+        self.assertIs(self.uow.orcamentos.obter(o.id).estado, EstadoOrcamento.ENVIADO)
+        self.assertEqual(self.uow.titulos.listar(), [])
+
     def test_CA_13_E7_RB_03_contador_nao_envia_nao_decide_nem_ve_a_caixa(self):
         enviado = self.enviado()
         pronto = self.pronto()

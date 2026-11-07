@@ -820,7 +820,7 @@ def pagina_titulo(
         saldo=f.moeda(titulo.saldo),
         venc=f.data(titulo.vencimento),
         condicao=titulo.condicao_pagamento or "—",
-        origem=_origem_do_titulo(titulo),
+        origem=_origem_do_titulo(ctx, titulo),
     )
     linhas = []
     for pagamento in titulo.pagamentos:
@@ -1224,14 +1224,14 @@ def _cartao_envios(mensagens: list) -> Html:
     return h('<section class="cartao" aria-labelledby="t-envios"><h2 id="t-envios">Envio ao cliente</h2>{i}</section>', i=itens)
 
 
-def _origem_do_titulo(titulo) -> Html:
+def _origem_do_titulo(ctx: Contexto, titulo) -> Html:
+    """O link para o orçamento só aparece para quem pode abri-lo (o Contador vê títulos, mas não orçamentos)."""
     if titulo.orcamento_id:
-        return h(
-            '<a href="/orcamentos/{o}">Gerado do orçamento nº {n}</a>',
-            o=titulo.orcamento_id,
-            n=numero_do_orcamento(titulo.orcamento_id),
-        )
-    return Html("Cadastro manual" if titulo.origem == "manual" else titulo.origem)
+        numero = numero_do_orcamento(titulo.orcamento_id)
+        if ctx.pode(Operacao.CONDUZIR_ORCAMENTO):
+            return h('<a href="/orcamentos/{o}">Gerado do orçamento nº {n}</a>', o=titulo.orcamento_id, n=numero)
+        return h("Gerado do orçamento nº {n}", n=numero)
+    return h("{o}", o="Cadastro manual" if titulo.origem == "manual" else titulo.origem)
 
 
 def _cartao_decisao(ctx: Contexto, orcamento, nomes_usuarios: Dict[str, str], valores: Valores, erros: Erros) -> Html:

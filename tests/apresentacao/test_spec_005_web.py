@@ -39,6 +39,16 @@ class Spec005Web(Base):
         self.assertIn("Prazo para pagamento", texto)
         self.assertIn(f'href="/orcamentos/{orcamento.id}"', diego.get(f"/titulos/{orcamento.titulo_id}").texto)
 
+    def test_contadora_ve_a_origem_do_titulo_sem_link_que_ela_nao_pode_abrir(self):
+        diego = self.navegador("diego@exemplo.com")
+        pagina = self.orcamento_pronto(diego)
+        diego.enviar(pagina, f"{pagina}/envio", {})
+        diego.enviar(pagina, f"{pagina}/resposta-do-cliente", {"decisao": "aprovar", "data": "2026-10-22"})
+        orcamento = self.salvo(pagina)
+        texto = self.navegador("helena@exemplo.com").get(f"/titulos/{orcamento.titulo_id}").texto
+        self.assertIn(f"Gerado do orçamento nº {orcamento.id[:8].upper()}", texto)
+        self.assertNotIn(f'href="/orcamentos/{orcamento.id}"', texto)
+
     def test_botoes_conforme_o_estado(self):
         diego = self.navegador("diego@exemplo.com")
         pagina = self.orcamento_pronto(diego)
