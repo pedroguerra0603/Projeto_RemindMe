@@ -10,7 +10,7 @@ Para uma leitura única e resumida, veja a [documentação final consolidada](do
 |---|---|
 | [Visão](visao.md) | Problema, público-alvo, solução, escopo, critérios de sucesso |
 | [Benchmark](benchmark.md) | Soluções existentes e a lacuna que o projeto ocupa |
-| [Personas](personas.md) | Quatro personas, uma por perfil de negócio |
+| [Personas](personas.md) | Quatro personas: uma por perfil de negócio e o cliente, que não acessa o sistema |
 
 ## 2. Requisitos e modelagem
 
@@ -20,7 +20,7 @@ Para uma leitura única e resumida, veja a [documentação final consolidada](do
 | [Glossário](glossario.md) | Vocabulário do domínio |
 | [Modelo de domínio](modelo-dominio.md) | Classes, responsabilidades, relações e multiplicidades |
 | [Estados](uml/estados.md) | Ciclos de vida de orçamento, título e obrigação |
-| [Casos de uso](casos-de-uso/README.md) | 14 casos de uso, diagrama e cobertura dos requisitos |
+| [Casos de uso](casos-de-uso/README.md) | 16 casos de uso, diagrama e cobertura dos requisitos |
 
 ## 3. Arquitetura e decisões
 
