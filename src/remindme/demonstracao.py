@@ -85,20 +85,22 @@ def preparar_demonstracao(sistema, senha: str) -> List[Tuple[str, str, str]]:
     # Orçamentos (Spec 004): todos os estados desta spec, com um desconto aguardando a Dona.
     orcamentos = servicos.orcamentos
 
-    def orcamento(cliente, condicao: str, itens, desconto: str = ""):
+    def orcamento(cliente, condicao: str, itens, desconto: str = "", prazo=None):
         o = orcamentos.criar_orcamento(operador, cliente.id, condicao)
         for descricao, quantidade, unitario in itens:
             orcamentos.incluir_item(operador, o.id, descricao, Decimal(quantidade), Decimal(unitario))
+        if prazo is not None:  # antes do desconto: acima da alçada, o orçamento fica Pendente e não muda mais
+            o = orcamentos.alterar_prazo(operador, o.id, prazo)
         if desconto:
             o = orcamentos.informar_desconto(operador, o.id, Decimal(desconto))
         return o
 
     orcamento(
         studio, "50% na aprovação e 50% na entrega",
-        [("Manutenção dos aparelhos de musculação", "1", "1800.00"), ("Visita técnica extra", "2", "150.00")], "5",
+        [("Manutenção dos aparelhos de musculação", "1", "1800.00"), ("Visita técnica extra", "2", "150.00")], "5", 30,
     )
-    orcamento(padaria, "Boleto, 28 dias", [("Forno industrial, revisão completa", "1", "2600.00"), ("Peças de reposição", "4", "185.50")], "15")
-    aprovado = orcamento(oficina, "Pix à vista", [("Consultoria financeira, horas", "12", "220.00")], "18")
+    orcamento(padaria, "Boleto, 28 dias", [("Forno industrial, revisão completa", "1", "2600.00"), ("Peças de reposição", "4", "185.50")], "15", 28)
+    aprovado = orcamento(oficina, "Pix à vista", [("Consultoria financeira, horas", "12", "220.00")], "18", 0)
     orcamentos.decidir_desconto(dona, aprovado.id, True, Decimal("12"))
     cancelado_o = orcamento(mercadinho, "Boleto", [("Sistema de etiquetas", "1", "980.00")])
     orcamentos.cancelar_orcamento(operador, cancelado_o.id, "Cliente desistiu da compra")
@@ -111,6 +113,17 @@ def preparar_demonstracao(sistema, senha: str) -> List[Tuple[str, str, str]]:
         endereco="Rua das Palmeiras, 120, sala 4, São Paulo, SP",
     )
     acesso.criar_conta("Bruno Lima", "bruno@demo.example", Perfil.OPERADOR_FINANCEIRO, senha)
+
+    # Spec 005: orçamentos enviados ao cliente pelo canal simulado, depois dos dados da empresa (a mensagem
+    # leva o nome dela). Um aguarda a resposta, um foi aprovado e virou título e outro foi rejeitado.
+    def enviado(cliente, condicao: str, itens, prazo: int):
+        return orcamentos.enviar_orcamento(operador, orcamento(cliente, condicao, itens, prazo=prazo).id)
+
+    enviado(padaria, "Boleto", [("Troca do termostato do forno", "1", "640.00")], 15)
+    convertido = enviado(studio, "Pix", [("Revisão semestral dos aparelhos", "1", "1250.00")], 10)
+    orcamentos.registrar_decisao_do_cliente(operador, convertido.id, True, hoje)
+    rejeitado = enviado(oficina, "Boleto, 30 dias", [("Planejamento tributário anual", "1", "3200.00")], 30)
+    orcamentos.registrar_decisao_do_cliente(operador, rejeitado.id, False, hoje, "Preferiu deixar para o ano que vem")
 
     # Contas a pagar (Spec 018): uma borracharia comprando pneus, peças e o aluguel, em todos os estados.
     fornecedores, contas = servicos.fornecedores, servicos.contas_pagar
