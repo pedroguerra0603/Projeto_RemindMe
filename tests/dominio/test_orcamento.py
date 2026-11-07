@@ -160,7 +160,9 @@ class EnvioECancelamento(unittest.TestCase):
         with self.assertRaises(OperacaoRecusada) as ctx:
             orcamento().exigir_envio()
         self.assertIn("RB-24", ctx.exception.motivo)
-        orcamento(("1", "10.00")).exigir_envio()
+        com_item = orcamento(("1", "10.00"))
+        com_item.alterar_prazo(30)  # Spec 005: o envio também exige o prazo (OPEN-61).
+        com_item.exigir_envio()
 
     def test_RB_15_pendente_de_alcada_nao_e_enviado(self):
         o = orcamento(("1", "100.00"))
@@ -188,3 +190,144 @@ class EnvioECancelamento(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# Spec 005: prazo para pagamento, envio, decisão do cliente e conversão.
+
+ENVIO = date(2026, 11, 2)
+HOJE_005 = date(2026, 11, 7)
+
+
+def pronto(prazo=30):
+    o = orcamento(("1", "1000.00"))
+    o.alterar_prazo(prazo)
+    return o
+
+
+def enviado(prazo=30, data=ENVIO):
+    o = pronto(prazo)
+    o.marcar_enviado(data)
+    return o
+
+
+class Prazo(unittest.TestCase):
+    def test_OPEN_61_prazo_aceita_0_e_365_e_recusa_fora_da_faixa(self):
+        for dias in (0, 30, 365):
+            o = orcamento(("1", "10.00"))
+            o.alterar_prazo(dias)
+            self.assertEqual(o.prazo_pagamento_dias, dias)
+        for invalido in (-1, 366, "2,5", True, "abc", "1e2", 2.5):
+            o = orcamento(("1", "10.00"))
+            with self.assertRaises(OperacaoRecusada) as ctx:
+                o.alterar_prazo(invalido)
+            self.assertEqual(
+                ctx.exception.campos, {"prazo": "O prazo para pagamento é um número inteiro de dias, de 0 a 365."}, invalido
+            )
+            self.assertIsNone(o.prazo_pagamento_dias)
+
+    def test_foco_5_prazo_aceita_espacos_e_zeros_a_esquerda(self):
+        o = orcamento(("1", "10.00"))
+        o.alterar_prazo("030")
+        self.assertEqual(o.prazo_pagamento_dias, 30)
+        o.alterar_prazo(" 30 ")
+        self.assertEqual(o.prazo_pagamento_dias, 30)
+        o.alterar_prazo("")
+        self.assertIsNone(o.prazo_pagamento_dias)
+
+    def test_INV_7_prazo_so_muda_em_rascunho(self):
+        o = orcamento(("1", "100.00"))
+        o.informar_desconto(Decimal("50"), "operador", ALCADA)
+        with self.assertRaises(OperacaoRecusada):
+            o.alterar_prazo(30)
+        self.assertIsNone(o.prazo_pagamento_dias)
+
+    def test_OPEN_61_sem_prazo_nao_e_enviado(self):
+        self.assertEqual(
+            orcamento(("1", "10.00")).motivo_para_nao_enviar(),
+            "Informe o prazo para pagamento antes de enviar o orçamento (OPEN-61).",
+        )
+        self.assertIsNone(pronto().motivo_para_nao_enviar())
+
+    def test_foco_1_valor_liquido_zero_nao_e_enviado(self):
+        o = pronto()
+        o.informar_desconto(Decimal("100"), "dono", None)
+        self.assertEqual(o.motivo_para_nao_enviar(), "O valor líquido é zero: não há o que cobrar.")
+
+
+class EnvioEDecisao(unittest.TestCase):
+    def test_RF_08_marcar_enviado_guarda_a_data(self):
+        o = enviado()
+        self.assertEqual((o.estado, o.enviado_em), (EstadoOrcamento.ENVIADO, ENVIO))
+
+    def test_RF_08_marcar_enviado_exige_que_possa_sair_de_rascunho(self):
+        o = orcamento(("1", "10.00"))
+        with self.assertRaises(OperacaoRecusada):
+            o.marcar_enviado(ENVIO)
+        self.assertEqual((o.estado, o.enviado_em), (EstadoOrcamento.RASCUNHO, None))
+
+    def test_RF_09_aprovacao_e_rejeicao(self):
+        o = enviado()
+        o.registrar_decisao(True, HOJE_005, HOJE_005)
+        self.assertEqual((o.estado, o.decidido_em), (EstadoOrcamento.APROVADO, HOJE_005))
+        o = enviado()
+        o.registrar_decisao(False, HOJE_005, HOJE_005, "  Achou caro  ")
+        self.assertEqual((o.estado, o.motivo_rejeicao), (EstadoOrcamento.REJEITADO, "Achou caro"))
+        o = enviado()
+        o.registrar_decisao(False, HOJE_005, HOJE_005, "   ")
+        self.assertIsNone(o.motivo_rejeicao)
+
+    def test_E3_decisao_fora_de_enviado_e_recusada(self):
+        rascunho = pronto()
+        pendente = orcamento(("1", "100.00"))
+        pendente.informar_desconto(Decimal("50"), "operador", ALCADA)
+        rejeitado = enviado()
+        rejeitado.registrar_decisao(False, HOJE_005, HOJE_005)
+        aprovado = enviado()
+        aprovado.registrar_decisao(True, HOJE_005, HOJE_005)
+        convertido = enviado()
+        convertido.registrar_decisao(True, HOJE_005, HOJE_005)
+        convertido.converter("t1")
+        cancelado = pronto()
+        cancelado.cancelar("Desistiu")
+        for o in (rascunho, pendente, rejeitado, aprovado, convertido, cancelado):
+            estado = o.estado
+            with self.assertRaises(OperacaoRecusada) as ctx:
+                o.registrar_decisao(True, HOJE_005, HOJE_005)
+            self.assertEqual(ctx.exception.motivo, f"Orçamento {estado.value} não aceita decisão do cliente (RF-12).")
+            self.assertIs(o.estado, estado)
+
+    def test_E4_data_da_decisao(self):
+        casos = {
+            None: "Informe a data da decisão do cliente.",
+            "2026-11-07": "Informe a data da decisão do cliente.",
+            date(2026, 11, 8): "A data da decisão não pode ser posterior a hoje.",
+            date(2026, 11, 1): "A data da decisão não pode ser anterior ao envio (02/11/2026).",
+        }
+        for data, mensagem in casos.items():
+            o = enviado()
+            with self.assertRaises(OperacaoRecusada) as ctx:
+                o.registrar_decisao(True, data, HOJE_005)
+            self.assertEqual(ctx.exception.campos, {"data": mensagem}, data)
+            self.assertIs(o.estado, EstadoOrcamento.ENVIADO)
+        o = enviado()
+        o.registrar_decisao(True, ENVIO, HOJE_005)
+        self.assertEqual(o.decidido_em, ENVIO)
+
+    def test_OPEN_61_vencimento_e_decisao_mais_prazo(self):
+        for envio, prazo, esperado in (
+            (date(2026, 1, 31), 30, date(2026, 3, 2)),
+            (date(2026, 12, 20), 15, date(2027, 1, 4)),
+            (date(2026, 11, 7), 0, date(2026, 11, 7)),
+        ):
+            o = enviado(prazo, envio)
+            o.registrar_decisao(True, envio, date(2027, 2, 1))
+            self.assertEqual(o.vencimento_do_titulo, esperado)
+
+    def test_RF_12_converter_exige_aprovado(self):
+        o = enviado()
+        with self.assertRaises(OperacaoRecusada) as ctx:
+            o.converter("t1")
+        self.assertEqual(ctx.exception.motivo, "Só orçamento Aprovado vira título; este está Enviado (RF-12).")
+        o.registrar_decisao(True, HOJE_005, HOJE_005)
+        o.converter("t1")
+        self.assertEqual((o.estado, o.titulo_id), (EstadoOrcamento.CONVERTIDO, "t1"))

@@ -1,11 +1,12 @@
-"""Orçamento, itens e desconto (Spec 004). Regras RB-15 e RB-24; transições em `docs/uml/estados.md`.
+"""Orçamento, itens e desconto (Spec 004); prazo, envio, decisão do cliente e conversão (Spec 005).
+Regras RB-05, RB-15 e RB-24; transições em `docs/uml/estados.md`.
 
 Valores: OPEN-20 e OPEN-24 (duas casas, até 15 dígitos inteiros). Quantidade, percentual e arredondamento:
-OPEN-51. Alçada padrão: OPEN-49.
+OPEN-51. Alçada padrão: OPEN-49. Prazo para pagamento e vencimento do título: OPEN-61.
 """
 
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from enum import Enum
 from typing import Dict, List, Optional
@@ -18,6 +19,7 @@ CENTAVO = Decimal("0.01")
 CEM = Decimal(100)
 LIMITE_VALOR = Decimal(10) ** 15
 TAMANHO_MAXIMO_TEXTO = 200
+PRAZO_MAXIMO_DIAS = 365
 
 # OPEN-49 (provisória até a Spec 014, que torna a alçada configurável, RF-14): percentual máximo de desconto
 # sem aprovação. Perfil fora da tabela não concede desconto. O Dono não tem limite (RB-15).
@@ -94,6 +96,12 @@ class Orcamento:
     pendencia: Optional[PendenciaDesconto] = None
     decisoes: List[AprovacaoDesconto] = field(default_factory=list)
     motivo_cancelamento: Optional[str] = None
+    # Spec 005
+    prazo_pagamento_dias: Optional[int] = None
+    enviado_em: Optional[date] = None
+    decidido_em: Optional[date] = None
+    motivo_rejeicao: Optional[str] = None
+    titulo_id: Optional[str] = None
 
     @classmethod
     def criar(
@@ -204,12 +212,65 @@ class Orcamento:
             return f"Orçamento {self.estado.value} não é enviado."
         if not self.itens:
             return "Inclua ao menos um item antes de enviar o orçamento (RB-24)."
+        if self.prazo_pagamento_dias is None:
+            return "Informe o prazo para pagamento antes de enviar o orçamento (OPEN-61)."
+        if self.valor_liquido <= ZERO:
+            return "O valor líquido é zero: não há o que cobrar."
         return None
 
     def exigir_envio(self) -> None:
         motivo = self.motivo_para_nao_enviar()
         if motivo:
             raise OperacaoRecusada(motivo)
+
+    # Prazo, envio, decisão do cliente e conversão (Spec 005)
+
+    def alterar_prazo(self, dias: object) -> None:
+        """OPEN-61: dias inteiros de 0 a 365; vazio limpa. Só em Rascunho (INV-7)."""
+        self._exigir_rascunho("alterar o prazo")
+        self.prazo_pagamento_dias = _prazo(dias)
+
+    def marcar_enviado(self, data: date) -> None:
+        """RF-08: Rascunho → Enviado, se o orçamento pode sair de Rascunho."""
+        self.exigir_envio()
+        self.estado = EstadoOrcamento.ENVIADO
+        self.enviado_em = data
+
+    def registrar_decisao(self, aprovado: bool, data: object, hoje: date, motivo: object = None) -> None:
+        """RF-09: Enviado → Aprovado ou Rejeitado, na data em que o cliente decidiu (E3, E4)."""
+        if self.estado is not EstadoOrcamento.ENVIADO:
+            raise OperacaoRecusada(f"Orçamento {self.estado.value} não aceita decisão do cliente (RF-12).")
+        if not isinstance(data, date):
+            _recusar("data", "Informe a data da decisão do cliente.")
+        if data > hoje:
+            _recusar("data", "A data da decisão não pode ser posterior a hoje.")
+        if self.enviado_em is not None and data < self.enviado_em:
+            _recusar("data", f"A data da decisão não pode ser anterior ao envio ({self.enviado_em:%d/%m/%Y}).")
+        self.decidido_em = data
+        if aprovado:
+            self.estado = EstadoOrcamento.APROVADO
+        else:
+            self.estado = EstadoOrcamento.REJEITADO
+            texto = " ".join(motivo.split()) if isinstance(motivo, str) else ""
+            if len(texto) > TAMANHO_MAXIMO_TEXTO:
+                _recusar("motivo", f"O motivo tem no máximo {TAMANHO_MAXIMO_TEXTO} caracteres.")
+            self.motivo_rejeicao = texto or None
+
+    def exigir_aprovado(self) -> None:
+        """RF-12: só orçamento Aprovado vira título."""
+        if self.estado is not EstadoOrcamento.APROVADO:
+            raise OperacaoRecusada(f"Só orçamento Aprovado vira título; este está {self.estado.value} (RF-12).")
+
+    def converter(self, titulo_id: str) -> None:
+        """RF-11, RB-05: Aprovado → Convertido, ligado ao título gerado."""
+        self.exigir_aprovado()
+        self.estado = EstadoOrcamento.CONVERTIDO
+        self.titulo_id = titulo_id
+
+    @property
+    def vencimento_do_titulo(self) -> date:
+        """OPEN-61: data da decisão do cliente + prazo para pagamento."""
+        return self.decidido_em + timedelta(days=self.prazo_pagamento_dias)
 
     # Cancelamento (RF-13)
 
@@ -287,6 +348,18 @@ def _condicao(condicao: object) -> Optional[str]:
     if len(texto) > TAMANHO_MAXIMO_TEXTO:
         _recusar("condicao", f"A condição de pagamento tem no máximo {TAMANHO_MAXIMO_TEXTO} caracteres.")
     return texto or None
+
+
+def _prazo(dias: object) -> Optional[int]:
+    """OPEN-61. Aceita inteiro ou texto de dígitos (com espaços nas pontas); vazio limpa o prazo."""
+    if isinstance(dias, str):
+        texto = dias.strip()
+        if not texto:
+            return None
+        dias = int(texto) if texto.isascii() and texto.isdigit() else None
+    if isinstance(dias, bool) or not isinstance(dias, int) or not 0 <= dias <= PRAZO_MAXIMO_DIAS:
+        _recusar("prazo", "O prazo para pagamento é um número inteiro de dias, de 0 a 365.")
+    return dias
 
 
 def _decimal(numero: object) -> bool:

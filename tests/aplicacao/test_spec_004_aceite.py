@@ -97,7 +97,8 @@ class Spec004(Base):
         self.assertEqual((decisao.aprovado, decisao.decidido_por, decisao.data), (True, "dono", HOJE))
         (registro,) = self.registros(o, "decisão do desconto")
         self.assertEqual(registro.usuario_id, "dono")
-        self.assertIsNone(o.motivo_para_nao_enviar())
+        # A decisão libera o desconto; o que ainda falta para enviar é o prazo, da Spec 005 (OPEN-61).
+        self.assertNotIn("RB-15", o.motivo_para_nao_enviar())
 
     def test_CA_07_UC_05_A2_aprovacao_menor_registra_solicitado_e_aprovado(self):
         o = self.criar()

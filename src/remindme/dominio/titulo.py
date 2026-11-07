@@ -4,13 +4,18 @@ from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from remindme.dominio.erros import OperacaoRecusada
 from remindme.dominio.valores import ZERO
 from remindme.dominio.valores import exigir_decimal as _exigir_decimal
 from remindme.dominio.valores import exigir_valor_monetario as _exigir_valor_monetario
 from remindme.dominio.valores import exigir_motivo, recusar as _recusar
+
+if TYPE_CHECKING:
+    from remindme.dominio.orcamento import Orcamento
+
+ORIGEM_ORCAMENTO = "orcamento"
 
 
 class EstadoTitulo(Enum):
@@ -50,6 +55,7 @@ class Titulo:
     condicao_pagamento: Optional[str]
     estado: EstadoTitulo
     pagamentos: List[Pagamento] = field(default_factory=list)
+    orcamento_id: Optional[str] = None
 
     @classmethod
     def cadastrar_manual(
@@ -76,6 +82,18 @@ class Titulo:
             condicao_pagamento=condicao_pagamento,
             estado=EstadoTitulo.ABERTO,
         )
+
+    @classmethod
+    def gerar_de_orcamento(cls, id: str, orcamento: "Orcamento") -> "Titulo":
+        """RF-11, RF-19, RB-05 (Spec 005): cliente, valor líquido e condição do orçamento Aprovado; vencimento
+        pela OPEN-61. Nasce Aberto (RB-21); quem chama aplica RF-24 se o vencimento já passou."""
+        orcamento.exigir_aprovado()
+        titulo = cls.cadastrar_manual(
+            id, orcamento.cliente_id, orcamento.valor_liquido, orcamento.vencimento_do_titulo, orcamento.condicao_pagamento
+        )
+        titulo.origem = ORIGEM_ORCAMENTO
+        titulo.orcamento_id = orcamento.id
+        return titulo
 
     @property
     def saldo(self) -> Decimal:
