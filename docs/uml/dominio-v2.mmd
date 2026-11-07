@@ -21,11 +21,16 @@ classDiagram
         dataCriacao
         condicaoPagamento
         percentualDesconto
+        prazoPagamentoDias
+        enviadoEm
+        decididoEm
+        motivoRejeicao
         estado
         valorBruto()
         valorLiquido()
         enviar()
         registrarDecisao()
+        converter()
         cancelar()
     }
     class ItemOrcamento {
@@ -42,6 +47,7 @@ classDiagram
         vencimento
         origem
         estado
+        gerarDeOrcamento()
         saldo()
         registrarPagamento()
         estornarPagamento()
