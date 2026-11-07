@@ -70,7 +70,7 @@ Fonte: [modelo de domínio](modelo-dominio.md) e [diagrama de classes](uml/domin
 
 ### Estados
 
-Fonte: [`uml/estados.md`](uml/estados.md) e, para a conta a pagar, RB-31 e o [glossário](glossario.md). Transição fora da tabela é inválida e é recusada.
+Fonte: [`uml/estados.md`](uml/estados.md). Transição fora da tabela é inválida e é recusada.
 
 | Entidade | Estados |
 |---|---|

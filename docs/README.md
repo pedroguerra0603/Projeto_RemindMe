@@ -19,7 +19,7 @@ Para uma leitura única e resumida, veja a [documentação final consolidada](do
 | [Requisitos](requisitos.md) | RF e RNF em EARS; RB declarativas |
 | [Glossário](glossario.md) | Vocabulário do domínio |
 | [Modelo de domínio](modelo-dominio.md) | Classes, responsabilidades, relações e multiplicidades |
-| [Estados](uml/estados.md) | Ciclos de vida de orçamento, título e obrigação |
+| [Estados](uml/estados.md) | Ciclos de vida de orçamento, título, obrigação e conta a pagar |
 | [Casos de uso](casos-de-uso/README.md) | 16 casos de uso, diagrama e cobertura dos requisitos |
 
 ## 3. Arquitetura e decisões
@@ -55,6 +55,7 @@ Os diagramas ficam em [`uml/`](uml/), cada um com a fonte em Mermaid (`.mmd`) e 
 | Estados do título | [`estados-titulo.mmd`](uml/estados-titulo.mmd) | [`estados-titulo.png`](uml/estados-titulo.png) |
 | Estados do orçamento | [`estados-orcamento.mmd`](uml/estados-orcamento.mmd) | [`estados-orcamento.png`](uml/estados-orcamento.png) |
 | Estados da obrigação | [`estados-obrigacao.mmd`](uml/estados-obrigacao.mmd) | [`estados-obrigacao.png`](uml/estados-obrigacao.png) |
+| Estados da conta a pagar | [`estados-conta-pagar.mmd`](uml/estados-conta-pagar.mmd) | [`estados-conta-pagar.png`](uml/estados-conta-pagar.png) |
 
 ## Identificadores
 
