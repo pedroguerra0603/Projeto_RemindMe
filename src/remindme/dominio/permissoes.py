@@ -39,6 +39,8 @@ MATRIZ_INICIAL: Dict[Operacao, FrozenSet[Perfil]] = {
     Operacao.ESTORNAR_PAGAMENTO_CONTA: frozenset({_D}),
     Operacao.CANCELAR_CONTA_PAGAR: frozenset({_D}),
     Operacao.CONSULTAR_CONTAS_PAGAR: frozenset({_D, _O, _C}),
+    # Spec 005: mensagem não é dado financeiro; o Contador não vê a caixa de saída (RB-03).
+    Operacao.CONSULTAR_MENSAGENS: frozenset({_D, _O}),
 }
 
 
