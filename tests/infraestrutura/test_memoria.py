@@ -108,5 +108,33 @@ class ClientesERelogio(unittest.TestCase):
         self.assertEqual(RelogioFixo(momento).agora(), momento)
 
 
+class Mensagens(unittest.TestCase):
+    """Spec 005: a caixa de saída participa da transação (RNF-09)."""
+
+    def mensagem(self, id="m1"):
+        from remindme.aplicacao.portas import Mensagem
+
+        return Mensagem(id, "c1", "a@b.com", "Assunto", "Texto", datetime(2026, 11, 7, 12, 0), "enviada", "orcamento o1")
+
+    def test_mensagens_registradas_e_listadas_em_ordem(self):
+        from remindme.infraestrutura.memoria import UnidadeDeTrabalhoEmMemoria
+
+        uow = UnidadeDeTrabalhoEmMemoria()
+        with uow:
+            uow.mensagens.registrar(self.mensagem("m1"))
+            uow.mensagens.registrar(self.mensagem("m2"))
+        self.assertEqual([m.id for m in uow.mensagens.listar()], ["m1", "m2"])
+
+    def test_mensagens_sao_desfeitas_com_a_transacao(self):
+        from remindme.infraestrutura.memoria import UnidadeDeTrabalhoEmMemoria
+
+        uow = UnidadeDeTrabalhoEmMemoria()
+        with self.assertRaises(RuntimeError):
+            with uow:
+                uow.mensagens.registrar(self.mensagem())
+                raise RuntimeError("falha depois de registrar")
+        self.assertEqual(uow.mensagens.listar(), [])
+
+
 if __name__ == "__main__":
     unittest.main()

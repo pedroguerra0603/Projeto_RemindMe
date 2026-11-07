@@ -67,8 +67,10 @@ Este texto é a fonte. O diagrama é uma vista dele e deve ser regerado quando o
 |---|---|---|
 | `Orcamento` | `valorBruto()` | Soma de quantidade × valor unitário dos itens. |
 | `Orcamento` | `valorLiquido()` | Valor bruto menos o desconto percentual. |
-| `Orcamento` | `enviar()` | Exige ao menos um item (RB-24) e desconto dentro da alçada ou aprovado (RB-15). |
-| `Orcamento` | `registrarDecisao()` | Só aceita decisão em orçamento Enviado. Aprovação gera o título (RB-05). |
+| `Orcamento` | `enviar()` | Exige ao menos um item (RB-24), desconto dentro da alçada ou aprovado (RB-15), prazo para pagamento (OPEN-61) e valor líquido maior que zero (Spec 005). |
+| `Orcamento` | `registrarDecisao()` | Só aceita decisão em orçamento Enviado, com data entre o envio e hoje (Spec 005). |
+| `Orcamento` | `converter()` | Só orçamento Aprovado vira título (RF-12); passa a Convertido, ligado ao título, na mesma operação da aprovação (RB-05). |
+| `Titulo` | `gerarDeOrcamento()` | Copia do orçamento Aprovado o cliente, o valor líquido e a condição; vencimento = data da decisão + prazo para pagamento (RF-19, OPEN-61). |
 | `Titulo` | `saldo()` | Valor menos a soma dos pagamentos não estornados. |
 | `Titulo` | `registrarPagamento()` | Recusa valor menor ou igual a zero ou maior que o saldo (RB-23). Saldo zero baixa o título (RB-22). |
 | `Titulo` | `marcarVencido()` | Só se aplica a título Aberto com saldo maior que zero e vencimento passado (RB-21). |
@@ -113,11 +115,16 @@ classDiagram
         dataCriacao
         condicaoPagamento
         percentualDesconto
+        prazoPagamentoDias
+        enviadoEm
+        decididoEm
+        motivoRejeicao
         estado
         valorBruto()
         valorLiquido()
         enviar()
         registrarDecisao()
+        converter()
         cancelar()
     }
     class ItemOrcamento {
@@ -134,6 +141,7 @@ classDiagram
         vencimento
         origem
         estado
+        gerarDeOrcamento()
         saldo()
         registrarPagamento()
         estornarPagamento()
@@ -278,3 +286,4 @@ classDiagram
 | v1 | Primeira versão do diagrama. |
 | v2 | Corrigida a multiplicidade entre `Usuario` e `Perfil`. Incluídos `Renegociacao`, `Evidencia`, `AprovacaoDesconto`, `SugestaoClassificacao` e `RegistroAuditoria`. `Titulo` passou a se ligar diretamente a `Cliente`. `HistoricoCobranca` virou `TentativaCobranca` e `SequenciaCobranca` virou `ReguaCobranca`. Removidos identificadores técnicos dos atributos. |
 | v3 | Incluídos `Fornecedor` e `ContaPagar` (Spec 018) e `Empresa` (OPEN-54). `ContaPagar` também recebe `Pagamento`. O estorno passou a ser operação do `Titulo` (`estornarPagamento()`), e não do `Pagamento`, com a permissão verificada na aplicação (DV-07, DT-06). O arquivo do diagrama manteve o nome `dominio-v2.mmd`. |
+| v4 | `Orcamento` ganha o prazo para pagamento, as datas de envio e de decisão do cliente, o motivo da rejeição e `converter()`; `Titulo` ganha `gerarDeOrcamento()` (Spec 005, OPEN-61). |

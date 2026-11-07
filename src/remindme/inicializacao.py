@@ -21,19 +21,21 @@ from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, make_server
 
 from remindme.aplicacao.acesso import Autorizacao
 from remindme.aplicacao.auditoria import RegistroErrosNoLog
-from remindme.aplicacao.portas import CifradorDeSenha, RegistroErros, Relogio
+from remindme.aplicacao.portas import CanalNotificacao, CifradorDeSenha, RegistroErros, Relogio
 from remindme.aplicacao.servico_acesso import ServicoAcesso
 from remindme.aplicacao.servico_auditoria import ServicoAuditoria
 from remindme.aplicacao.servico_clientes import ServicoClientes
 from remindme.aplicacao.servico_contas_pagar import ServicoContasPagar
 from remindme.aplicacao.servico_empresa import ServicoEmpresa
 from remindme.aplicacao.servico_fornecedores import ServicoFornecedores
+from remindme.aplicacao.servico_mensagens import ServicoMensagens
 from remindme.aplicacao.servico_orcamentos import ServicoOrcamentos
 from remindme.aplicacao.servico_titulos import ServicoTitulos
 from remindme.apresentacao.web.aplicacao_web import AplicacaoWeb, Servicos
 from remindme.dominio.erros import OperacaoRecusada
 from remindme.dominio.usuario import Perfil
 from remindme.entradas.agendador import AgendadorDeVencimentos
+from remindme.infraestrutura.canal import CanalSimulado
 from remindme.infraestrutura.relogio import RelogioDoSistema
 from remindme.infraestrutura.sqlite import UnidadeDeTrabalhoSQLite, preparar_banco
 
@@ -60,6 +62,7 @@ def montar(
     relogio: Optional[Relogio] = None,
     cifrador: Optional[CifradorDeSenha] = None,
     erros: Optional[RegistroErros] = None,
+    canal: Optional[CanalNotificacao] = None,
 ) -> Sistema:
     preparar_banco(caminho_banco)
     uow = UnidadeDeTrabalhoSQLite(caminho_banco)
@@ -71,10 +74,11 @@ def montar(
         clientes=ServicoClientes(uow, relogio, erros, autorizacao),
         titulos=ServicoTitulos(uow, uow.clientes, relogio, erros, autorizacao),
         auditoria=ServicoAuditoria(uow, relogio, erros, autorizacao),
-        orcamentos=ServicoOrcamentos(uow, relogio, erros, autorizacao),
+        orcamentos=ServicoOrcamentos(uow, relogio, erros, autorizacao, canal or CanalSimulado()),
         empresa=ServicoEmpresa(uow, relogio, erros, autorizacao),
         fornecedores=ServicoFornecedores(uow, relogio, erros, autorizacao),
         contas_pagar=ServicoContasPagar(uow, relogio, erros, autorizacao),
+        mensagens=ServicoMensagens(uow, relogio, erros, autorizacao),
     )
     agendador = AgendadorDeVencimentos(servicos.titulos, relogio, contas=servicos.contas_pagar)
     return Sistema(servicos, AplicacaoWeb(servicos, relogio, erros), agendador, uow, relogio)

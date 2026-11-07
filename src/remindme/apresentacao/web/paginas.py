@@ -9,6 +9,7 @@ from typing import Dict, FrozenSet, Iterable, List, Optional, Sequence, Tuple
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import graficos as g
 from remindme.apresentacao.web.html import Html, e, h, juntar
+from remindme.aplicacao.modelos_de_mensagem import numero_do_orcamento
 from remindme.dominio.conta_pagar import EstadoContaPagar
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.orcamento import EstadoOrcamento
@@ -37,6 +38,7 @@ MENU = (
     ("empresa", "/empresa", "Empresa", "▣", None),
     ("titulos", "/titulos", "Títulos", "▤", Operacao.CONSULTAR_TITULOS),
     ("orcamentos", "/orcamentos", "Orçamentos", "◇", Operacao.CONDUZIR_ORCAMENTO),
+    ("mensagens", "/mensagens", "Mensagens enviadas", "✉", Operacao.CONSULTAR_MENSAGENS),
     ("clientes", "/clientes", "Clientes", "◉", Operacao.CONSULTAR_CLIENTES),
     ("contas", "/contas-a-pagar", "Contas a pagar", "▥", Operacao.CONSULTAR_CONTAS_PAGAR),
     ("fornecedores", "/fornecedores", "Fornecedores", "◍", Operacao.CONSULTAR_FORNECEDORES),
@@ -818,7 +820,7 @@ def pagina_titulo(
         saldo=f.moeda(titulo.saldo),
         venc=f.data(titulo.vencimento),
         condicao=titulo.condicao_pagamento or "—",
-        origem="Cadastro manual" if titulo.origem == "manual" else titulo.origem,
+        origem=_origem_do_titulo(ctx, titulo),
     )
     linhas = []
     for pagamento in titulo.pagamentos:
@@ -1032,6 +1034,7 @@ def pagina_orcamento(
     erros: Erros,
     historico: Optional[list],
     aviso=None,
+    mensagens: Optional[list] = None,
 ) -> Html:
     rascunho = orcamento.estado is EstadoOrcamento.RASCUNHO
     pode_conduzir = ctx.pode(Operacao.CONDUZIR_ORCAMENTO)
@@ -1044,7 +1047,9 @@ def pagina_orcamento(
     motivo_envio = orcamento.motivo_para_nao_enviar()
     if orcamento.estado is EstadoOrcamento.RASCUNHO:
         prontidao = (
-            caixa_de_aviso("sucesso", "Pronto para envio: tem itens e o desconto está liberado. O envio ao cliente chega com a Spec 005.")
+            _cartao_envio(ctx, orcamento, erros_de("envio"))
+            if motivo_envio is None and pode_conduzir
+            else caixa_de_aviso("sucesso", "Pronto para envio ao cliente.")
             if motivo_envio is None
             else caixa_de_aviso("info", motivo_envio)
         )
@@ -1057,8 +1062,10 @@ def pagina_orcamento(
 <div><dt>Desconto</dt><dd>{pct} ({desc})</dd></div>
 <div><dt>Valor líquido</dt><dd><strong>{liquido}</strong></dd></div>
 <div><dt>Condição de pagamento</dt><dd>{condicao}</dd></div>
+<div><dt>Prazo para pagamento</dt><dd>{prazo}</dd></div>
 <div><dt>Criado em</dt><dd>{criado}</dd></div>
 <div><dt>Elaborado por</dt><dd>{elaborado}</dd></div>
+{andamento}
 {motivo}
 </dl>""",
         bruto=f.moeda(orcamento.valor_bruto),
@@ -1066,16 +1073,21 @@ def pagina_orcamento(
         desc=f.moeda(orcamento.valor_desconto),
         liquido=f.moeda(orcamento.valor_liquido),
         condicao=orcamento.condicao_pagamento or "—",
+        prazo=_prazo(orcamento.prazo_pagamento_dias),
         criado=f.data(orcamento.criado_em),
         elaborado=elaborado,
+        andamento=_andamento_do_orcamento(orcamento),
         motivo=h("<div><dt>Motivo do cancelamento</dt><dd>{m}</dd></div>", m=orcamento.motivo_cancelamento) if orcamento.motivo_cancelamento else Html(""),
     )
     partes = [
-        cabecalho(cliente_nome, "Orçamento", juntar(acoes)),
+        cabecalho(cliente_nome, f"Orçamento nº {numero_do_orcamento(orcamento.id)}", juntar(acoes)),
         h('<div class="selos-do-titulo">{s}</div>', s=selo_orcamento(orcamento.estado, grande=True)),
         prontidao,
         h('<section class="cartao">{d}</section>', d=dados),
     ]
+    if orcamento.estado is EstadoOrcamento.ENVIADO and pode_conduzir:
+        valores_resposta = valores_de("resposta") or {"data": ctx.hoje.isoformat()}
+        partes.append(_cartao_resposta_do_cliente(ctx, orcamento, valores_resposta, erros_de("resposta")))
     if orcamento.pendencia is not None:
         partes.append(_cartao_decisao(ctx, orcamento, nomes_usuarios, valores_de("decisao"), erros_de("decisao")))
     partes.append(h('<section class="cartao sem-borda-interna"><h2>Itens</h2>{t}</section>', t=_tabela_de_itens(ctx, orcamento, editavel)))
@@ -1098,7 +1110,10 @@ def pagina_orcamento(
             )
         )
         valores_desconto = valores_de("desconto") or {"percentual": f.numero_para_campo(orcamento.percentual_desconto)}
-        valores_condicao = valores_de("condicao") or {"condicao": orcamento.condicao_pagamento or ""}
+        valores_condicao = valores_de("condicao") or {
+            "condicao": orcamento.condicao_pagamento or "",
+            "prazo": "" if orcamento.prazo_pagamento_dias is None else str(orcamento.prazo_pagamento_dias),
+        }
         partes.append(
             h(
                 """<div class="grade-2">
@@ -1107,10 +1122,10 @@ def pagina_orcamento(
 {protecao}{geral_d}{percentual}
 <div class="acoes"><button type="submit">Aplicar desconto</button></div>
 </form></section>
-<section class="cartao" aria-labelledby="t-condicao"><h2 id="t-condicao">Condição de pagamento</h2>
+<section class="cartao" aria-labelledby="t-condicao"><h2 id="t-condicao">Pagamento</h2>
 <form class="formulario" method="post" action="/orcamentos/{id}/condicao" novalidate>
-{protecao}{geral_c}{condicao}
-<div class="acoes"><button class="secundario" type="submit">Salvar condição</button></div>
+{protecao}{geral_c}{prazo}{condicao}
+<div class="acoes"><button class="secundario" type="submit">Salvar pagamento</button></div>
 </form></section>
 </div>""",
                 id=orcamento.id,
@@ -1121,12 +1136,102 @@ def pagina_orcamento(
                     "percentual", "Desconto (%)", valores_desconto, erros_de("desconto"),
                     ajuda="Acima da alçada do seu perfil, o orçamento aguarda a decisão do Dono.", extra='inputmode="decimal"',
                 ),
+                prazo=campo(
+                    "prazo", "Prazo para pagamento (dias)", valores_condicao, erros_de("condicao"),
+                    ajuda="Contado da aprovação do cliente; 0 é à vista. Obrigatório para enviar.", extra='inputmode="numeric"',
+                ),
                 condicao=campo("condicao", "Condição", valores_condicao, erros_de("condicao"), obrigatorio=False),
             )
         )
+    if mensagens:
+        partes.append(_cartao_envios(mensagens))
     if historico is not None:
         partes.append(_cartao_historico(historico))
     return layout("Orçamento", juntar(partes), ctx, "orcamentos", aviso)
+
+
+def _prazo(dias: Optional[int]) -> str:
+    if dias is None:
+        return "—"
+    if dias == 0:
+        return "À vista, na aprovação"
+    return f"{dias} {'dia' if dias == 1 else 'dias'} após a aprovação"
+
+
+def _andamento_do_orcamento(orcamento) -> Html:
+    """Spec 005: envio, decisão do cliente e o título gerado."""
+    partes = []
+    if orcamento.enviado_em:
+        partes.append(h("<div><dt>Enviado ao cliente em</dt><dd>{d}</dd></div>", d=f.data(orcamento.enviado_em)))
+    if orcamento.decidido_em:
+        partes.append(h("<div><dt>Decisão do cliente em</dt><dd>{d}</dd></div>", d=f.data(orcamento.decidido_em)))
+    if orcamento.motivo_rejeicao:
+        partes.append(h("<div><dt>Motivo da rejeição</dt><dd>{m}</dd></div>", m=orcamento.motivo_rejeicao))
+    if orcamento.titulo_id:
+        partes.append(
+            h('<div><dt>Título gerado</dt><dd><a href="/titulos/{t}">Ver o título</a></dd></div>', t=orcamento.titulo_id)
+        )
+    return juntar(partes)
+
+
+def _cartao_envio(ctx: Contexto, orcamento, erros: Erros) -> Html:
+    """RF-08: pronto para sair de Rascunho."""
+    return h(
+        """<section class="cartao destaque-sucesso" aria-labelledby="t-envio"><h2 id="t-envio">Pronto para envio</h2>
+<p>O cliente recebe os itens, o valor líquido e o prazo para pagamento pelo canal de notificação.</p>
+<form class="formulario" method="post" action="/orcamentos/{id}/envio">{protecao}{geral}
+<div class="acoes"><button type="submit">Enviar ao cliente</button></div></form></section>""",
+        id=orcamento.id,
+        protecao=protecao(ctx),
+        geral=erro_geral(erros),
+    )
+
+
+def _cartao_resposta_do_cliente(ctx: Contexto, orcamento, valores: Valores, erros: Erros) -> Html:
+    """RF-09 (OPEN-57): quem fala com o cliente registra a resposta dele."""
+    return h(
+        """<section class="cartao destaque-alerta" aria-labelledby="t-resposta"><h2 id="t-resposta">Registrar decisão do cliente</h2>
+<p>Na aprovação, o título é gerado com vencimento na data da decisão mais o prazo ({prazo}).</p>
+<form class="formulario" method="post" action="/orcamentos/{id}/resposta-do-cliente" novalidate>
+{protecao}{geral}
+<div class="linha-campos">{data}{motivo}</div>
+<div class="acoes"><button type="submit" name="decisao" value="aprovar">Registrar aprovação</button>
+<button class="secundario" type="submit" name="decisao" value="rejeitar">Registrar rejeição</button></div>
+</form></section>""",
+        id=orcamento.id,
+        prazo=_prazo(orcamento.prazo_pagamento_dias).lower(),
+        protecao=protecao(ctx),
+        geral=erro_geral(erros),
+        data=campo("data", "Data da decisão", valores, erros, tipo="date", ajuda="O dia em que o cliente respondeu."),
+        motivo=campo("motivo", "Motivo", valores, erros, obrigatorio=False, ajuda="Opcional, na rejeição."),
+    )
+
+
+def _cartao_envios(mensagens: list) -> Html:
+    """O que o canal de notificação registrou para este orçamento (ADR-002)."""
+    itens = juntar(
+        h(
+            '<details><summary>{quando} · {contato} · <span class="selo {classe}">{resultado}</span></summary>'
+            '<pre class="mensagem">{texto}</pre></details>',
+            quando=f.data_hora(m.enviada_em),
+            contato=m.contato,
+            classe="baixado" if m.resultado == "enviada" else "vencido",
+            resultado="Enviada" if m.resultado == "enviada" else "Falhou",
+            texto=m.texto,
+        )
+        for m in mensagens
+    )
+    return h('<section class="cartao" aria-labelledby="t-envios"><h2 id="t-envios">Envio ao cliente</h2>{i}</section>', i=itens)
+
+
+def _origem_do_titulo(ctx: Contexto, titulo) -> Html:
+    """O link para o orçamento só aparece para quem pode abri-lo (o Contador vê títulos, mas não orçamentos)."""
+    if titulo.orcamento_id:
+        numero = numero_do_orcamento(titulo.orcamento_id)
+        if ctx.pode(Operacao.CONDUZIR_ORCAMENTO):
+            return h('<a href="/orcamentos/{o}">Gerado do orçamento nº {n}</a>', o=titulo.orcamento_id, n=numero)
+        return h("Gerado do orçamento nº {n}", n=numero)
+    return h("{o}", o="Cadastro manual" if titulo.origem == "manual" else titulo.origem)
 
 
 def _cartao_decisao(ctx: Contexto, orcamento, nomes_usuarios: Dict[str, str], valores: Valores, erros: Erros) -> Html:

@@ -1,7 +1,5 @@
-"""Casos de uso da Spec 004: orçamento, itens, desconto e decisão do Dono (UC-04, passos 1 a 4; UC-05).
-
-O envio, a decisão do cliente e a conversão em título são da Spec 005.
-"""
+"""Casos de uso das Specs 004 e 005: orçamento, itens, desconto e decisão do Dono (UC-04, passos 1 a 4; UC-05);
+prazo, envio ao cliente, decisão do cliente e conversão em título (UC-04, passos 5 a 9)."""
 
 import uuid
 from dataclasses import dataclass
@@ -12,11 +10,13 @@ from typing import List, Optional
 from remindme.aplicacao.acesso import Autorizacao
 from remindme.aplicacao.auditoria import OperacaoAuditada, RegistroErrosNoLog
 from remindme.aplicacao.execucao import Execucao
-from remindme.aplicacao.portas import RegistroErros, Relogio, UnidadeDeTrabalho
+from remindme.aplicacao.modelos_de_mensagem import mensagem_de_orcamento
+from remindme.aplicacao.portas import CanalNotificacao, Mensagem, RegistroErros, Relogio, UnidadeDeTrabalho
 from remindme.aplicacao.tempo import data_local
 from remindme.dominio.erros import OperacaoRecusada
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.orcamento import EstadoOrcamento, ItemOrcamento, Orcamento, alcada_do_perfil
+from remindme.dominio.titulo import Titulo
 
 
 @dataclass(frozen=True)
@@ -36,8 +36,10 @@ class ServicoOrcamentos:
         relogio: Relogio,
         erros: Optional[RegistroErros] = None,
         autorizacao: Optional[Autorizacao] = None,
+        canal: Optional[CanalNotificacao] = None,
     ):
         self._relogio = relogio
+        self._canal = canal  # injetado pela montagem (ADR-001, ADR-002)
         self._execucao = Execucao(
             uow, relogio, erros or RegistroErrosNoLog(), autorizacao or Autorizacao(relogio)
         )
@@ -170,6 +172,83 @@ class ServicoOrcamentos:
             )
         return orcamento
 
+    # Prazo, envio e decisão do cliente (Spec 005)
+
+    def alterar_prazo(self, sessao: Optional[str], orcamento_id: str, dias: object) -> Orcamento:
+        """OPEN-61: prazo para pagamento em dias, só em Rascunho."""
+        with self._execucao.operacao("alterar orçamento", sessao, Operacao.CONDUZIR_ORCAMENTO) as op:
+            orcamento = _obter(op, orcamento_id)
+            anterior = orcamento.prazo_pagamento_dias
+            orcamento.alterar_prazo(dias)
+            if anterior != orcamento.prazo_pagamento_dias:
+                op.uow.orcamentos.salvar(orcamento)
+                op.registrar(
+                    _ref(orcamento), "prazo para pagamento", _texto(anterior), _texto(orcamento.prazo_pagamento_dias)
+                )
+        return orcamento
+
+    def enviar_orcamento(self, sessao: Optional[str], orcamento_id: str) -> Orcamento:
+        """RF-08: o texto do modelo (RB-27) vai ao contato do cliente pelo canal. Toda tentativa fica na caixa de
+        saída (ADR-002); se o canal falhar, o orçamento continua em Rascunho (E2)."""
+        if self._canal is None:
+            raise RuntimeError("Canal de notificação não configurado: a montagem do sistema deve fornecê-lo.")
+        with self._execucao.operacao("enviar orçamento", sessao, Operacao.CONDUZIR_ORCAMENTO) as op:
+            orcamento = _obter(op, orcamento_id)
+            orcamento.exigir_envio()
+            cliente = op.uow.clientes.obter(orcamento.cliente_id)
+            assunto, texto = mensagem_de_orcamento(op.uow.empresa.obter(), cliente, orcamento)
+            try:
+                entregue = bool(self._canal.entregar(cliente.contato, assunto, texto))
+            except Exception:
+                entregue = False
+            op.uow.mensagens.registrar(
+                Mensagem(
+                    _novo_id(), cliente.id, cliente.contato, assunto, texto, self._relogio.agora(),
+                    "enviada" if entregue else "falhou", _ref(orcamento),
+                )
+            )
+            if entregue:
+                orcamento.marcar_enviado(data_local(self._relogio.agora()))
+                op.uow.orcamentos.salvar(orcamento)
+                op.registrar(
+                    _ref(orcamento), "estado", EstadoOrcamento.RASCUNHO.value, orcamento.estado.value,
+                    operacao="mudar estado",
+                )
+        if not entregue:
+            # Fora da transação: a tentativa que falhou já está gravada na caixa de saída.
+            raise OperacaoRecusada(
+                "O canal de notificação não entregou o orçamento. Ele continua em Rascunho; tente enviar de novo."
+            )
+        return orcamento
+
+    def registrar_decisao_do_cliente(
+        self, sessao: Optional[str], orcamento_id: str, aprovado: bool, data: object, motivo: object = None
+    ) -> Orcamento:
+        """RF-09 (OPEN-57): um usuário registra o que o cliente decidiu. Na aprovação, gera o título e converte o
+        orçamento na mesma transação (RF-11, RF-19, RB-05, RNF-09)."""
+        with self._execucao.operacao("registrar decisão do cliente", sessao, Operacao.CONDUZIR_ORCAMENTO) as op:
+            hoje = data_local(self._relogio.agora())
+            orcamento = _obter(op, orcamento_id)
+            orcamento.registrar_decisao(bool(aprovado), data, hoje, motivo)
+            op.registrar(
+                _ref(orcamento), "estado", EstadoOrcamento.ENVIADO.value, orcamento.estado.value,
+                orcamento.motivo_rejeicao, operacao="mudar estado",
+            )
+            if orcamento.estado is EstadoOrcamento.APROVADO:
+                titulo = Titulo.gerar_de_orcamento(_novo_id(), orcamento)
+                ref_titulo = f"titulo {titulo.id}"
+                op.registrar(ref_titulo, "estado", None, titulo.estado.value, operacao="mudar estado")
+                if titulo.marcar_vencido(hoje):  # RF-24: aprovação registrada com atraso (A2).
+                    op.registrar(ref_titulo, "estado", "Aberto", titulo.estado.value, operacao="mudar estado")
+                orcamento.converter(titulo.id)
+                op.uow.titulos.salvar(titulo)
+                op.registrar(
+                    _ref(orcamento), "estado", EstadoOrcamento.APROVADO.value, orcamento.estado.value,
+                    operacao="mudar estado",
+                )
+            op.uow.orcamentos.salvar(orcamento)
+        return orcamento
+
     # Consulta (RF-10)
 
     def consultar_orcamentos(self, sessao: Optional[str], filtro: FiltroOrcamentos = FiltroOrcamentos()) -> List[Orcamento]:
@@ -225,6 +304,10 @@ def _ref(orcamento: Orcamento, item_id: Optional[str] = None) -> str:
     if item_id is None:
         return f"orcamento {orcamento.id}"
     return f"orcamento {orcamento.id}, item {item_id}"
+
+
+def _texto(dias: Optional[int]) -> Optional[str]:
+    return None if dias is None else str(dias)
 
 
 def _novo_id() -> str:

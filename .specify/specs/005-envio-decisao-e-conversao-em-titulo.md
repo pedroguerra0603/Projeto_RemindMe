@@ -8,7 +8,7 @@
 | **Nome** | Envio, decisão do cliente e conversão em título |
 | **Objetivo** | Levar o orçamento pronto até o cliente, registrar a decisão dele e, na aprovação, gerar o título a receber na mesma operação, com o vencimento calculado pelo prazo combinado. |
 | **Valor entregue** | O Operador Financeiro envia o orçamento com um clique e registra a resposta do cliente; o título nasce sozinho, com o valor e o vencimento certos. A Dona deixa de ter orçamento aprovado que nunca virou cobrança, a primeira dor da [visão](../../docs/visao.md#2-problema). A caixa de saída mostra o que o sistema mandou a cada cliente. |
-| **Situação** | **Aprovada** |
+| **Situação** | **Verificada** — implementada e verificada em 2026-11-07; todos os critérios de aceite passaram (seção 8). |
 | **Aprovada por** | Renan Gandolpho, em 2026-11-07 |
 
 ## 2. Rastreabilidade
@@ -134,4 +134,46 @@ Os testes levam no nome o critério ou a regra, como `test_CA_07_RF_11_...` e `t
 
 ## 8. Verificação
 
-*(preencher após a implementação)*
+Implementada e verificada em 2026-11-07, pelo [plano](../plans/005-plano.md). Suíte completa: 533 testes, todos passando, com 9 pulados (4 de navegador sem o Playwright, opcional, e 5 marcadores de outras specs).
+
+| Critério | Teste (`tests/aplicacao/test_spec_005_aceite.py`) | Resultado |
+|---|---|---|
+| CA-01 | `test_CA_01_OPEN_61_prazo_gravado_e_auditado` | Passou |
+| CA-02 | `test_CA_02_E6_prazo_invalido_e_recusado_no_campo` | Passou |
+| CA-03 | `test_CA_03_RF_08_envio_passa_a_enviado_e_deixa_mensagem` | Passou |
+| CA-04 | `test_CA_04_E1_orcamento_que_nao_pode_sair_de_rascunho_nao_e_enviado` | Passou |
+| CA-05 | `test_CA_05_E2_canal_que_falha_deixa_rascunho_e_mensagem_que_falhou` | Passou |
+| CA-06 | `test_CA_06_RB_27_texto_e_o_do_modelo` | Passou |
+| CA-07 | `test_CA_07_RF_11_RF_19_aprovacao_gera_o_titulo_e_converte` | Passou |
+| CA-08 | `test_CA_08_A2_aprovacao_registrada_com_atraso_gera_titulo_vencido` | Passou |
+| CA-09 | `test_CA_09_A1_rejeicao_nao_gera_titulo` | Passou |
+| CA-10 | `test_CA_10_E3_decisao_fora_de_enviado_e_recusada` | Passou |
+| CA-11 | `test_CA_11_E4_data_da_decisao_futura_ou_anterior_ao_envio` | Passou |
+| CA-12 | `test_CA_12_E5_falha_na_auditoria_da_conversao_desfaz_o_titulo_ja_salvo`; também no SQLite, `test_CA_12_RNF_09_falha_na_auditoria_da_conversao_nao_deixa_titulo_no_banco` | Passou |
+| CA-13 | `test_CA_13_E7_RB_03_contador_nao_envia_nao_decide_nem_ve_a_caixa` | Passou |
+| CA-14 | `test_CA_14_INV_1_segundo_titulo_e_recusado` | Passou |
+
+Também verificado:
+
+- Regras do domínio, sem banco: `tests/dominio/test_orcamento.py` (classes `Prazo` e `EnvioEDecisao`) e `tests/dominio/test_titulo.py` (`GeradoDeOrcamento`), nomeados por RF, OPEN, INV e E.
+- Modelo da mensagem (RB-27): `tests/aplicacao/test_modelos_de_mensagem.py`, com o texto exato, o prazo zero, a quantidade fracionada e a empresa sem cadastro.
+- SQLite: ida e volta dos campos novos, índice único de um título por orçamento (INV-1) e migração de um banco da versão 4 sem perda de dados, com a permissão nova (`tests/infraestrutura/test_sqlite.py`, `Spec005NoSQLite`).
+- Interface web: `tests/apresentacao/test_spec_005_web.py` (fluxo envio → aprovação → título, botões por estado, erros por campo, escape de HTML, caixa de saída protegida, falha do canal, duplo envio da aprovação e demonstração).
+- O canal é injetado pela montagem: a aplicação não importa a infraestrutura (`test_ADR_001_cada_camada_importa_somente_as_camadas_permitidas`, `test_ADR_001_servico_sem_canal_configurado_nao_envia`).
+- Foco de revisão do plano: valor líquido zero não é enviado; empresa sem cadastro usa "Nossa empresa"; aprovação enviada duas vezes gera um título; canal que lança exceção conta como falha; prazo "030" e " 30 " vale 30. Cada um tem teste `test_foco_N_...`.
+- No navegador (Chromium), com a demonstração, em 1280 px e 360 px: orçamento Rascunho, Enviado e Convertido, título gerado e Mensagens enviadas, sem rolagem horizontal da página.
+- Revisão final da branch, por um revisor independente: nenhum problema crítico. O teste do CA-12 falhava cedo demais (na primeira auditoria, antes de o título existir) e foi reforçado; a falha agora vem na auditoria da conversão, com o título já salvo, e uma mutação que tira o título da transação faz o teste novo falhar. O link para o orçamento na página do título passou a aparecer só para quem pode abrir orçamentos.
+- Pirâmide de testes recontada: a unidade foi de 35,7% para 36,1% ([`docs/testes.md`](../../docs/testes.md)).
+
+Dois testes da Spec 004 passaram a informar o prazo antes do envio, porque esta spec o exige (OPEN-61); o que eles verificam não mudou.
+
+### Onde está cada parte
+
+| Parte | Arquivo |
+|---|---|
+| Regras, estados e cálculo do vencimento | `src/remindme/dominio/orcamento.py`, `src/remindme/dominio/titulo.py` |
+| Texto ao cliente (RB-27) | `src/remindme/aplicacao/modelos_de_mensagem.py` |
+| Casos de uso, autorização e auditoria | `src/remindme/aplicacao/servico_orcamentos.py`, `src/remindme/aplicacao/servico_mensagens.py` |
+| Canal de notificação | porta em `src/remindme/aplicacao/portas.py`; `src/remindme/infraestrutura/canal.py` (simulado) |
+| Persistência | `src/remindme/infraestrutura/sqlite.py` (migração 5) e `memoria.py` |
+| Telas | `src/remindme/apresentacao/web/aplicacao_web.py`, `paginas.py` e `paginas_mensagens.py` |

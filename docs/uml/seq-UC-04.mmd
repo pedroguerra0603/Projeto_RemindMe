@@ -45,7 +45,7 @@ sequenceDiagram
         else envio realizado
             Canal->>Cliente: entrega o orçamento
             Canal-->>App: enviado
-            App->>Orc: estado Enviado
+            App->>Orc: marcarEnviado() → Enviado
             App->>Aud: registra envio
         end
     end
@@ -55,12 +55,12 @@ sequenceDiagram
     UI->>App: registrarDecisao(decisao)
 
     alt cliente aprova
-        App->>Orc: estado Aprovado
-        App->>Tit: gera título com cliente, valor líquido e condição (RF-11, RF-19, RB-05)
-        App->>Orc: estado Convertido
+        App->>Orc: registrarDecisao(aprovado) → Aprovado
+        App->>Tit: gerarDeOrcamento(): cliente, valor líquido, condição, vencimento = decisão + prazo (RF-11, RF-19, RB-05)
+        App->>Orc: converter(título) → Convertido
         App->>Aud: registra aprovação e conversão
         App-->>UI: título Aberto
     else cliente rejeita
-        App->>Orc: estado Rejeitado
+        App->>Orc: registrarDecisao(rejeitado) → Rejeitado
         App->>Aud: registra rejeição
     end

@@ -6,7 +6,7 @@ Instruções permanentes para agentes de codificação neste repositório. Valem
 
 RemindMe é um sistema web de gestão do ciclo de recebíveis e das obrigações de micro e pequenas empresas. É o projeto da disciplina Modelagem de Software (Mackenzie, 2026-2), desenvolvido por Spec-Driven Development.
 
-Situação atual: baseline de modelagem escrita; mapa de specs aprovado; Specs 001, 002, 003, 004 (orçamentos), 006, 013, 017, 018 e 019 (troca da própria senha) aprovadas, implementadas e verificadas (Python 3.11, biblioteca padrão, interface web WSGI e SQLite); demais specs a escrever.
+Situação atual: baseline de modelagem escrita; mapa de specs aprovado; Specs 001, 002, 003, 004 (orçamentos), 005 (envio e conversão em título), 006, 013, 017, 018 e 019 (troca da própria senha) aprovadas, implementadas e verificadas (Python 3.11, biblioteca padrão, interface web WSGI e SQLite); demais specs a escrever.
 
 ## Fonte de verdade
 

@@ -24,11 +24,13 @@ from remindme.aplicacao.servico_clientes import ServicoClientes
 from remindme.aplicacao.servico_contas_pagar import FiltroContas, ServicoContasPagar
 from remindme.aplicacao.servico_empresa import ServicoEmpresa
 from remindme.aplicacao.servico_fornecedores import ServicoFornecedores
+from remindme.aplicacao.servico_mensagens import ServicoMensagens
 from remindme.aplicacao.servico_orcamentos import FiltroOrcamentos, ServicoOrcamentos
 from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroTitulos, ServicoTitulos
 from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
+from remindme.apresentacao.web import paginas_mensagens as pm
 from remindme.apresentacao.web import paginas_pagar as pp
 from remindme.apresentacao.web.html import Html
 from remindme.dominio.conta_pagar import EstadoContaPagar
@@ -81,9 +83,12 @@ AVISOS = {
     "item-removido": ("sucesso", "Item removido. Os valores foram recalculados."),
     "desconto": ("sucesso", "Desconto aplicado. Os valores foram recalculados."),
     "desconto-pendente": ("info", "O desconto passa da sua alçada: o orçamento aguarda a decisão do Dono."),
-    "condicao": ("sucesso", "Condição de pagamento atualizada."),
+    "condicao": ("sucesso", "Prazo e condição de pagamento atualizados."),
     "decisao": ("sucesso", "Decisão registrada. O orçamento voltou a Rascunho."),
     "orcamento-cancelado": ("sucesso", "Orçamento cancelado."),
+    "orcamento-enviado": ("sucesso", "Orçamento enviado ao cliente."),
+    "orcamento-convertido": ("sucesso", "Aprovação registrada. O título foi gerado."),
+    "orcamento-rejeitado": ("sucesso", "Rejeição registrada."),
     "empresa": ("sucesso", "Dados da empresa salvos."),
     "fornecedor": ("sucesso", "Fornecedor cadastrado."),
     "fornecedor-alterado": ("sucesso", "Dados do fornecedor atualizados."),
@@ -107,6 +112,7 @@ class Servicos:
     empresa: Optional[ServicoEmpresa] = None
     fornecedores: Optional[ServicoFornecedores] = None
     contas_pagar: Optional[ServicoContasPagar] = None
+    mensagens: Optional[ServicoMensagens] = None
 
 
 class CorpoGrandeDemais(Exception):
@@ -217,6 +223,9 @@ class AplicacaoWeb:
         r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/desconto", self._desconto, protegida))
         r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/condicao", self._condicao, protegida))
         r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/decisao", self._decisao, protegida))
+        r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/envio", self._envio, protegida))
+        r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/resposta-do-cliente", self._resposta_do_cliente, protegida))
+        r.append(("GET", "/mensagens", self._mensagens, protegida))
         r.append(("GET", f"/orcamentos/(?P<orcamento_id>{ID})/cancelamento", self._orcamento_cancelamento_pagina, protegida))
         r.append(("POST", f"/orcamentos/(?P<orcamento_id>{ID})/cancelamento", self._orcamento_cancelamento, protegida))
         r.append(("GET", "/fornecedores", self._fornecedores, protegida))
@@ -661,8 +670,50 @@ class AplicacaoWeb:
             erros or {},
             self._historico(sessao, ctx, f"orcamento {orcamento.id}"),
             None if erros else _aviso(req),
+            self._mensagens_de(sessao, ctx, f"orcamento {orcamento.id}"),
         )
         return Resposta.pagina(pagina, 400 if erros else 200)
+
+    def _mensagens_de(self, sessao: str, ctx: p.Contexto, origem: str) -> Optional[list]:
+        """Spec 005: os envios deste registro, para quem pode ver a caixa de saída."""
+        if not self._s.mensagens or not ctx.pode(Operacao.CONSULTAR_MENSAGENS):
+            return None
+        return [m for m in self._s.mensagens.consultar(sessao) if m.origem == origem]
+
+    def _envio(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str) -> Resposta:
+        """RF-08. Se o canal falhar, a recusa aparece na página e a tentativa fica na caixa de saída (E2)."""
+        try:
+            self._s.orcamentos.enviar_orcamento(sessao, orcamento_id)
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return self._orcamento(req, sessao, ctx, orcamento_id, "envio", {}, {"_": recusa.motivo})
+        return Resposta.redirecionar(f"/orcamentos/{orcamento_id}?aviso=orcamento-enviado")
+
+    def _resposta_do_cliente(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str) -> Resposta:
+        """RF-09 (OPEN-57): o usuário registra o que o cliente decidiu; a aprovação gera o título (RF-11)."""
+        valores = _valores(req, "decisao", "data", "motivo")
+        erros: Dict[str, str] = {}
+        if valores["decisao"] not in ("aprovar", "rejeitar"):
+            erros["_"] = "Escolha registrar a aprovação ou a rejeição."
+        data = f.ler_data(valores["data"]) if valores["data"] else None
+        if valores["data"] and data is None:
+            erros["data"] = "Informe uma data válida."
+        if not erros:
+            aprovado = valores["decisao"] == "aprovar"
+            try:
+                self._s.orcamentos.registrar_decisao_do_cliente(sessao, orcamento_id, aprovado, data, valores["motivo"])
+                aviso = "orcamento-convertido" if aprovado else "orcamento-rejeitado"
+                return Resposta.redirecionar(f"/orcamentos/{orcamento_id}?aviso={aviso}")
+            except OperacaoNegada:
+                raise
+            except OperacaoRecusada as recusa:
+                erros = _erros(recusa)
+        return self._orcamento(req, sessao, ctx, orcamento_id, "resposta", valores, erros)
+
+    def _mensagens(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        mensagens = self._s.mensagens.consultar(sessao)
+        return Resposta.pagina(pm.pagina_mensagens(ctx, mensagens, self._nomes_clientes(sessao, ctx)))
 
     def _item_novo(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str) -> Resposta:
         valores = _valores(req, "descricao", "quantidade", "valor_unitario")
@@ -735,8 +786,10 @@ class AplicacaoWeb:
         return self._orcamento(req, sessao, ctx, orcamento_id, "desconto", valores, erros)
 
     def _condicao(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str) -> Resposta:
-        valores = _valores(req, "condicao")
+        """Prazo para pagamento (OPEN-61) e condição. O prazo vem primeiro: inválido, nada é gravado."""
+        valores = _valores(req, "condicao", "prazo")
         try:
+            self._s.orcamentos.alterar_prazo(sessao, orcamento_id, valores["prazo"])
             self._s.orcamentos.alterar_condicao(sessao, orcamento_id, valores["condicao"])
         except OperacaoNegada:
             raise

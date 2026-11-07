@@ -43,6 +43,7 @@ TABELA_DA_SPEC = {
     Operacao.ESTORNAR_PAGAMENTO_CONTA: {D},
     Operacao.CANCELAR_CONTA_PAGAR: {D},
     Operacao.CONSULTAR_CONTAS_PAGAR: {D, O, C},
+    Operacao.CONSULTAR_MENSAGENS: {D, O},  # Spec 005
 }
 
 

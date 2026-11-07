@@ -184,6 +184,9 @@ main > * + * { margin-top: 28px; }
 .cartao.sem-borda-interna > h2 { padding-bottom: 10px; border-bottom: 2px solid var(--tinta); margin-bottom: 0; }
 .cartao.destaque-alerta { border-left: 3px solid var(--alerta); padding-left: 16px; }
 .cartao.sem-borda-interna.destaque-alerta > h2 { border-bottom-color: var(--alerta); }
+.cartao.destaque-sucesso { border-left: 3px solid var(--sucesso); padding-left: 16px; }
+/* Spec 005: texto da mensagem enviada ao cliente, com as quebras de linha e sem estourar a largura. */
+pre.mensagem { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; margin: 8px 0 12px; }
 .grade-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px 24px; }
 .grade-2 > * { margin: 0; }
 

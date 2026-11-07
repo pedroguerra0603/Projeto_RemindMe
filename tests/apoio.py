@@ -27,3 +27,17 @@ class ComSessoes:
 
     def sessao(self, usuario) -> str:
         return abrir_sessao(self.uow, usuario)
+
+
+class CanalQueFalha:
+    """Canal de notificação que nunca entrega (Spec 005, E2)."""
+
+    def entregar(self, contato: str, assunto: str, texto: str) -> bool:
+        return False
+
+
+class CanalQueLanca:
+    """Canal de notificação que lança exceção em vez de devolver falha (Spec 005, foco de revisão 4)."""
+
+    def entregar(self, contato: str, assunto: str, texto: str) -> bool:
+        raise ConnectionError("canal fora do ar")

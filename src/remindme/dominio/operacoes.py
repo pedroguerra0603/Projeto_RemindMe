@@ -31,6 +31,8 @@ class Operacao(Enum):
     ESTORNAR_PAGAMENTO_CONTA = "Estornar pagamento de conta a pagar"
     CANCELAR_CONTA_PAGAR = "Cancelar conta a pagar"
     CONSULTAR_CONTAS_PAGAR = "Consultar contas a pagar"
+    # Spec 005: caixa de saída do canal de notificação.
+    CONSULTAR_MENSAGENS = "Consultar mensagens enviadas"
 
     @property
     def descricao(self) -> str:

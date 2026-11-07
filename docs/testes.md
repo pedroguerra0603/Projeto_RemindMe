@@ -1,6 +1,6 @@
 # Estratégia de Testes e Qualidade — RemindMe
 
-> Os testes usam `unittest`, da biblioteca padrão do Python, pela decisão de OPEN-01 (2026-10-03). A suíte está em [`tests/`](../tests/README.md), e a avaliação de qualidade, em [`qualidade/`](qualidade/README.md). Desde a Spec 017 (2026-10-23), há interface web: os testes de API chamam a aplicação WSGI no próprio processo (`tests/apresentacao/`), e o fluxo crítico roda no navegador com Playwright, opcional (`tests/ponta_a_ponta/`), conforme OPEN-29. A suíte de 2026-11-07 tem 478 testes, contados na pirâmide abaixo. Como executar: [`execucao.md`](execucao.md).
+> Os testes usam `unittest`, da biblioteca padrão do Python, pela decisão de OPEN-01 (2026-10-03). A suíte está em [`tests/`](../tests/README.md), e a avaliação de qualidade, em [`qualidade/`](qualidade/README.md). Desde a Spec 017 (2026-10-23), há interface web: os testes de API chamam a aplicação WSGI no próprio processo (`tests/apresentacao/`), e o fluxo crítico roda no navegador com Playwright, opcional (`tests/ponta_a_ponta/`), conforme OPEN-29. A suíte de 2026-11-07, depois da Spec 005, tem 530 testes, contados na pirâmide abaixo. Como executar: [`execucao.md`](execucao.md).
 
 ## Princípios
 
@@ -37,24 +37,24 @@ Os testes de arquitetura (`tests/arquitetura/`) e de desempenho (`tests/desempen
 
 ### Contagem atual
 
-Suíte de 2026-11-07: 478 testes, todos passando, com 9 pulados (4 de navegador sem o Playwright, opcional, e 5 marcadores de testes ainda não escritos), contados. Comando: carregar a suíte com `unittest.defaultTestLoader.discover` e contar por pasta; o aceite são os arquivos `tests/aplicacao/test_spec_*_aceite.py`.
+Suíte de 2026-11-07, depois da Spec 005: 530 testes, todos passando, com 9 pulados (4 de navegador sem o Playwright, opcional, e 5 marcadores de testes ainda não escritos), contados. Comando: carregar a suíte com `unittest.defaultTestLoader.discover` e contar por pasta; o aceite são os arquivos `tests/aplicacao/test_spec_*_aceite.py`.
 
 | Nível | Pasta | Testes | Participação | Alvo | Situação |
 |---|---|---|---|---|---|
-| Unidade de domínio | `tests/dominio/` | 134 | 28,5% | — | — |
-| Unidade de infraestrutura | `tests/infraestrutura/` | 34 | 7,2% | — | — |
-| **Unidade, total** | | **168** | **35,7%** | 50% a 60% | Abaixo do alvo |
-| Aplicação (sem o aceite) | `tests/aplicacao/` | 60 | 12,7% | 20% a 30% | Abaixo do alvo |
-| Integração | `tests/integracao/` | 11 | 2,3% | 5% a 10% | Abaixo do alvo |
-| Aceite (Specs 001 a 004, 006, 013, 018 e 019) | `tests/aplicacao/test_spec_*_aceite.py` | 150 | 31,8% | 10% a 15% | Muito acima do alvo |
-| Interface e API | `tests/apresentacao/` (78), `tests/ponta_a_ponta/` (4) | 82 | 17,4% | até 5% | Muito acima do alvo |
+| Unidade de domínio | `tests/dominio/` | 149 | 28,5% | — | — |
+| Unidade de infraestrutura | `tests/infraestrutura/` | 40 | 7,6% | — | — |
+| **Unidade, total** | | **189** | **36,1%** | 50% a 60% | Abaixo do alvo |
+| Aplicação (sem o aceite) | `tests/aplicacao/` | 66 | 12,6% | 20% a 30% | Abaixo do alvo |
+| Integração | `tests/integracao/` | 11 | 2,1% | 5% a 10% | Abaixo do alvo |
+| Aceite (Specs 001 a 006, 013, 018 e 019) | `tests/aplicacao/test_spec_*_aceite.py` | 167 | 31,9% | 10% a 15% | Muito acima do alvo |
+| Interface e API | `tests/apresentacao/` (86), `tests/ponta_a_ponta/` (4) | 90 | 17,2% | até 5% | Muito acima do alvo |
 | Transversais (arquitetura e desempenho) | `tests/arquitetura/`, `tests/desempenho/` | 7 | — | fora da proporção | — |
 
-Percentuais sobre os 471 testes dos cinco níveis (478 menos os 7 transversais). A contagem de 2026-10-16 tinha 199 testes, com a unidade em 50,3% e nenhum teste de interface.
+Percentuais sobre os 523 testes dos cinco níveis (530 menos os 7 transversais). A contagem de 2026-10-16 tinha 199 testes, com a unidade em 50,3% e nenhum teste de interface. Na recontagem anterior, de 2026-11-07, antes da Spec 005, eram 478 testes, com a unidade em 35,7%: a Spec 005 seguiu a proposta da lacuna 1 e a proporção melhorou um pouco.
 
 ### Lacunas
 
-1. **A pirâmide se inverteu.** O risco registrado em 2026-10-16 se confirmou: cada spec nova trouxe seus testes de aceite e de interface, e quase nenhum de unidade. Aceite e interface somam 49,3% da suíte, contra um alvo de até 20%; a unidade caiu de 50,3% para 35,7%. Proposta: nas próximas specs, testar cada regra nova no domínio primeiro, deixar no aceite só um teste por critério e, na interface, só o que depende da tela (sessão, formulário, erro por campo, escape de HTML).
+1. **A pirâmide se inverteu.** O risco registrado em 2026-10-16 se confirmou: cada spec nova trouxe seus testes de aceite e de interface, e quase nenhum de unidade. Aceite e interface somam 49,1% da suíte, contra um alvo de até 20%; a unidade caiu de 50,3% para 36,1%. Proposta: nas próximas specs, testar cada regra nova no domínio primeiro, deixar no aceite só um teste por critério e, na interface, só o que depende da tela (sessão, formulário, erro por campo, escape de HTML).
 2. **Não há cone de sorvete na prática, ainda.** Os testes de aceite usam repositórios em memória, e os de interface chamam a aplicação WSGI no próprio processo, sem servidor nem navegador; a suíte inteira roda em cerca de 16 s. Só os 4 testes de `tests/ponta_a_ponta/` abrem o navegador, e são pulados sem o Playwright. O custo da inversão hoje é de manutenção (mudar uma tela quebra muitos testes), e não de tempo.
 3. **Integração abaixo do alvo.** O banco existe desde a Spec 017 (SQLite, ADR-007), mas a maior parte dos testes que o usam está em `tests/infraestrutura/`, contada como unidade. A atomicidade com duas transações simultâneas continua como marcador pulado (`test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo`). Proposta: escrever esse teste contra o SQLite e rever se os testes do SQLite são unidade ou integração.
 4. **Sem medição de cobertura.** A pirâmide mede quantidade de testes, e não o que eles exercitam. Por OPEN-27, coverage.py é opcional, só no desenvolvimento.

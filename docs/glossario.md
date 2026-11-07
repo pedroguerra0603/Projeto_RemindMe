@@ -7,6 +7,7 @@ Vocabulário do domínio. Os termos abaixo são os únicos usados em requisitos,
 | Alçada de desconto | `AlcadaDesconto` | Percentual máximo de desconto que um perfil pode conceder sem aprovação do Dono. |
 | Apuração do resultado | — | Cálculo de receitas menos despesas dos lançamentos classificados de um período. |
 | Baixa | — | Passagem de um título ao estado Baixado, quando o saldo chega a zero. |
+| Caixa de saída | — | Registro de tudo o que o canal de notificação tentou entregar aos clientes, com o resultado de cada tentativa (Spec 005). |
 | Canal de notificação | — | Meio pelo qual o sistema envia orçamentos, cobranças e alertas. O padrão é o canal simulado. |
 | Categoria financeira | `CategoriaFinanceira` | Conta do plano de contas da empresa, de receita ou de despesa. |
 | Cliente | `Cliente` | Pessoa ou empresa que recebe orçamentos e deve títulos. |
@@ -27,6 +28,7 @@ Vocabulário do domínio. Os termos abaixo são os únicos usados em requisitos,
 | Pagamento | `Pagamento` | Valor recebido de um cliente para um título, ou pago a um fornecedor para uma conta a pagar. |
 | Perfil | `Perfil` | Papel de acesso: Dono, Operador Financeiro, Contador ou Administrador. O cliente não tem perfil (OPEN-57). |
 | Plano de contas | — | Conjunto das categorias financeiras da empresa. |
+| Prazo para pagamento | `Orcamento` | Dias, contados da aprovação do cliente, até o vencimento do título gerado do orçamento; 0 é à vista (OPEN-61). |
 | Promessa de pagamento | `Renegociacao` | Compromisso do cliente de pagar um título em uma data. |
 | Régua de cobrança | `ReguaCobranca` | Sequência ordenada de etapas de cobrança aplicada aos títulos. |
 | Registro de auditoria | `RegistroAuditoria` | Registro imutável de uma operação: quem, quando, o quê e sobre qual registro. |

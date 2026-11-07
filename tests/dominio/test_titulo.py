@@ -148,5 +148,37 @@ class RF23ProximoDoVencimento(unittest.TestCase):
         self.assertFalse(t.proximo_do_vencimento(HOJE, 5))
 
 
+class GeradoDeOrcamento(unittest.TestCase):
+    """Spec 005: o título gerado na aprovação do orçamento (RF-11, RF-19, RB-05)."""
+
+    def orcamento(self, aprovar=True):
+        from remindme.dominio.orcamento import Orcamento
+
+        o = Orcamento.criar("o1", "c1", "operador", date(2026, 11, 2), "Boleto")
+        o.incluir_item("i1", "Revisão", Decimal("1"), Decimal("1000.00"))
+        o.informar_desconto(Decimal("10"), "operador", Decimal("10"))
+        o.alterar_prazo(30)
+        o.marcar_enviado(date(2026, 11, 2))
+        if aprovar:
+            o.registrar_decisao(True, date(2026, 11, 7), date(2026, 11, 7))
+        return o
+
+    def test_RF_19_gerar_de_orcamento_copia_cliente_valor_liquido_condicao_e_vencimento(self):
+        t = Titulo.gerar_de_orcamento("t9", self.orcamento())
+        self.assertEqual(
+            (t.id, t.cliente_id, t.valor, t.condicao_pagamento, t.vencimento, t.origem, t.orcamento_id, t.estado),
+            ("t9", "c1", Decimal("900.00"), "Boleto", date(2026, 12, 7), "orcamento", "o1", EstadoTitulo.ABERTO),
+        )
+        self.assertEqual(t.saldo, Decimal("900.00"))
+
+    def test_RF_12_gerar_de_orcamento_nao_aprovado_e_recusado(self):
+        with self.assertRaises(OperacaoRecusada) as ctx:
+            Titulo.gerar_de_orcamento("t9", self.orcamento(aprovar=False))
+        self.assertEqual(ctx.exception.motivo, "Só orçamento Aprovado vira título; este está Enviado (RF-12).")
+
+    def test_titulo_manual_nao_tem_orcamento(self):
+        self.assertIsNone(titulo().orcamento_id)
+
+
 if __name__ == "__main__":
     unittest.main()

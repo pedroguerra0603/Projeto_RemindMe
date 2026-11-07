@@ -29,12 +29,14 @@ OUTRO_ID = "0" * 32
 
 
 class Base(unittest.TestCase):
+    canal = None  # Spec 005: um canal de notificação de teste; sem ele, a montagem usa o simulado.
+
     def setUp(self):
         self._pasta = tempfile.TemporaryDirectory()
         self.caminho = str(Path(self._pasta.name).joinpath("remindme.db"))
         self.relogio = RelogioFixo(AGORA)
         self.erros = RegistroErrosEmMemoria()
-        self.sistema = montar(self.caminho, self.relogio, CIFRADOR_DE_TESTE, self.erros)
+        self.sistema = montar(self.caminho, self.relogio, CIFRADOR_DE_TESTE, self.erros, canal=self.canal)
         acesso = self.sistema.servicos.acesso
         acesso.criar_primeiro_administrador("Ana Admin", "admin@exemplo.com", SENHA)
         admin = acesso.entrar("admin@exemplo.com", SENHA).identificador
