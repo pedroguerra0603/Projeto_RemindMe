@@ -42,7 +42,7 @@ Titulo(valor=Decimal("1" + "0"*30 + ".01")).saldo  ->  1.00000000000000000000000
 | Item | Avaliação |
 |---|---|
 | Severidade | Baixa: exige valor acima de 10²⁷, impossível para uma micro ou pequena empresa. Mas é a mesma classe de falha do Ariane 5: o número deixa de caber e o sistema não avisa |
-| Por que não foi corrigido | Corrigir exige escolher um limite de valor (recusar acima de N dígitos) ou uma precisão. A baseline não define; a regra 2 do CLAUDE.md manda registrar e perguntar. Registrado como **OPEN-24**, com sugestão de recusar valor acima de 15 dígitos inteiros, com motivo |
+| Por que não foi corrigido | Corrigir exige escolher um limite de valor (recusar acima de N dígitos) ou uma precisão. A baseline não define; a regra 2 do SPECS.md manda registrar e perguntar. Registrado como **OPEN-24**, com sugestão de recusar valor acima de 15 dígitos inteiros, com motivo |
 | Como o defeito fica visível | O teste `test_D_06_...` está marcado `expectedFailure`. Quando a correção entrar, a suíte avisa com "unexpected success" e a marcação é retirada |
 
 ## 4. Regra de arredondamento

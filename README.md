@@ -14,7 +14,7 @@ O RemindMe garante que cada cobrança e cada obrigação avance no prazo, com re
 - **Calendário de obrigações.** Compromissos fiscais e contratuais com aviso antecipado, evidência de cumprimento e escalonamento ao dono.
 - **Apuração do resultado.** Derivada dos lançamentos que a própria operação gera.
 
-O sistema tem quatro perfis de negócio (Dono, Operador Financeiro, Cliente e Contador) e o perfil Administrador, que mantém usuários e configurações. A inteligência artificial é usada em dois pontos, sob um princípio: **a IA extrai e classifica; o sistema decide.**
+O sistema tem três perfis de negócio (Dono, Operador Financeiro e Contador) e o perfil Administrador, que mantém usuários e configurações. O cliente da empresa não acessa o sistema: recebe orçamentos e cobranças e responde pelo canal de notificação (OPEN-57). A inteligência artificial é usada em dois pontos, sob um princípio: **a IA extrai e classifica; o sistema decide.**
 
 Detalhes em [visão do produto](docs/visao.md).
 
@@ -25,7 +25,7 @@ Detalhes em [visão do produto](docs/visao.md).
 | 1. Problema e contexto | [Visão](docs/visao.md), [benchmark](docs/benchmark.md), [personas](docs/personas.md) | Escrito |
 | 2. Requisitos e modelagem | [Requisitos](docs/requisitos.md), [glossário](docs/glossario.md), [modelo de domínio](docs/modelo-dominio.md), [casos de uso](docs/casos-de-uso/README.md) | Escrito |
 | 3. Arquitetura e decisões | [Arquitetura](docs/arquitetura.md), [ADRs](docs/adr/README.md), [constituição](SPECS.md), [segurança](docs/seguranca.md) | Tecnologias decididas: Python 3.11 com a biblioteca padrão, interface WSGI (ADR-006) e SQLite (ADR-007) |
-| 4. Implementação e validação | [Mapa de specs](.specify/specs/mapa-de-specs.md), [specs](.specify/specs/), [qualidade](docs/qualidade/README.md), [rastreabilidade](docs/rastreabilidade.md) | Specs 001, 002, 003, 006, 013, 017, 018 e 019 verificadas: auditoria, acesso por perfil, clientes, títulos e pagamentos, consulta de auditoria, a interface web, contas a pagar e fornecedores e a troca da própria senha. Spec 004 (orçamentos e alçada de desconto) implementada e verificada, aguardando aprovação |
+| 4. Implementação e validação | [Mapa de specs](.specify/specs/mapa-de-specs.md), [specs](.specify/specs/), [qualidade](docs/qualidade/README.md), [rastreabilidade](docs/rastreabilidade.md) | Specs 001, 002, 003, 004, 006, 013, 017, 018 e 019 verificadas: auditoria, acesso por perfil, clientes, orçamentos e alçada de desconto, títulos e pagamentos, consulta de auditoria, a interface web, contas a pagar e fornecedores e a troca da própria senha |
 
 As decisões que ainda dependem da equipe estão em [questões em aberto](.specify/open.md).
 

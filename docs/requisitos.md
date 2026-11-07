@@ -105,7 +105,7 @@ A data de referência do sistema ("hoje") é a de America/Sao_Paulo, e os horár
 | RF-38 | IF a ação de uma etapa for intervenção manual ou o envio falhar, THEN THE SYSTEM SHALL criar uma tarefa para o Operador Financeiro. | UC-08 | |
 | RF-39 | WHEN um usuário consultar o histórico de cobrança de um título, THE SYSTEM SHALL apresentar as tentativas em ordem cronológica com seus resultados. | UC-08 | |
 | RF-70 | WHILE um título estiver Em Renegociação, THE SYSTEM SHALL suspender os envios da régua para esse título. | UC-08 | RB-11 |
-| RF-71 | WHERE o canal WhatsApp estiver habilitado, THE SYSTEM SHALL enviar cobranças e alertas por esse canal em vez do canal simulado. | UC-08 | RB-18 |
+| RF-71 | *Retirado em 2026-11-07 (OPEN-62): a execução é local, e o canal simulado é a única implementação do canal de notificação.* | — | — |
 
 ### 1.6 Renegociação assistida por IA
 
@@ -269,10 +269,10 @@ Regras de negócio são verdades do domínio que existiriam mesmo sem o sistema.
 | RB-12 | Lançamento sem classificação confirmada não entra na apuração do resultado. | RF-58, RF-53, RF-54, RF-55, RF-82, RF-86 |
 | RB-13 | Obrigação Aguardando Evidência permanece como pendência visível do Operador Financeiro. | RF-77 |
 | RB-14 | Sugestão da IA que não atende à RB-08 é decidida por uma pessoa. | RF-80 |
-| RB-15 | Cada perfil tem um percentual máximo de desconto (alçada). Desconto acima da alçada de quem elaborou o orçamento depende de aprovação do Dono. O Dono não tem limite. | RF-14, RF-15, RF-16, RF-17 |
+| RB-15 | Cada perfil tem um percentual máximo de desconto (alçada). Desconto acima da alçada de quem informa o desconto depende de aprovação do Dono (OPEN-50). O Dono não tem limite. | RF-14, RF-15, RF-16, RF-17 |
 | RB-16 | Obrigação Atrasada é escalada ao Dono. A tolerância padrão é de 0 dias e pode ser configurada. | RF-49 |
 | RB-17 | Mensagem de cliente da qual não se extrai intenção válida é tratada por uma pessoa. | RF-74 |
-| RB-18 | O canal de notificação é substituível. O canal padrão é o simulado. | RF-71 |
+| RB-18 | O canal de notificação é substituível. O canal padrão é o simulado. | RF-08 |
 | RB-19 | A troca de dados com planilhas ocorre somente em CSV, e uma importação é aceita inteira ou recusada inteira. | RF-83, RF-84, RF-85 |
 | RB-20 | Promessa de pagamento válida do cliente sobre um título Vencido coloca o título Em Renegociação. | RF-73 |
 | RB-21 | Um título está em exatamente um estado: Aberto, Vencido, Em Renegociação, Baixado ou Cancelado. As transições válidas estão no [diagrama de estados do título](uml/estados.md). | RF-20, RF-24, RF-26, RF-28, RF-30, RF-73 |

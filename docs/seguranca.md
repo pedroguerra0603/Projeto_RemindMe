@@ -53,7 +53,7 @@ Ferramentas possíveis: Cursor, Claude Code, VS Code com agente que possui hook,
 
 | Camada | O que faz | Situação neste repositório |
 |---|---|---|
-| 1. Instrução no repositório | Orienta o agente antes de propor uma ação | Ativa: [`CLAUDE.md`](../CLAUDE.md) |
+| 1. Instrução no repositório | Orienta o agente antes de propor uma ação | Ativa: [`SPECS.md`](../SPECS.md) |
 | 2. Hook de agente | Intercepta a ação e decide permitir, perguntar ou negar | Depende da ferramenta de cada integrante |
 | 3. Git hook local | Bloqueia antes do commit | Não configurado |
 | 4. CI e revisão | Bloqueia antes do merge | Revisão por PR em uso. CI não configurado, pois ainda não há código. |

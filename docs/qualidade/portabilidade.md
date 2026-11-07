@@ -40,7 +40,7 @@ Executados em 2026-10-09, sobre a branch desta avaliação (64 testes no momento
 |---|---|---|
 | Windows e macOS | Indisponíveis no ambiente da avaliação | Baixo: o código não usa caminho de arquivo, processo nem recurso do sistema operacional. O teste de arquitetura lê arquivos com `pathlib` e `encoding="utf-8"` |
 | Python 3.10 ou anterior | Fora do pré-requisito de `docs/execucao.md` | `sys.stdlib_module_names`, usado no teste de arquitetura, exige 3.10 |
-| Python 3.14 e PyPy | Não instalados; instalar interpretador exige aprovação (CLAUDE.md) | Baixo |
+| Python 3.14 e PyPy | Não instalados; instalar interpretador exige aprovação (SPECS.md) | Baixo |
 | Contêiner | Docker indisponível na máquina | — |
 
 Os integrantes podem completar a tabela rodando o mesmo comando em suas máquinas e anotando sistema, versão do Python e resultado.

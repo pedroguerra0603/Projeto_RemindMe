@@ -36,7 +36,7 @@ Não é defeito da Spec 006: nenhum requisito pede identificação de pedido rep
 
 | Caso | Depende de | Observação |
 |---|---|---|
-| Execução repetida da régua não repete etapa (DA-08) | Spec 008 | Teste `test_DA_08_...` registrado como pulado, sem código antecipado (regra 1 do CLAUDE.md) |
+| Execução repetida da régua não repete etapa (DA-08) | Spec 008 | Teste `test_DA_08_...` registrado como pulado, sem código antecipado (regra 1 do SPECS.md) |
 | Duas transações simultâneas no mesmo título não estouram o saldo | OPEN-02 (banco) | `test_RNF_09_duas_transacoes_simultaneas_...` registrado como pulado |
 | Chave de idempotência para pagamento parcial | OPEN-25 | Ver seção 2 |
 

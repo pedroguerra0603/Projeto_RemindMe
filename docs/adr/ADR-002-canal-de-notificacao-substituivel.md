@@ -1,8 +1,8 @@
 # ADR-002 — Canal de notificação substituível, simulado por padrão
 
-- **Situação:** Proposto, aguardando aprovação da equipe
+- **Situação:** Aceito em 2026-11-07
 - **Data:** 2026-10-03
-- **Decisores:** a definir pela equipe
+- **Decisores:** Renan Gandolpho
 - **Drivers:** DA-07
 - **Requisitos e regras:** RB-18, RF-71, RNF-23
 

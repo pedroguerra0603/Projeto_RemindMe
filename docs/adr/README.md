@@ -4,10 +4,10 @@ Um ADR registra uma decisão cara de reverter: o que foi decidido, por quê, que
 
 | ADR | Decisão | Situação |
 |---|---|---|
-| [ADR-001](ADR-001-monolito-em-camadas-com-dominio-isolado.md) | Monólito em camadas com domínio isolado | Proposto |
-| [ADR-002](ADR-002-canal-de-notificacao-substituivel.md) | Canal de notificação substituível, simulado por padrão | Proposto |
-| [ADR-003](ADR-003-ia-extrai-e-classifica-o-sistema-decide.md) | A IA extrai e classifica; o sistema decide | Proposto |
-| [ADR-004](ADR-004-auditoria-somente-inclusao.md) | Auditoria somente de inclusão, na mesma transação | Proposto |
+| [ADR-001](ADR-001-monolito-em-camadas-com-dominio-isolado.md) | Monólito em camadas com domínio isolado | Aceito |
+| [ADR-002](ADR-002-canal-de-notificacao-substituivel.md) | Canal de notificação substituível, simulado por padrão | Aceito |
+| [ADR-003](ADR-003-ia-extrai-e-classifica-o-sistema-decide.md) | A IA extrai e classifica; o sistema decide | Aceito |
+| [ADR-004](ADR-004-auditoria-somente-inclusao.md) | Auditoria somente de inclusão, na mesma transação | Aceito |
 | [ADR-005](ADR-005-banco-relacional.md) | Banco de dados relacional | Aceito |
 | [ADR-006](ADR-006-interface-web-sobre-wsgi-da-biblioteca-padrao.md) | Interface web sobre o WSGI da biblioteca padrão | Aceito |
 | [ADR-007](ADR-007-sqlite-como-banco-do-mvp.md) | SQLite como banco relacional do MVP | Aceito |

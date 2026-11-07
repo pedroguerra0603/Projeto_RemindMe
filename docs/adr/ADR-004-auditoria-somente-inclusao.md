@@ -1,8 +1,8 @@
 # ADR-004 — Auditoria somente de inclusão, na mesma transação
 
-- **Situação:** Proposto, aguardando aprovação da equipe
+- **Situação:** Aceito em 2026-11-07
 - **Data:** 2026-10-03
-- **Decisores:** a definir pela equipe
+- **Decisores:** Renan Gandolpho
 - **Drivers:** DA-02, DA-03
 - **Requisitos e regras:** RB-01, RB-30, RF-04, RF-05, RF-61, RF-62, RNF-06, RNF-09
 

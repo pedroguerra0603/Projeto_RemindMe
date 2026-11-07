@@ -72,10 +72,10 @@ sequenceDiagram
         Tit-->>App: recusa (RB-21)
         App-->>UI: informa o estado do título
     else pagamento válido
-        Tit-->>App: saldo atualizado
+        Tit->>Tit: reduz o saldo e, com saldo zero, passa a Baixado (RF-26, RB-22)
+        Tit-->>App: pagamento registrado, com saldo e estado
         App->>Lanc: gera lançamento de receita Pendente de Classificação (RF-51)
-        alt saldo igual a zero
-            App->>Tit: estado Baixado (RF-26, RB-22)
+        alt título Baixado
             App->>Regua: cancela envios pendentes (RF-37)
         else saldo maior que zero
             App-->>UI: saldo restante (RF-27)

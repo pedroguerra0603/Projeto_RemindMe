@@ -2,7 +2,7 @@
 
 A arquitetura responde ao que já está descrito em [requisitos](requisitos.md), [modelo de domínio](modelo-dominio.md) e [casos de uso](casos-de-uso/README.md). Este documento seleciona o que mais pesa (drivers), registra as decisões técnicas e descreve a estrutura resultante.
 
-> **Situação.** As decisões abaixo estão propostas e aguardam aprovação da equipe. Das escolhas de tecnologia, a linguagem foi decidida em 2026-10-03 (Python 3.11, somente com a biblioteca padrão, OPEN-01), e em 2026-10-23 foram decididos o tipo de banco, a sessão, a IA do MVP e o agendador (OPEN-02, OPEN-03, OPEN-04, OPEN-13). O que falta está em [`.specify/open.md`](../.specify/open.md).
+> **Situação.** As decisões abaixo estão aceitas: os ADR-001 a ADR-004 foram aceitos em 2026-11-07 por Renan Gandolpho, e as DT-05 a DT-09 não pedem ADR. Das escolhas de tecnologia, a linguagem foi decidida em 2026-10-03 (Python 3.11, somente com a biblioteca padrão, OPEN-01), e em 2026-10-23 foram decididos o tipo de banco, a sessão, a IA do MVP e o agendador (OPEN-02, OPEN-03, OPEN-04, OPEN-13). O que falta está em [`.specify/open.md`](../.specify/open.md).
 
 ## 1. Visão arquitetural
 
@@ -108,12 +108,13 @@ Os agrupamentos naturais do modelo de domínio viram módulos do sistema.
 
 | Módulo | Classes | Casos de uso |
 |---|---|---|
-| Acesso | `Usuario`, `Perfil`, `AlcadaDesconto` | UC-01, UC-02 |
+| Acesso | `Usuario`, `Perfil`, `AlcadaDesconto` | UC-01, UC-02, UC-16 |
 | Comercial | `Cliente`, `Orcamento`, `ItemOrcamento`, `AprovacaoDesconto` | UC-03, UC-04, UC-05 |
 | Recebíveis | `Titulo`, `Pagamento`, `Renegociacao` | UC-06, UC-07 |
 | Cobrança | `ReguaCobranca`, `EtapaCobranca`, `TentativaCobranca` | UC-08 |
 | Obrigações | `Obrigacao`, `Evidencia` | UC-09 |
 | Resultado | `LancamentoFinanceiro`, `CategoriaFinanceira`, `SugestaoClassificacao` | UC-10, UC-11 |
+| Pagáveis | `Fornecedor`, `ContaPagar` | UC-15 |
 | Auditoria | `RegistroAuditoria` | UC-12 |
 | Configuração e intercâmbio | — | UC-13, UC-14 |
 

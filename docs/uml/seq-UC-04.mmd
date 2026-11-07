@@ -43,13 +43,15 @@ sequenceDiagram
             Canal-->>App: falha
             App-->>UI: informa a falha, orçamento segue em Rascunho
         else envio realizado
+            Canal->>Cliente: entrega o orçamento
             Canal-->>App: enviado
             App->>Orc: estado Enviado
             App->>Aud: registra envio
         end
     end
 
-    Cliente->>UI: aprova ou rejeita o orçamento (RF-09)
+    Cliente-->>Canal: responde aprovando ou rejeitando
+    Operador->>UI: registra a decisão do cliente (RF-09, OPEN-57)
     UI->>App: registrarDecisao(decisao)
 
     alt cliente aprova

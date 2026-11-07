@@ -4,14 +4,14 @@ Issue #84. A qualidade do **produto** (ISO/IEC 9126 / 25010) é norma de referê
 
 - **Data:** 2026-10-16.
 - **Natureza:** autoavaliação para fins de estudo. O projeto não pretende nem tem certificação, e nada aqui é um parecer de conformidade nem uma avaliação formal (no CMMI, o equivalente seria um appraisal conduzido por avaliador credenciado).
-- **Fontes no projeto:** [`CLAUDE.md`](../../CLAUDE.md) (fluxo de trabalho obrigatório), [`combinados.md`](../combinados.md), [`testes.md`](../testes.md), [`.specify/`](../../.specify/README.md).
+- **Fontes no projeto:** [`SPECS.md`](../../SPECS.md) (fluxo de trabalho obrigatório), [`combinados.md`](../combinados.md), [`testes.md`](../testes.md), [`.specify/`](../../.specify/README.md).
 - **Relacionadas:** #60 (critérios de qualidade), #72 (relatório de qualidade). O resumo está na seção 8 do [relatório](relatorio-de-qualidade.md).
 
 ## 1. Etapas do fluxo SDD e processos da ISO/IEC 12207
 
 Nomes dos processos conforme a ISO/IEC/IEEE 12207:2017 (alinhada à ISO/IEC/IEEE 15288). Os nomes de processos da edição de 2008 estão entre parênteses, quando diferem.
 
-| Etapa do fluxo SDD (CLAUDE.md) | Processos da ISO/IEC 12207 | Como o projeto faz | Evidência |
+| Etapa do fluxo SDD (SPECS.md) | Processos da ISO/IEC 12207 | Como o projeto faz | Evidência |
 |---|---|---|---|
 | 1. **Mapa de specs**: decompor o trabalho e parar | Planejamento do projeto (*Project Planning*); definição de arquitetura (*Architecture Definition*) | O mapa decompõe o produto em specs numeradas, com dependências e ordem | [`mapa-de-specs.md`](../../.specify/specs/mapa-de-specs.md), [`arquitetura.md`](../arquitetura.md), ADRs |
 | 2. **Revisão humana** do mapa | Avaliação e controle do projeto (*Project Assessment and Control*); revisão (*Review*, 2008) | A equipe revisa a decomposição antes de qualquer spec | Regra 3 do fluxo: "Uma spec por vez"; PR do mapa |
@@ -24,7 +24,7 @@ Processos que atravessam todas as etapas:
 
 | Processo da ISO/IEC 12207 | Prática no projeto | Evidência |
 |---|---|---|
-| Gestão de configuração (*Configuration Management*) | Git; branch por issue; PR pequeno com `Closes #N`; identificadores nunca reaproveitados (regra 7); spec e código no mesmo PR (regra 5) | [`combinados.md`](../combinados.md), [`CLAUDE.md`](../../CLAUDE.md) |
+| Gestão de configuração (*Configuration Management*) | Git; branch por issue; PR pequeno com `Closes #N`; identificadores nunca reaproveitados (regra 7); spec e código no mesmo PR (regra 5) | [`combinados.md`](../combinados.md), [`SPECS.md`](../../SPECS.md) |
 | Gestão da informação / documentação (*Information Management*; em 2008, *Documentation Management*) | Baseline em `docs/` como fonte de verdade; glossário obrigatório; diagramas com fonte Mermaid | [`docs/README.md`](../README.md), [`glossario.md`](../glossario.md) |
 | Gestão de riscos (*Risk Management*) | Decisão ausente vira `OPEN-nn` em vez de ser preenchida (regra 2); 26 questões registradas | [`.specify/open.md`](../../.specify/open.md) |
 | Gestão de decisão (*Decision Management*) | ADRs para decisões caras de reverter | [`adr/`](../adr/README.md) |
@@ -69,7 +69,7 @@ CMMI organiza a maturidade em cinco níveis: 1 Inicial, 2 Gerenciado, 3 Definido
 | Medição e análise | Parcial | Métricas existem, em uma única medição |
 | Gestão de acordos com fornecedores | Não aplicável | Não há fornecedor |
 
-Por que não é o nível 3: o processo é definido (o `CLAUDE.md` é um processo padrão, com modelo de spec e regras), mas para o projeto, e não como padrão de uma organização com adaptação (*tailoring*) e treinamento. Isso é suficiente para dizer que há **elementos** do nível 3, como o processo padrão escrito, as ADRs (análise de decisão) e as verificações por critério de aceite.
+Por que não é o nível 3: o processo é definido (o `SPECS.md` é um processo padrão, com modelo de spec e regras), mas para o projeto, e não como padrão de uma organização com adaptação (*tailoring*) e treinamento. Isso é suficiente para dizer que há **elementos** do nível 3, como o processo padrão escrito, as ADRs (análise de decisão) e as verificações por critério de aceite.
 
 **O que faltaria para o nível seguinte** (completar o 2 e chegar ao 3):
 
@@ -83,4 +83,4 @@ Os níveis 4 e 5 (gestão quantitativa e otimização) não se aplicam ao tamanh
 
 ## 4. Particularidade: trabalho com agente de codificação
 
-O SDD usa um agente de codificação como executor. Para o processo, isso muda duas coisas: o **fluxo** (spec aprovada, depois código) é a principal medida de controle, porque o agente não preenche lacunas (regra 2) e as **ações do agente** têm limites explícitos ([`CLAUDE.md`](../../CLAUDE.md), "Ações do agente"; [`seguranca.md`](../seguranca.md)); e o **PR declara o uso de agente**, com revisão humana (template de PR, [`combinados.md`](../combinados.md)). Isso corresponde, na ISO 9001, ao controle de processos fornecidos externamente (8.4) e à responsabilidade de quem aprova (8.3.4).
+O SDD usa um agente de codificação como executor. Para o processo, isso muda duas coisas: o **fluxo** (spec aprovada, depois código) é a principal medida de controle, porque o agente não preenche lacunas (regra 2) e as **ações do agente** têm limites explícitos ([`SPECS.md`](../../SPECS.md), "Ações do agente"; [`seguranca.md`](../seguranca.md)); e o **PR declara o uso de agente**, com revisão humana (template de PR, [`combinados.md`](../combinados.md)). Isso corresponde, na ISO 9001, ao controle de processos fornecidos externamente (8.4) e à responsabilidade de quem aprova (8.3.4).

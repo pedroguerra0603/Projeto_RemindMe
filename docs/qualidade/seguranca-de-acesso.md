@@ -43,7 +43,7 @@ A matriz também está no código do teste (`MATRIZ`), e um teste confere que el
 
 A lista `AuditoriaEmMemoria.registros` é pública e mutável. Ela é um dublê de teste, não o adaptador real, mas quem tiver o objeto pode apagá-la. O que impede alteração e exclusão é a **interface da porta** (só `registrar`) e a imutabilidade do registro. Para o armazenamento real, a garantia (por exemplo, permissão de banco só de inclusão) é da persistência escolhida em OPEN-02. O teste `test_ADR_004_provisorio_...` apenas documenta o fato.
 
-## 4. Pendente, sem código antecipado (regra 1 do CLAUDE.md)
+## 4. Pendente, sem código antecipado (regra 1 do SPECS.md)
 
 | Caso | Depende de | Teste registrado como pulado |
 |---|---|---|

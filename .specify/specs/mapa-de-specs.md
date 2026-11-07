@@ -2,9 +2,9 @@
 
 Lista ordenada das unidades implementáveis do sistema. O mapa não é implementação: ele decompõe a baseline de [`/docs`](../../docs/README.md) em fatias com comportamento verificável e mostra em que ordem elas podem ser construídas.
 
-- **Situação do mapa:** Proposto, aguardando revisão da equipe.
+- **Situação do mapa:** Aprovado por Renan Gandolpho em 2026-11-07.
 - **Gerado em:** 2026-10-03, por agente (Claude), a partir da baseline revisada na mesma data.
-- **Revisado por:** *(preencher com nomes e data)*
+- **Revisado por:** Renan Gandolpho, em 2026-11-07
 - **Alteração autorizada:** em 2026-10-23, João Pedro Silva Guerra autorizou o agente a incluir a Spec 017, a primeira com interface, e a seguir com as specs necessárias para ela. As perguntas de revisão abaixo continuam a cargo da equipe.
 
 ## Como o mapa foi montado
@@ -22,11 +22,11 @@ Lista ordenada das unidades implementáveis do sistema. O mapa não é implement
 | [001](001-fundacao-camadas-e-auditoria.md) | Fundação: estrutura em camadas e auditoria de operações | RF-04, RF-05, RF-61, RF-62 | RB-01, RB-30 | RNF-06, RNF-09, RNF-19, RNF-21, RNF-23 | — | `RegistroAuditoria` | DA-01, DA-02, DA-03, DA-07, DA-09; ADR-001, ADR-004 | OPEN-01, OPEN-02 (decididas; produto do banco em OPEN-36) | **Verificada** |
 | [002](002-autenticacao-e-autorizacao.md) | Autenticação e autorização por perfil | RF-02, RF-03, RF-65, RF-66, RF-67 | RB-03 | RNF-01 a RNF-05 | UC-01, UC-02 | `Usuario`, `Perfil` | DA-04 | 001; OPEN-03, OPEN-10, OPEN-35 (decididas) | **Verificada** |
 | [003](003-cadastro-de-clientes.md) | Cadastro de clientes | RF-01 | — | RNF-14 | UC-03 | `Cliente` | — | 001, 002; OPEN-40 a OPEN-42 (decididas) | **Verificada** |
-| [004](004-orcamento-itens-valores-e-alcada.md) | Orçamento: itens, valores e alçada de desconto | RF-06, RF-07, RF-10, RF-13 a RF-18 | RB-15, RB-24 | RNF-03 | UC-04, UC-05 | `Orcamento`, `ItemOrcamento`, `AlcadaDesconto`, `AprovacaoDesconto` | DA-01 | 003; OPEN-49 a OPEN-52 (provisórias) | Proposta; implementada e verificada, aguarda aprovação |
-| 005 | Envio, decisão do cliente e conversão em título | RF-08, RF-09, RF-11, RF-12, RF-19 | RB-05, RB-18 | RNF-09 | UC-04 | `Orcamento`, `Titulo` | DA-01, DA-07; ADR-002 | 004, 006; OPEN-15 (decidida) | A escrever |
+| [004](004-orcamento-itens-valores-e-alcada.md) | Orçamento: itens, valores e alçada de desconto | RF-06, RF-07, RF-10, RF-13 a RF-18 | RB-15, RB-24 | RNF-03 | UC-04, UC-05 | `Orcamento`, `ItemOrcamento`, `AlcadaDesconto`, `AprovacaoDesconto` | DA-01 | 003; OPEN-49 a OPEN-52 (decididas) | **Verificada** |
+| [005](005-envio-decisao-e-conversao-em-titulo.md) | Envio, decisão do cliente e conversão em título | RF-08, RF-09, RF-11, RF-12, RF-19 | RB-05, RB-18 | RNF-09 | UC-04 | `Orcamento`, `Titulo` | DA-01, DA-07; ADR-002 | 004, 006; OPEN-15 (decidida) | Aprovada |
 | [006](006-titulo-pagamento-baixa-e-estorno.md) | Título: cadastro manual, pagamento, baixa e estorno | RF-20 a RF-27, RF-30, RF-31, RF-68 | RB-01, RB-02, RB-21, RB-22, RB-23 | RNF-09, RNF-19 | UC-06 | `Titulo`, `Pagamento` | DA-01, DA-03, DA-09; ADR-001 | 001; para o uso completo, 002 e 003 | **Verificada** |
 | 007 | Régua de cobrança: configuração | RF-32, RF-36 | RB-10 | RNF-18, RNF-20 | UC-13 | `ReguaCobranca`, `EtapaCobranca` | DA-10 | 002 | A escrever |
-| 008 | Régua de cobrança: execução e histórico | RF-33, RF-34, RF-35, RF-37, RF-38, RF-39, RF-70, RF-71 | RB-10, RB-11, RB-18 | RNF-12, RNF-13 | UC-08 | `TentativaCobranca` | DA-05, DA-07, DA-08; ADR-002 | 006, 007; OPEN-13 (decidida) | A escrever |
+| 008 | Régua de cobrança: execução e histórico | RF-33, RF-34, RF-35, RF-37, RF-38, RF-39, RF-70 | RB-10, RB-11, RB-18 | RNF-12, RNF-13 | UC-08 | `TentativaCobranca` | DA-05, DA-07, DA-08; ADR-002 | 006, 007; OPEN-13 (decidida) | A escrever |
 | 009 | Renegociação com extração de intenção | RF-28, RF-29, RF-69, RF-72 a RF-76 | RB-11, RB-17, RB-20, RB-26, RB-27, RB-28 | RNF-22, RNF-24, RNF-25 | UC-07 | `Renegociacao` | DA-06; ADR-003 | 006, 008; OPEN-04, OPEN-06, OPEN-08, OPEN-14 (decididas) | A escrever |
 | 010 | Calendário de obrigações | RF-40 a RF-50, RF-77 | RB-04, RB-07, RB-13, RB-16, RB-29 | RNF-15 | UC-09 | `Obrigacao`, `Evidencia` | DA-01, DA-05 | 002; OPEN-13 (decidida) | A escrever |
 | 011 | Lançamentos e classificação assistida por IA | RF-51, RF-52, RF-58, RF-59, RF-78 a RF-81, RF-86 | RB-08, RB-09, RB-12, RB-14, RB-27 | RNF-22, RNF-24, RNF-26 | UC-10 | `LancamentoFinanceiro`, `CategoriaFinanceira`, `SugestaoClassificacao` | DA-06; ADR-003 | 006; OPEN-04, OPEN-05, OPEN-07 (decididas) | A escrever |

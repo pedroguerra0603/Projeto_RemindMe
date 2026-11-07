@@ -1,6 +1,6 @@
 # Estratégia de Testes e Qualidade — RemindMe
 
-> Os testes usam `unittest`, da biblioteca padrão do Python, pela decisão de OPEN-01 (2026-10-03). A suíte está em [`tests/`](../tests/README.md), e a avaliação de qualidade, em [`qualidade/`](qualidade/README.md). Desde a Spec 017 (2026-10-23), há interface web: os testes de API chamam a aplicação WSGI no próprio processo (`tests/apresentacao/`), e o fluxo crítico roda no navegador com Playwright, opcional (`tests/ponta_a_ponta/`), conforme OPEN-29. A suíte de 2026-10-23 tem 331 testes. A tabela da pirâmide abaixo é a de 2026-10-16. Como executar: [`execucao.md`](execucao.md).
+> Os testes usam `unittest`, da biblioteca padrão do Python, pela decisão de OPEN-01 (2026-10-03). A suíte está em [`tests/`](../tests/README.md), e a avaliação de qualidade, em [`qualidade/`](qualidade/README.md). Desde a Spec 017 (2026-10-23), há interface web: os testes de API chamam a aplicação WSGI no próprio processo (`tests/apresentacao/`), e o fluxo crítico roda no navegador com Playwright, opcional (`tests/ponta_a_ponta/`), conforme OPEN-29. A suíte de 2026-11-07 tem 478 testes, contados na pirâmide abaixo. Como executar: [`execucao.md`](execucao.md).
 
 ## Princípios
 
@@ -30,41 +30,40 @@ Aplicação da Pirâmide de Testes (Martin Fowler; Ham Vocke, *The Practical Tes
 | Unidade de domínio e de infraestrutura | `tests/dominio/`, `tests/infraestrutura/` | 50% a 60% | As regras de negócio vivem no domínio, sem banco e sem interface (ADR-001, RNF-19). São os testes mais rápidos e os que mais localizam um defeito. Cada RB tem teste nomeado pelo identificador |
 | Aplicação | `tests/aplicacao/`, exceto o aceite | 20% a 30% | Permissão, transação, auditoria e falha injetada (RNF-02, RNF-09) só existem na camada de aplicação. Usa repositórios em memória, então continua rápido |
 | Integração | `tests/integracao/` | 5% a 10% | Poucos, porque cada um exige banco real. Verificam o que a unidade não alcança: atomicidade, unicidade e contrato do repositório |
-| Aceite | `tests/aplicacao/test_spec_006_aceite.py` | 10% a 15% | Um teste por critério Dado, Quando, Então de cada spec. O número é dado pela spec, e não escolhido |
-| Interface e API | — (planejado, seção abaixo) | no máximo 5% | Lentos e frágeis. Só os fluxos críticos |
+| Aceite | `tests/aplicacao/test_spec_*_aceite.py` | 10% a 15% | Um teste por critério Dado, Quando, Então de cada spec. O número é dado pela spec, e não escolhido |
+| Interface e API | `tests/apresentacao/`, `tests/ponta_a_ponta/` | no máximo 5% | Lentos e frágeis. Só os fluxos críticos |
 
 Os testes de arquitetura (`tests/arquitetura/`) e de desempenho (`tests/desempenho/`) são transversais: guardam a regra de dependência (ADR-001) e o limite de RNF-11. Ficam fora da proporção.
 
 ### Contagem atual
 
-Suíte de 2026-10-16: 199 testes (9 pulados por dependerem de specs não aprovadas e 1 falha esperada do defeito D-06, ambos contados). Comando: carregar a suíte com `unittest.defaultTestLoader.discover` e contar por módulo.
+Suíte de 2026-11-07: 478 testes, todos passando, com 9 pulados (4 de navegador sem o Playwright, opcional, e 5 marcadores de testes ainda não escritos), contados. Comando: carregar a suíte com `unittest.defaultTestLoader.discover` e contar por pasta; o aceite são os arquivos `tests/aplicacao/test_spec_*_aceite.py`.
 
-| Nível | Testes | Participação | Alvo | Situação |
-|---|---|---|---|---|
-| Unidade de domínio | 86 | 44,6% | — | — |
-| Unidade de infraestrutura | 11 | 5,7% | — | — |
-| **Unidade, total** | **97** | **50,3%** | 50% a 60% | No alvo, no limite inferior |
-| Aplicação (sem o aceite) | 58 | 30,1% | 20% a 30% | Marginalmente acima do limite |
-| Integração | 9 | 4,7% | 5% a 10% | Um pouco abaixo; ver lacuna 2 |
-| Aceite (Spec 006) | 29 | 15,0% | 10% a 15% | No alvo, no limite superior |
-| Interface e API | 0 | 0% | até 5% | Não existe (OPEN-01) |
-| Transversais (arquitetura e desempenho) | 6 | — | fora da proporção | — |
+| Nível | Pasta | Testes | Participação | Alvo | Situação |
+|---|---|---|---|---|---|
+| Unidade de domínio | `tests/dominio/` | 134 | 28,5% | — | — |
+| Unidade de infraestrutura | `tests/infraestrutura/` | 34 | 7,2% | — | — |
+| **Unidade, total** | | **168** | **35,7%** | 50% a 60% | Abaixo do alvo |
+| Aplicação (sem o aceite) | `tests/aplicacao/` | 60 | 12,7% | 20% a 30% | Abaixo do alvo |
+| Integração | `tests/integracao/` | 11 | 2,3% | 5% a 10% | Abaixo do alvo |
+| Aceite (Specs 001 a 004, 006, 013, 018 e 019) | `tests/aplicacao/test_spec_*_aceite.py` | 150 | 31,8% | 10% a 15% | Muito acima do alvo |
+| Interface e API | `tests/apresentacao/` (78), `tests/ponta_a_ponta/` (4) | 82 | 17,4% | até 5% | Muito acima do alvo |
+| Transversais (arquitetura e desempenho) | `tests/arquitetura/`, `tests/desempenho/` | 7 | — | fora da proporção | — |
 
-Percentuais sobre os 193 testes dos quatro níveis (199 menos os 6 transversais).
+Percentuais sobre os 471 testes dos cinco níveis (478 menos os 7 transversais). A contagem de 2026-10-16 tinha 199 testes, com a unidade em 50,3% e nenhum teste de interface.
 
 ### Lacunas
 
-1. **Base no limite inferior, aplicação no superior.** A forma é de pirâmide, mas sem folga: a unidade está em 50,3% (limite inferior) e a aplicação em 30,1% (um décimo acima do limite). Os testes de qualidade (confiabilidade, exceções, idempotência, segurança de acesso) foram escritos na camada de aplicação porque exercitam o serviço com falha injetada e perfil; é o lugar certo para eles. O risco é a proporção se inverter conforme as próximas specs entrarem. Proposta: pôr cada regra nova no domínio e testá-la ali primeiro, deixando na aplicação só o que depende de perfil, transação e auditoria.
-2. **Integração só com repositório em memória e um pouco abaixo do alvo.** Os 9 testes de integração rodam contra a implementação em memória. Atomicidade, unicidade e concorrência reais só são verificáveis com o banco (OPEN-02); o contrato do repositório de títulos foi escrito para ser reaplicado. Quando houver banco, este nível cresce e passa da faixa mínima.
-3. **Topo da pirâmide inexistente.** Não há teste de API nem de interface. É esperado: não há interface (OPEN-01). O plano está na seção "Testes de API e de ponta a ponta".
-4. **Sem medição de cobertura.** A pirâmide mede quantidade de testes, e não o que eles exercitam. A decisão sobre medir cobertura é OPEN-27.
-5. **Não há cone de sorvete.** Nenhum teste passa pela interface, e os testes de aceite usam o serviço com repositórios em memória, rápidos (a suíte inteira roda em cerca de 3,5 s).
+1. **A pirâmide se inverteu.** O risco registrado em 2026-10-16 se confirmou: cada spec nova trouxe seus testes de aceite e de interface, e quase nenhum de unidade. Aceite e interface somam 49,3% da suíte, contra um alvo de até 20%; a unidade caiu de 50,3% para 35,7%. Proposta: nas próximas specs, testar cada regra nova no domínio primeiro, deixar no aceite só um teste por critério e, na interface, só o que depende da tela (sessão, formulário, erro por campo, escape de HTML).
+2. **Não há cone de sorvete na prática, ainda.** Os testes de aceite usam repositórios em memória, e os de interface chamam a aplicação WSGI no próprio processo, sem servidor nem navegador; a suíte inteira roda em cerca de 16 s. Só os 4 testes de `tests/ponta_a_ponta/` abrem o navegador, e são pulados sem o Playwright. O custo da inversão hoje é de manutenção (mudar uma tela quebra muitos testes), e não de tempo.
+3. **Integração abaixo do alvo.** O banco existe desde a Spec 017 (SQLite, ADR-007), mas a maior parte dos testes que o usam está em `tests/infraestrutura/`, contada como unidade. A atomicidade com duas transações simultâneas continua como marcador pulado (`test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo`). Proposta: escrever esse teste contra o SQLite e rever se os testes do SQLite são unidade ou integração.
+4. **Sem medição de cobertura.** A pirâmide mede quantidade de testes, e não o que eles exercitam. Por OPEN-27, coverage.py é opcional, só no desenvolvimento.
 
-Esta seção é proposta de alteração da baseline (regra 4 do CLAUDE.md) e aguarda aprovação da equipe no PR.
+Seção aprovada por Renan Gandolpho em 2026-11-07.
 
 ## Testes de API e de ponta a ponta (planejamento)
 
-Issue #83. Esta seção foi escrita como plano; a Spec 017 implementou os testes de API, o fluxo "Registrar pagamento integral e ver o título Baixado" no navegador e a recusa de rede sem TLS (OPEN-38). O fluxo do orçamento depende da Spec 004. Nenhum código de teste é escrito antes de existir spec aprovada com interface (regra 1 do CLAUDE.md). Todo o plano está **condicionado à decisão de OPEN-01** (framework web) e, para o ambiente de execução, de OPEN-12 (hospedagem).
+Issue #83. Esta seção foi escrita como plano; a Spec 017 implementou os testes de API, o fluxo "Registrar pagamento integral e ver o título Baixado" no navegador e a recusa de rede sem TLS (OPEN-38). O fluxo do orçamento depende da Spec 004. Nenhum código de teste é escrito antes de existir spec aprovada com interface (regra 1 do SPECS.md). Todo o plano está **condicionado à decisão de OPEN-01** (framework web) e, para o ambiente de execução, de OPEN-12 (hospedagem).
 
 ### Fluxos críticos candidatos a ponta a ponta
 
@@ -97,7 +96,7 @@ Comparação para subsidiar a decisão; **a escolha é da equipe** (OPEN-29). As
 |---|---|---|---|
 | API | Postman com Newman (citadas na aula) | Coleções com interface gráfica; Newman roda no terminal e na integração contínua | Ferramenta externa ao repositório de código; coleções em JSON são difíceis de revisar em PR; exige Node.js |
 | API | Testes em Python com a biblioteca padrão (`urllib`, `unittest`) | Sem dependência nova (RNF-23); versionado junto do código | Mais verboso; sem recursos prontos de coleção |
-| API | Testes em Python com `requests` ou o cliente de teste do framework | Concisos; o cliente de teste do framework dispensa subir o servidor | Instala dependência (pergunta antes, CLAUDE.md); o cliente de teste depende da escolha de OPEN-01 |
+| API | Testes em Python com `requests` ou o cliente de teste do framework | Concisos; o cliente de teste do framework dispensa subir o servidor | Instala dependência (pergunta antes, SPECS.md); o cliente de teste depende da escolha de OPEN-01 |
 | Navegador | Selenium (citado na aula) | Maduro; vários navegadores; documentação ampla | Esperas explícitas e testes mais frágeis; exige driver do navegador |
 | Navegador | Playwright | Espera automática de elementos; Chromium já disponível neste ambiente de agente | Dependência nova; ecossistema menos conhecido pela equipe, a confirmar |
 | Navegador | Cypress | Boa experiência de depuração | Exige Node.js; limitações com várias abas |
@@ -111,7 +110,7 @@ Comparação para subsidiar a decisão; **a escolha é da equipe** (OPEN-29). As
 
 ## Simuladores do canal de notificação e do serviço de IA
 
-Issue #79. Dublês de teste para que a suíte rode sem credencial externa (RNF-23) e cubra os casos de borda. Lições: Nubank (2021), e-mails de encerramento de conta enviados por engano, e Taco Bell (2025), falhas de IA em casos de borda. **Ainda não há código**: a regra 1 do CLAUDE.md manda escrevê-lo junto da primeira spec aprovada que usar a porta (Specs 008, 009 e 011). O que esta seção fixa é o contrato que cada simulador deve cumprir.
+Issue #79. Dublês de teste para que a suíte rode sem credencial externa (RNF-23) e cubra os casos de borda. Lições: Nubank (2021), e-mails de encerramento de conta enviados por engano, e Taco Bell (2025), falhas de IA em casos de borda. **Ainda não há código**: a regra 1 do SPECS.md manda escrevê-lo junto da primeira spec aprovada que usar a porta (Specs 008, 009 e 011). O que esta seção fixa é o contrato que cada simulador deve cumprir.
 
 Comum aos dois:
 
@@ -128,7 +127,7 @@ Casos de teste que os simuladores habilitam, a escrever com as specs:
 
 | Caso | Requisito |
 |---|---|
-| Mensagem da régua vai ao destinatário certo, com o conteúdo certo | RF-34, RF-71 |
+| Mensagem da régua vai ao destinatário certo, com o conteúdo certo | RF-34, RB-18 |
 | Falha do canal não repete etapa nem perde o registro de tentativa | DA-08 |
 | Confiança exatamente igual ao limiar é aceita; um centésimo abaixo é decidida por pessoa | RB-08, RB-14, OPEN-05 |
 | Categoria que não existe no plano de contas é recusada | RB-08 |
@@ -161,7 +160,7 @@ Uma issue de implementação está pronta quando:
 
 ## Registro da verificação
 
-A verificação de cada spec é registrada na seção 8 da própria spec, com um resultado por critério de aceite: passou, não passou ou não verificado (passo 6 do fluxo do [`CLAUDE.md`](../CLAUDE.md)). Critério que não puder ser automatizado é verificado manualmente e registrado no mesmo lugar.
+A verificação de cada spec é registrada na seção 8 da própria spec, com um resultado por critério de aceite: passou, não passou ou não verificado (passo 6 do fluxo do [`SPECS.md`](../SPECS.md)). Critério que não puder ser automatizado é verificado manualmente e registrado no mesmo lugar.
 
 A [matriz de critérios](qualidade/matriz-criterios-de-aceite.md) liga cada critério ao teste.
 

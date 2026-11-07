@@ -7,7 +7,7 @@
 | **Objetivo** | Obter novo prazo para um título vencido, com o combinado registrado. |
 | **Gatilho** | O Cliente envia uma mensagem sobre um título seu. |
 | **Regras de negócio** | RB-11, RB-17, RB-20, RB-27, RB-28 |
-| **Requisitos** | RF-28, RF-29, RF-69, RF-72 a RF-76, RNF-22, RNF-24 |
+| **Requisitos** | RF-28, RF-29, RF-72 a RF-76, RNF-22, RNF-24 |
 
 ## Pré-condições
 
@@ -26,7 +26,7 @@
 ## Fluxos alternativos
 
 - **A1 — Proposta fora dos limites.** No passo 6, o sistema encaminha a proposta ao Operador Financeiro ou ao Dono. Se aprovada, o fluxo segue no passo 6. Se recusada, o título volta a Vencido e o Cliente é avisado por template (RF-76).
-- **A2 — Consulta de títulos.** O Cliente autenticado consulta seus títulos, com valor, vencimento, saldo e estado, sem propor renegociação (RF-69).
+- **A2 — Consulta de títulos.** *Retirado em 2026-10-31 (OPEN-57): o cliente não acessa o sistema, e o RF-69 foi retirado.*
 - **A3 — Renegociação registrada pelo Operador.** O Operador Financeiro registra a proposta recebida por outro meio. O fluxo segue no passo 3.
 
 ## Exceções

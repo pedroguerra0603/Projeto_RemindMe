@@ -1,6 +1,6 @@
 # Estados — RemindMe
 
-Ciclos de vida das três entidades com estado explícito. Uma transição que não está na tabela é inválida e deve ser recusada.
+Ciclos de vida das quatro entidades com estado explícito. Uma transição que não está na tabela é inválida e deve ser recusada.
 
 ## Título
 
@@ -110,3 +110,37 @@ Cláusulas de estado derivadas:
 
 - WHILE a obrigação estiver Aguardando Evidência, o alerta permanece no painel do Operador Financeiro (RF-77).
 - IF a obrigação permanecer Atrasada pela tolerância configurada, THEN o sistema escala ao Dono (RF-49).
+
+## Conta a pagar
+
+Regras: RB-31, RB-32 e RB-33 (Spec 018). Imagem: [`estados-conta-pagar.png`](estados-conta-pagar.png).
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> Aberta : cadastrada
+    Aberta --> Vencida : vencimento passa
+    Aberta --> Paga : saldo zero
+    Vencida --> Paga : saldo zero
+    Paga --> Aberta : estorno, a vencer
+    Paga --> Vencida : estorno, já vencida
+    Aberta --> Cancelada : cancelamento
+    Vencida --> Cancelada : cancelamento
+    Cancelada --> [*]
+```
+
+| De | Para | Gatilho | Requisito |
+|---|---|---|---|
+| — | Aberta | Conta cadastrada para um fornecedor, com saldo igual ao valor | RF-88 |
+| Aberta | Vencida | Vencimento passa, pelo agendador | RF-90 |
+| Aberta, Vencida | Paga | Pagamento leva o saldo a zero | RF-91 |
+| Paga | Aberta | Estorno pelo Dono, com motivo e vencimento futuro | RF-92 |
+| Paga | Vencida | Estorno pelo Dono, com motivo e vencimento passado | RF-92 |
+| Aberta, Vencida | Cancelada | Cancelamento pelo Dono, com motivo | RF-93 |
+
+Cláusulas de estado derivadas:
+
+- Pagamento parcial e estorno de pagamento em conta Aberta ou Vencida não mudam o estado; só o saldo (RF-91, RF-92).
+- IF for solicitado pagamento em conta Paga ou Cancelada, THEN o sistema recusa (RB-31).
+- IF for solicitado o cancelamento de conta Paga, THEN o sistema recusa; os pagamentos são estornados antes (RB-31).
+- Pela OPEN-53, o Administrador também estorna e cancela (RB-33).

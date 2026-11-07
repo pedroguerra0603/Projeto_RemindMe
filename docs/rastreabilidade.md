@@ -2,10 +2,10 @@
 
 Issue #40. Este documento liga os requisitos aos drivers arquiteturais, às decisões técnicas, à implementação e aos testes. Ele mostra, para cada requisito, de onde ele vem e onde está a evidência de que foi atendido.
 
-- **Data:** 2026-10-16.
-- **Base:** `main` em `4b4ef09`, depois do PR #85. A suíte tem 132 testes, todos passando.
-- **Fontes:** [requisitos](requisitos.md), [arquitetura](arquitetura.md), [ADRs](adr/README.md), [mapa de specs](../.specify/specs/mapa-de-specs.md), [Spec 006](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md), [`src/`](../src/README.md), [`tests/`](../tests/README.md).
-- **Complementa:** a [matriz de critérios de aceite](qualidade/matriz-criterios-de-aceite.md). A matriz parte de cada critério da Spec 006 e chega ao teste. Este documento parte do requisito e passa pelo driver e pela decisão.
+- **Data:** 2026-11-07.
+- **Base:** `main` em `f9f2a01`, depois do PR #103, com as aprovações de 2026-11-07. A suíte tem 478 testes, todos passando, com 9 pulados (4 de navegador sem o Playwright, opcional, e 5 marcadores de testes ainda não escritos).
+- **Fontes:** [requisitos](requisitos.md), [arquitetura](arquitetura.md), [ADRs](adr/README.md), [mapa de specs](../.specify/specs/mapa-de-specs.md), as [specs](../.specify/specs/) verificadas, [`src/`](../src/README.md), [`tests/`](../tests/README.md).
+- **Complementa:** a [matriz de critérios de aceite](qualidade/matriz-criterios-de-aceite.md), que parte de cada critério da Spec 006 e chega ao teste, e a seção 8 de cada spec, que registra o teste de cada critério. Este documento parte do requisito e passa pelo driver e pela decisão.
 
 ## 1. Cadeia
 
@@ -15,91 +15,146 @@ Requisito (RF, RNF, RB) → Driver (DA) → Decisão (DT, ADR) → Spec → Cód
 
 O identificador é o elo da cadeia. Ele aparece no requisito, na spec, na docstring do código e no nome do teste. Por exemplo, a regra `RB-23` vira o teste `test_RB_23_recusa_pagamento_maior_que_o_saldo`. Os caminhos de código são relativos a `src/remindme/`.
 
+### Como as tabelas foram montadas
+
+1. Os requisitos ativos vêm de [`requisitos.md`](requisitos.md); os retirados (RF-60, RF-63, RF-69, RF-71, RNF-10, RB-26) ficam de fora.
+2. As specs de cada requisito vêm das colunas RF, RB e RNF do mapa. Um requisito está **Implementado** quando todas as specs que o citam estão Verificadas; **Parcial** quando só parte delas está; **Sem implementação** quando nenhuma está.
+3. O código é a lista de módulos que citam o identificador; os testes são as funções cujo nome contém o identificador (`test_*RF_24*`) e os arquivos de teste das specs verificadas (`test_spec_NNN_*`).
+4. A situação foi corrigida à mão quando a regra do item 2 não refletia o código, com o motivo na própria linha: RB-01, RB-21, RF-61, RNF-23 (parciais), RNF-11, RNF-25 (parciais, ver lacuna 4) e RF-28, RF-29 (sem implementação, ver lacuna 3).
+
 ## 2. Drivers → decisões → implementação → testes
 
 Os dez drivers de [`arquitetura.md`](arquitetura.md#2-drivers-arquiteturais), com a decisão que responde a cada um e a evidência no código.
 
 | Driver | Requisitos de origem | Decisão | Specs | Implementação | Testes | Situação |
 |---|---|---|---|---|---|---|
-| DA-01 — Transições de estado são invariantes de domínio | RB-21, RB-05, RB-22, RF-12, RF-24 | DT-01, ADR-001 | 006 (título); 004, 005 (orçamento); 010 (obrigação) | `dominio/titulo.py`: `EstadoTitulo` e os métodos de `Titulo` | `test_RB_21_*` (10), `test_INV_4_*` (2), CA-08, CA-09, CA-19 | Título: implementado, sem Em Renegociação (Spec 009). Orçamento e obrigação: pendentes |
-| DA-02 — Toda mudança de estado é auditada, e a auditoria é imutável | RB-01, RB-30, RNF-06 | DT-04, ADR-004 | 001, 013; 006 (uso) | `dominio/auditoria.py` (`RegistroAuditoria` imutável); `aplicacao/servico_titulos.py` (`_auditar`, `_auditar_estado`); `infraestrutura/memoria.py` (`AuditoriaEmMemoria`, só inclusão) | CA-22 (2), `test_RB_01_toda_mudanca_de_estado_tem_registro_de_auditoria`, `test_RB_30_registro_de_auditoria_e_imutavel`, `test_ADR_004_registros_sao_acrescentados_em_ordem` | Parcial: título e pagamento, em memória. Persistência e consulta nas Specs 001 e 013 |
-| DA-03 — Operações financeiras são atômicas | RNF-09, RB-19 | DT-05 | 006; 005, 015 | `infraestrutura/memoria.py`: `UnidadeDeTrabalhoEmMemoria`; o serviço abre uma transação por operação | CA-23, `test_RNF_09_*` (8) | Implementado em memória. O banco depende de OPEN-02 |
-| DA-04 — Acesso negado por padrão; o cliente não acessa o sistema (OPEN-57) | RNF-02, RNF-03, RNF-25, RB-03 | DT-06 | 002, 009; 006 (estorno e cancelamento) | `dominio/regras.py` (`exigir_permissao_de_estorno`, `exigir_permissao_de_cancelamento`), chamadas pelo serviço antes do domínio | CA-15, CA-18, `test_RB_02_*` (2), `test_OPEN_16_*` (2) | Parcial: só RB-02 e OPEN-16. RB-03, RNF-01, RNF-02 e RNF-25 dependem das Specs 002 e 009 |
-| DA-05 — Processamento por tempo não degrada o uso interativo | RF-24, RF-33, RF-34, RF-44, RF-48, RNF-12, RNF-13 | DT-07 | 008, 010 | `ServicoTitulos.verificar_vencimentos`: a operação existe e pode ser chamada pelo agendador | CA-10, CA-11, `test_RF_24_*` (3); lote de vencimentos medido em [eficiência](qualidade/eficiencia.md) | Parcial: o agendador não existe (OPEN-13, Spec 008) |
+| DA-01 — Transições de estado são invariantes de domínio | RB-21, RB-05, RB-22, RF-12, RF-24 | DT-01, ADR-001 | 004, 006, 018; 005, 009, 010 | `dominio/titulo.py`, `dominio/orcamento.py`, `dominio/conta_pagar.py`: estados e transições nos próprios objetos | `test_RB_21_*`, `test_RB_31_*`, `tests/dominio/test_orcamento.py`, `test_INV_*` | Parcial: título (sem Em Renegociação), orçamento até o envio e conta a pagar. Conversão em título (005) e obrigação (010) pendentes |
+| DA-02 — Toda mudança de estado é auditada, e a auditoria é imutável | RB-01, RB-30, RNF-06 | DT-04, ADR-004 | 001, 013 e todas as que alteram dados | `dominio/auditoria.py` (`RegistroAuditoria` imutável); `aplicacao/auditoria.py`; `infraestrutura/sqlite.py` (triggers que recusam alterar e excluir) | `test_RB_01_*`, `test_RB_30_*`, aceite das Specs 001 e 013 | Implementado para as entidades que existem |
+| DA-03 — Operações financeiras são atômicas | RNF-09, RB-19 | DT-05 | 001, 006, 018, 019; 005, 015 | `infraestrutura/sqlite.py`: uma transação por operação, com `BEGIN IMMEDIATE`; `infraestrutura/memoria.py` para os testes | `test_RNF_09_*`, `test_CA_23_falha_na_auditoria_desfaz_o_pagamento`, `tests/integracao/` | Implementado; o teste de concorrência real continua como marcador (lacuna 5) |
+| DA-04 — Acesso negado por padrão; o cliente não acessa o sistema (OPEN-57) | RNF-02, RNF-03, RNF-25, RB-03 | DT-06 | 002, 017, 018 | `dominio/permissoes.py` (matriz perfil × operação); `aplicacao/acesso.py`, chamado pelo serviço antes do domínio | `test_RNF_02_*`, `test_RNF_03_*`, `test_RB_03_*`, aceite da Spec 002 | Implementado |
+| DA-05 — Processamento por tempo não degrada o uso interativo | RF-24, RF-33, RF-34, RF-44, RF-48, RNF-12, RNF-13 | DT-07 | 006, 017, 018; 008, 010 | `entradas/agendador.py` (`AgendadorDeVencimentos`, na inicialização e a cada hora, OPEN-48) | `test_RF_24_*`, `test_RF_90_*`; lote de vencimentos medido em [eficiência](qualidade/eficiencia.md) | Parcial: vencimento de títulos e contas a pagar. Régua (008) e obrigações (010) pendentes |
 | DA-06 — A IA é falível e nunca decide | RB-08, RB-14, RB-17, RB-27, RNF-24 | DT-03, ADR-003 | 009, 011 | — | — | Pendente |
-| DA-07 — A suíte roda sem credencial externa | RNF-23, RB-18 | DT-02, ADR-002 | 001, 005, 008 | O código e os testes usam somente a biblioteca padrão; não há variável de credencial | `test_OPEN_01_codigo_usa_somente_a_biblioteca_padrao`; a suíte inteira | Parcial: os simuladores de canal e de IA ainda não existem (issue #79) |
-| DA-08 — A régua não repete etapa para o mesmo título | UC-08, RF-35 | DT-08 | 008 | — | — | Pendente |
-| DA-09 — Cada regra em um único ponto, com teste nomeado | RNF-19 | DT-01 | Todas | RB-21, RB-22 e RB-23 só em `dominio/titulo.py`; RB-02 e OPEN-16 só em `dominio/regras.py` | `test_RNF_19_regras_do_titulo_ficam_somente_no_dominio`, `test_ADR_001_cada_camada_importa_somente_as_camadas_permitidas` | Implementado para a Spec 006 |
+| DA-07 — A suíte roda sem credencial externa | RNF-23, RB-18 | DT-02, ADR-002 | 001; 005, 008 | Somente a biblioteca padrão; nenhuma variável de credencial | `test_OPEN_01_codigo_usa_somente_a_biblioteca_padrao`; a suíte inteira | Parcial: os simuladores de canal e de IA vêm com as Specs 008, 009 e 011 |
+| DA-08 — A régua não repete etapa para o mesmo título | UC-08, RF-35 | DT-08 | 008 | — | `test_DA_08_*` (marcador pulado) | Pendente |
+| DA-09 — Cada regra em um único ponto, com teste nomeado | RNF-19 | DT-01 | Todas | Regras em `dominio/`; a apresentação não as reimplementa | `test_RNF_19_regras_do_titulo_ficam_somente_no_dominio`, `test_ADR_001_cada_camada_importa_somente_as_camadas_permitidas`, `test_INV_1_a_apresentacao_nao_usa_regras_do_dominio_diretamente` | Implementado |
 | DA-10 — Configuração alterada não reescreve o passado | RNF-18, RF-36 | DT-09 | 007, 014 | — | — | Pendente |
 
 ## 3. Requisitos implementados → código → testes
 
-Requisitos da Spec 006 e os RNF verificados na rodada de qualidade de outubro (#48 a #72). O asterisco indica o conjunto de testes com aquele prefixo; entre parênteses, a quantidade.
+Requisitos com situação Implementado ou Parcial. "Specs" lista só as verificadas.
 
-| Requisito | Driver | Decisão | Código | Testes | Situação |
-|---|---|---|---|---|---|
-| RF-20 | DA-01 | DT-01 | `Titulo.cadastrar_manual`; `ServicoTitulos.cadastrar_titulo` | CA-01, CA-02 (2), `test_RB_21_titulo_nasce_aberto`, `test_RF_20_condicao_de_pagamento_e_opcional`, `test_E7_*` (5) | Implementado. "Usuário autorizado" depende da Spec 002 |
-| RF-21 | — | — | Campos de `Titulo` | `test_RF_21_armazena_todos_os_dados_do_titulo`, `test_contrato_salva_e_obtem_com_todos_os_dados` | Implementado |
-| RF-22 | — | — | `ServicoTitulos.consultar_titulos`, `FiltroTitulos`, `_atende` | CA-21 (2) | Implementado. "Período" filtra o vencimento (OPEN-19) |
-| RF-23 | — | — | `Titulo.proximo_do_vencimento` | CA-20, `test_RF_23_*` (3) | Implementado. Nenhuma spec define de onde vem a antecedência (OPEN-21) |
-| RF-24 | DA-01, DA-05 | DT-01, DT-07 | `Titulo.marcar_vencido`; `ServicoTitulos.verificar_vencimentos` | CA-10, CA-11, `test_RF_24_*` (3), `test_RNF_09_falha_no_meio_do_lote_de_vencimentos_desfaz_o_lote_inteiro` | Implementado. O disparo periódico é da Spec 008 |
-| RF-25 | DA-01, DA-03 | DT-01, DT-05 | `Titulo.registrar_pagamento`; `ServicoTitulos.registrar_pagamento` | CA-03, CA-04, `test_RF_25_devolve_o_pagamento_registrado` | Implementado. "Usuário autorizado" depende da Spec 002 |
-| RF-26 | DA-01 | DT-01 | `Titulo.registrar_pagamento` (RB-22) | CA-03, CA-05, CA-12 | Implementado |
-| RF-27 | — | — | `Titulo.saldo` | CA-04, `test_RF_27_*` (2) | Implementado |
-| RF-30 | DA-01, DA-04 | DT-01, DT-06 | `Titulo.estornar_pagamento`; `regras.exigir_permissao_de_estorno`; `ServicoTitulos.estornar_pagamento` | CA-13, CA-14, `test_A4_*` (3), `test_RF_30_estorno_guarda_o_motivo` | Implementado. Em aberto: OPEN-18 e OPEN-23 |
-| RF-31 | DA-02 | DT-04 | `_exigir_motivo` em `dominio/titulo.py` | CA-16, `test_CA_18_E4_recusa_cancelamento_sem_motivo`, `test_RF_31_motivo_em_branco_equivale_a_ausente`, `test_E4_*` (3) | Implementado para estorno e cancelamento. A "alteração de valor" não tem operação (OPEN-22) |
-| RF-68 | DA-01 | DT-01 | `Titulo.registrar_pagamento`, `_exigir_decimal` | CA-06, CA-07, `test_E1_*` (3) | Implementado |
-| RB-01 | DA-02 | DT-04, ADR-004 | `ServicoTitulos._auditar`, `_auditar_estado` | CA-22 (2), `test_RB_01_toda_mudanca_de_estado_tem_registro_de_auditoria`, `test_UC_06_ciclo_completo_grava_estado_e_trilha_de_auditoria` | Parcial: título e pagamento |
-| RB-02 | DA-04 | DT-06 | `regras.exigir_permissao_de_estorno` | CA-15, `test_RB_02_*` (2) | Implementado |
-| RB-21 | DA-01 | DT-01, ADR-001 | `EstadoTitulo`, `ESTADOS_QUE_ACEITAM_PAGAMENTO`, `ESTADOS_QUE_ACEITAM_CANCELAMENTO` e os métodos de `Titulo` | CA-08, CA-09, CA-19, `test_RB_21_*` (10), `test_INV_4_*` (2) | Parcial: sem Em Renegociação (Spec 009) |
-| RB-22 | DA-01 | DT-01 | `Titulo.registrar_pagamento`, `Titulo.saldo` | CA-03, CA-05, `test_RB_22_*` (3) | Implementado |
-| RB-23 | DA-01 | DT-01 | `Titulo.registrar_pagamento` | CA-06, CA-07, `test_RB_23_*` (6) | Implementado |
-| RB-30 | DA-02 | DT-04, ADR-004 | `RegistroAuditoria` imutável (`frozen=True`); `AuditoriaEmMemoria` sem alteração nem exclusão | `test_RB_30_registro_de_auditoria_e_imutavel`, `test_ADR_004_registros_sao_acrescentados_em_ordem` | Parcial: objeto imutável. A garantia no armazenamento é da Spec 001 |
-| OPEN-16 (decisão) | DA-04 | DT-06 | `regras.exigir_permissao_de_cancelamento` | `test_CA_18_OPEN_16_operador_financeiro_nao_cancela`, `test_OPEN_16_*` (2) | Implementado |
-| RNF-03 | DA-04 | DT-06 | A permissão é verificada no serviço, sem interface | CA-15, `test_RB_02_nenhum_outro_perfil_estorna` | Parcial: só estorno e cancelamento |
-| RNF-09 | DA-03 | DT-05 | `UnidadeDeTrabalhoEmMemoria` | CA-23, `test_RNF_09_*` (8) | Implementado em memória |
-| RNF-11 | DA-05 | — | — | `test_RNF_11_*` (3); [eficiência](qualidade/eficiencia.md) | Atende, com 2000 títulos em memória |
-| RNF-14 | — | — | Motivo de `OperacaoRecusada` | `test_RNF_14_*` (2); [usabilidade](qualidade/usabilidade.md) | Parcial: ainda não há interface |
-| RNF-19 | DA-09 | DT-01 | Regras somente em `dominio/` | `test_RNF_19_regras_do_titulo_ficam_somente_no_dominio` | Implementado |
-| RNF-23 | DA-07 | DT-02 | Somente a biblioteca padrão | `test_OPEN_01_codigo_usa_somente_a_biblioteca_padrao` | Parcial: simuladores pendentes |
-| RF-95 | DA-04 | DT-06 | `ServicoAcesso.trocar_senha`; `motivo_da_senha` | `test_CA_01_*` a `test_CA_12_*` (Spec 019); `test_CA_17_*`; `test_CA_18_*` | Implementado |
-| RF-96 | DA-04 | DT-06 | `ServicoAcesso.trocar_senha`; `motivo_da_senha` | `test_CA_02_senha_atual_errada_nao_muda_nada`; `test_CA_15_*` | Implementado |
+| Requisito | Specs | Código | Testes | Situação |
+|---|---|---|---|---|
+| RF-01 | 003, 017 | `aplicacao/servico_clientes.py`; `dominio/cliente.py` | testes da Spec 003, Spec 017 | Implementado |
+| RF-02 | 002, 017 | `aplicacao/servico_acesso.py`; `dominio/usuario.py` | `test_*RF_02*` (1); testes da Spec 002, Spec 017 | Implementado |
+| RF-03 | 002, 017 | `aplicacao/acesso.py`; `aplicacao/servico_acesso.py`; `dominio/permissoes.py` | `test_*RF_03*` (2); testes da Spec 002, Spec 017 | Parcial. Falta a parte da Spec 014 |
+| RF-04 | 001 | — | testes da Spec 001 | Implementado |
+| RF-05 | 001 | `aplicacao/auditoria.py`; `aplicacao/servico_acesso.py`; `aplicacao/servico_clientes.py` … | `test_*RF_05*` (2); testes da Spec 001 | Implementado |
+| RF-65 | 002, 017 | `aplicacao/servico_acesso.py`; `apresentacao/web/aplicacao_web.py`; `dominio/permissoes.py` | `test_*RF_65*` (2); testes da Spec 002, Spec 017 | Implementado |
+| RF-66 | 002, 017 | `aplicacao/servico_acesso.py`; `apresentacao/web/aplicacao_web.py` | `test_*RF_66*` (2); testes da Spec 002, Spec 017 | Implementado |
+| RF-67 | 002, 017 | `aplicacao/servico_acesso.py`; `dominio/erros.py`; `dominio/permissoes.py` | `test_*RF_67*` (3); testes da Spec 002, Spec 017 | Implementado |
+| RF-95 | 019 | `aplicacao/servico_acesso.py`; `apresentacao/web/aplicacao_web.py`; `apresentacao/web/paginas.py` | testes da Spec 019 | Implementado |
+| RF-96 | 019 | `aplicacao/servico_acesso.py` | testes da Spec 019 | Implementado |
+| RF-06 | 004 | `aplicacao/servico_orcamentos.py`; `dominio/orcamento.py` | `test_*RF_06*` (2); testes da Spec 004 | Implementado |
+| RF-07 | 004 | `aplicacao/servico_orcamentos.py`; `dominio/orcamento.py` | `test_*RF_07*` (4); testes da Spec 004 | Implementado |
+| RF-10 | 004 | `aplicacao/servico_orcamentos.py` | `test_*RF_10*` (1); testes da Spec 004 | Implementado |
+| RF-13 | 004 | `aplicacao/servico_orcamentos.py`; `dominio/orcamento.py` | `test_*RF_13*` (3); testes da Spec 004 | Implementado |
+| RF-14 | 004 | `dominio/orcamento.py` | testes da Spec 004 | Parcial. Falta a parte da Spec 014 |
+| RF-15 | 004 | `aplicacao/servico_orcamentos.py`; `dominio/orcamento.py` | `test_*RF_15*` (1); testes da Spec 004 | Implementado |
+| RF-16 | 004 | `aplicacao/servico_orcamentos.py`; `dominio/orcamento.py` | `test_*RF_16*` (2); testes da Spec 004 | Implementado |
+| RF-17 | 004 | `aplicacao/servico_orcamentos.py`; `dominio/orcamento.py` | `test_*RF_17*` (2); testes da Spec 004 | Implementado |
+| RF-18 | 004 | `aplicacao/servico_orcamentos.py`; `dominio/orcamento.py` | `test_*RF_18*` (1); testes da Spec 004 | Implementado |
+| RF-20 | 006, 017 | `dominio/titulo.py` | `test_*RF_20*` (2); testes da Spec 006, Spec 017 | Implementado |
+| RF-21 | 006, 017 | `dominio/titulo.py` | `test_*RF_21*` (1); testes da Spec 006, Spec 017 | Implementado |
+| RF-22 | 006, 017 | `aplicacao/servico_titulos.py` | `test_*RF_22*` (1); testes da Spec 006, Spec 017 | Implementado |
+| RF-23 | 006, 017 | `dominio/titulo.py` | `test_*RF_23*` (4); testes da Spec 006, Spec 017 | Parcial. Falta a parte da Spec 014 |
+| RF-24 | 006, 017 | `dominio/titulo.py`; `entradas/agendador.py` | `test_*RF_24*` (14); testes da Spec 006, Spec 017 | Implementado |
+| RF-25 | 006, 017 | `apresentacao/web/graficos.py`; `dominio/titulo.py` | `test_*RF_25*` (6); testes da Spec 006, Spec 017 | Implementado |
+| RF-26 | 006, 017 | `dominio/titulo.py` | testes da Spec 006, Spec 017 | Implementado |
+| RF-27 | 006, 017 | `dominio/titulo.py` | `test_*RF_27*` (2); testes da Spec 006, Spec 017 | Implementado |
+| RF-30 | 006, 017 | `dominio/titulo.py` | `test_*RF_30*` (6); testes da Spec 006, Spec 017 | Implementado |
+| RF-31 | 006, 017 | `dominio/titulo.py` | `test_*RF_31*` (1); testes da Spec 006, Spec 017 | Implementado |
+| RF-68 | 006 | — | testes da Spec 006 | Implementado |
+| RF-61 | 001 | — | testes da Spec 001 | Parcial. Orçamento, título e pagamento; obrigação e lançamento dependem das Specs 010 e 011 |
+| RF-62 | 001 | `dominio/auditoria.py` | `test_*RF_62*` (1); testes da Spec 001 | Implementado |
+| RF-64 | 013, 017 | `aplicacao/servico_auditoria.py` | testes da Spec 013, Spec 017 | Implementado |
+| RF-87 | 018 | `aplicacao/servico_fornecedores.py`; `dominio/fornecedor.py` | testes da Spec 018 | Implementado |
+| RF-88 | 018 | `aplicacao/servico_contas_pagar.py`; `dominio/conta_pagar.py` | `test_*RF_88*` (1); testes da Spec 018 | Implementado |
+| RF-89 | 018 | `aplicacao/servico_contas_pagar.py` | `test_*RF_89*` (1); testes da Spec 018 | Implementado |
+| RF-90 | 018 | `aplicacao/servico_contas_pagar.py`; `dominio/conta_pagar.py`; `entradas/agendador.py` | `test_*RF_90*` (1); testes da Spec 018 | Implementado |
+| RF-91 | 018 | `aplicacao/servico_contas_pagar.py`; `dominio/conta_pagar.py` | testes da Spec 018 | Implementado |
+| RF-92 | 018 | `aplicacao/servico_contas_pagar.py`; `dominio/conta_pagar.py` | `test_*RF_92*` (1); testes da Spec 018 | Implementado |
+| RF-93 | 018 | `aplicacao/servico_contas_pagar.py`; `dominio/conta_pagar.py` | `test_*RF_93*` (1); testes da Spec 018 | Implementado |
+| RF-94 | 018 | `apresentacao/web/paginas.py` | testes da Spec 018 | Implementado |
+| RNF-01 | 002, 017, 019 | `aplicacao/acesso.py`; `apresentacao/web/aplicacao_web.py` | `test_*RNF_01*` (3); testes da Spec 002, Spec 017, Spec 019 | Implementado |
+| RNF-02 | 002, 017, 018 | `aplicacao/acesso.py`; `dominio/erros.py`; `dominio/permissoes.py` | `test_*RNF_02*` (8); testes da Spec 002, Spec 017, Spec 018 | Implementado |
+| RNF-03 | 002, 004, 017 | — | `test_*RNF_03*` (4); testes da Spec 002, Spec 004, Spec 017 | Implementado |
+| RNF-04 | 002, 019 | `aplicacao/portas.py`; `aplicacao/senhas.py`; `aplicacao/servico_acesso.py` | `test_*RNF_04*` (1); testes da Spec 002, Spec 019 | Implementado |
+| RNF-05 | 002, 017 | `inicializacao.py` | `test_*RNF_05*` (2); testes da Spec 002, Spec 017 | Implementado |
+| RNF-06 | 001, 013, 017 | `aplicacao/portas.py`; `infraestrutura/sqlite.py` | `test_*RNF_06*` (3); testes da Spec 001, Spec 013, Spec 017 | Implementado |
+| RNF-25 | — | — | `test_*RNF_25*` (2) | Parcial. A recusa por perfil não revela dados do título; a resposta a mensagens de cliente é da Spec 009 |
+| RNF-09 | 001, 006, 017, 018, 019 | `aplicacao/portas.py`; `aplicacao/servico_acesso.py`; `infraestrutura/memoria.py` … | `test_*RNF_09*` (14); testes da Spec 001, Spec 006, Spec 017, Spec 018, Spec 019 | Parcial. Falta a parte das Specs 005, 015 |
+| RNF-11 | — | — | `test_*RNF_11*` (3) | Parcial. Medido para cadastro, consulta, pagamento e cancelamento; o mapa o atribui só à Spec 012 |
+| RNF-14 | 003, 017, 018, 019 | `apresentacao/web/aplicacao_web.py`; `dominio/cliente.py`; `dominio/empresa.py` … | `test_*RNF_14*` (10); testes da Spec 003, Spec 017, Spec 018, Spec 019 | Implementado |
+| RNF-15 | 018 | — | `test_*RNF_15*` (1); testes da Spec 018 | Parcial. Falta a parte das Specs 010, 016 |
+| RNF-16 | 017 | `aplicacao/servico_titulos.py` | testes da Spec 017 | Parcial. Falta a parte da Spec 016 |
+| RNF-19 | 001, 006 | `dominio/regras.py` | `test_*RNF_19*` (1); testes da Spec 001, Spec 006 | Implementado |
+| RNF-21 | 001, 017 | `__init__.py`; `aplicacao/auditoria.py`; `aplicacao/portas.py` … | `test_*RNF_21*` (1); testes da Spec 001, Spec 017 | Implementado |
+| RNF-23 | 001 | — | testes da Spec 001 | Parcial. A suíte roda sem credencial; os simuladores de canal e de IA vêm com as Specs 008, 009 e 011 |
+| RB-01 | 001, 006 | — | `test_*RB_01*` (4); testes da Spec 001, Spec 006 | Parcial. Orçamento, título e pagamento; obrigação e lançamento dependem das Specs 010 e 011 |
+| RB-02 | 006 | `dominio/regras.py`; `dominio/titulo.py` | `test_*RB_02*` (4); testes da Spec 006 | Implementado |
+| RB-03 | 002 | `dominio/regras.py` | `test_*RB_03*` (7); testes da Spec 002 | Implementado |
+| RB-15 | 004 | `aplicacao/servico_orcamentos.py`; `dominio/orcamento.py`; `dominio/regras.py` | `test_*RB_15*` (7); testes da Spec 004 | Implementado |
+| RB-21 | 006 | `dominio/titulo.py` | `test_*RB_21*` (11); testes da Spec 006 | Parcial. Sem o estado Em Renegociação (Spec 009) |
+| RB-22 | 006 | `dominio/titulo.py` | `test_*RB_22*` (5); testes da Spec 006 | Implementado |
+| RB-23 | 006 | `dominio/titulo.py` | `test_*RB_23*` (12); testes da Spec 006 | Implementado |
+| RB-24 | 004 | `apresentacao/web/paginas.py`; `dominio/orcamento.py` | `test_*RB_24*` (2); testes da Spec 004 | Implementado |
+| RB-30 | 001, 013 | `aplicacao/portas.py`; `aplicacao/servico_auditoria.py`; `dominio/auditoria.py` … | `test_*RB_30*` (6); testes da Spec 001, Spec 013 | Implementado |
+| RB-31 | 018 | `dominio/conta_pagar.py` | `test_*RB_31*` (3); testes da Spec 018 | Implementado |
+| RB-32 | 018 | `dominio/conta_pagar.py` | `test_*RB_32*` (1); testes da Spec 018 | Implementado |
+| RB-33 | 018 | `aplicacao/servico_contas_pagar.py`; `dominio/conta_pagar.py`; `dominio/permissoes.py` … | `test_*RB_33*` (1); testes da Spec 018 | Implementado |
 
 ## 4. Requisitos ainda sem implementação
 
-Todo requisito ativo aparece em ao menos uma spec do mapa. A conferência foi feita por script sobre `requisitos.md` e a tabela do mapa: os 137 requisitos ativos aparecem. RNF-07 e RNF-08 aparecem como operacionais, na nota abaixo da tabela. Os que não estão na seção 3 seguem pela spec indicada no mapa.
+Todo requisito ativo aparece em ao menos uma spec do mapa, exceto RNF-07 e RNF-08, que são operacionais. Os requisitos abaixo seguem pela spec indicada; um requisito pode aparecer em mais de uma.
 
 | Spec | Requisitos | Situação da spec |
 |---|---|---|
-| 001 | RF-04, RF-05, RF-61, RF-62; RB-01, RB-30; RNF-06, RNF-21 | A escrever |
-| 002 | RF-02, RF-03, RF-65, RF-66, RF-67; RB-03; RNF-01 a RNF-05 | A escrever |
-| 003 | RF-01 | A escrever |
-| 004 | RF-06, RF-07, RF-10, RF-13 a RF-18; RB-15, RB-24 | A escrever |
-| 005 | RF-08, RF-09, RF-11, RF-12, RF-19; RB-05, RB-18 | A escrever |
-| 007, 008 | RF-32 a RF-39, RF-70, RF-71; RB-10, RB-11; RNF-12, RNF-13, RNF-18, RNF-20 | A escrever |
-| 009 | RF-28, RF-29, RF-72 a RF-76 (RF-69 retirado); RB-17, RB-20, RB-27, RB-28 (RB-26 retirada); RNF-22, RNF-24, RNF-25 | A escrever |
-| 010 | RF-40 a RF-50, RF-77; RB-04, RB-07, RB-13, RB-16, RB-29; RNF-15 | A escrever |
-| 011, 012 | RF-51 a RF-59, RF-78 a RF-82, RF-86; RB-06, RB-08, RB-09, RB-12, RB-14; RNF-26 | A escrever |
-| 013 a 016 | RF-64, RF-83 a RF-85; RB-19; RNF-16, RNF-17 | A escrever |
-| Operacionais | RNF-07, RNF-08 | Na entrega, depois de OPEN-09 e OPEN-12 |
+| 005 | RF-08, RF-09, RF-11, RF-12, RF-19, RB-05, RB-18 | Aprovada |
+| 007 | RF-32, RF-36, RNF-18, RNF-20, RB-10 | A escrever |
+| 008 | RF-33, RF-34, RF-35, RF-37, RF-38, RF-39, RF-70, RNF-12, RNF-13, RB-10, RB-11, RB-18 | A escrever |
+| 009 | RF-28, RF-29, RF-72, RF-73, RF-74, RF-75, RF-76, RNF-22, RNF-24, RB-11, RB-17, RB-20, RB-27, RB-28 | A escrever |
+| 010 | RF-40, RF-41, RF-42, RF-43, RF-44, RF-45, RF-46, RF-47, RF-48, RF-49, RF-50, RF-77, RB-04, RB-07, RB-13, RB-16, RB-29 | A escrever |
+| 011 | RF-51, RF-52, RF-58, RF-59, RF-78, RF-79, RF-80, RF-81, RF-86, RNF-22, RNF-24, RNF-26, RB-08, RB-09, RB-12, RB-14, RB-27 | A escrever |
+| 012 | RF-53, RF-54, RF-55, RF-56, RF-57, RF-82, RB-06, RB-12 | A escrever |
+| 014 | RNF-18, RNF-20, RB-07, RB-08, RB-16, RB-28 | A escrever |
+| 015 | RF-83, RF-84, RF-85, RB-19 | A escrever |
+| 016 | RNF-17, RB-13 | A escrever |
+| Operacionais | RNF-07, RNF-08 | Sem spec; na execução local da apresentação (OPEN-12) não há como medir disponibilidade mensal nem rotina de backup |
 
 ### Cobertura
 
-| Tipo | Ativos | Implementados | Parciais | Sem implementação |
-|---|---|---|---|---|
-| RF | 83 | 11 (RF-20 a RF-27, RF-30, RF-31, RF-68) | — | 72 |
-| RB | 29 | 3 (RB-02, RB-22, RB-23) | 3 (RB-01, RB-21, RB-30) | 23 |
-| RNF | 25 | 3 (RNF-09, RNF-11, RNF-19) | 3 (RNF-03, RNF-14, RNF-23) | 19 |
-| Drivers | 10 | 1 (DA-09) | 6 (DA-01 a DA-05, DA-07) | 3 (DA-06, DA-08, DA-10) |
+| Tipo | Ativos | Implementados | Parciais | Sem implementação | Operacionais |
+|---|---|---|---|---|---|
+| RF | 92 | 37 | 4 | 51 | — |
+| RB | 31 | 10 | 2 | 19 | — |
+| RNF | 25 | 9 | 6 | 8 | 2 |
+| **Total** | **148** | **56** | **12** | **78** | **2** |
+| Drivers | 10 | 4 (DA-02, DA-03, DA-04, DA-09) | 3 (DA-01, DA-05, DA-07) | 3 (DA-06, DA-08, DA-10) | — |
+
+DA-03 conta como implementado, embora o teste de concorrência real ainda seja um marcador (lacuna 5).
 
 ## 5. Lacunas encontradas
 
-| Lacuna | Tratamento |
-|---|---|
-| RF-23 fala em "número de dias configurado", mas nenhum RF, caso de uso ou spec configura essa antecedência. O código a recebe como parâmetro, e a docstring cita a Spec 014, que não a inclui | OPEN-21 |
-| RF-31 exige motivo para "alteração de valor", mas nenhuma operação altera o valor do título, e a Spec 006 diz que ele não muda (INV-5) | OPEN-22 |
-| A linha da Spec 006 no mapa não listava RB-01, que a spec cobre | Corrigido no mapa (#57) |
-| 20 dos 132 testes não levam identificador no nome, contra o princípio 2 de [`testes.md`](testes.md). São testes de infraestrutura, de integração e de contrato do repositório | Registrado em [divergências](qualidade/divergencias.md), DV-14 |
+| # | Lacuna | Tratamento |
+|---|---|---|
+| 1 | RF-23 fala em "número de dias configurado", mas nenhuma spec verificada configura essa antecedência | Resolvida por OPEN-21 e OPEN-37: parâmetro da Spec 014, com padrão de 5 dias até lá. RF-23 segue Parcial |
+| 2 | RF-31 exigia motivo para "alteração de valor", operação que não existe | Resolvida por OPEN-22: o valor do título não muda depois de criado |
+| 3 | A linha da Spec 017 no mapa cita "Telas de … RF-20 a RF-31", o que inclui RF-28 e RF-29 (renegociação). A renegociação não existe; eles seguem pela Spec 009 | Proposta: corrigir a linha da 017 no mapa para RF-20 a RF-27, RF-30 e RF-31 |
+| 4 | RNF-11 e RNF-25 têm testes que passam, mas o mapa os atribui só a specs futuras (012 e 009) | Proposta: incluir RNF-11 nas linhas 006 e 017, e RNF-25 na linha 002 do mapa |
+| 5 | Dois marcadores pulados já podiam ser testes: `test_RB_15_desconto_percentual_nao_perde_centavos` ("pendente da Spec 004", verificada) e `test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo` ("pendente de OPEN-02", decidida; o SQLite existe) | Escrever os dois testes |
+| 6 | RB-02 diz "somente o Dono estorna", mas o Administrador também estorna (OPEN-53); RB-33 já cita a exceção | Proposta: reescrever RB-02 e RB-15 com a exceção do Administrador |
+| 7 | 70 das 474 funções de teste não levam identificador no nome, contra o princípio 2 de [`testes.md`](testes.md). São, em geral, testes de infraestrutura, de integração, de contrato e de interface | Registrado em [divergências](qualidade/divergencias.md), DV-14, ainda em proposta |
 
 As divergências entre código, spec e baseline estão em [`qualidade/divergencias.md`](qualidade/divergencias.md).
 
@@ -108,3 +163,4 @@ As divergências entre código, spec e baseline estão em [`qualidade/divergenci
 1. Requisito novo ou alterado: atualizar a linha da spec no mapa e, se ele pesar na estrutura, a tabela de drivers da arquitetura.
 2. Spec aprovada e implementada: mover seus requisitos da seção 4 para a seção 3, com código e testes.
 3. Teste novo de regra: nomear pelo identificador (`test_RB_nn_...`, `test_CA_nn_...`), para que o elo apareça numa busca por texto.
+4. Para refazer as seções 3 e 4, aplicar o método da seção 1 sobre o mapa, `src/` e `tests/`, e revisar à mão as linhas com ajuste.

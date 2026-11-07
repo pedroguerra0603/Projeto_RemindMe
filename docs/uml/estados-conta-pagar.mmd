@@ -1,0 +1,11 @@
+stateDiagram-v2
+    direction LR
+    [*] --> Aberta : cadastrada
+    Aberta --> Vencida : vencimento passa
+    Aberta --> Paga : saldo zero
+    Vencida --> Paga : saldo zero
+    Paga --> Aberta : estorno, a vencer
+    Paga --> Vencida : estorno, já vencida
+    Aberta --> Cancelada : cancelamento
+    Vencida --> Cancelada : cancelamento
+    Cancelada --> [*]

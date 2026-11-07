@@ -57,7 +57,7 @@ Colunas: A fazer, Em andamento, Em revisão, Concluído.
 
 - Usar o agente é esperado. Esconder o uso é que é problema: o PR declara o que foi feito com o agente.
 - Quem abre o PR responde pelo conteúdo, tenha sido escrito por pessoa ou por agente.
-- O agente segue o [`CLAUDE.md`](../CLAUDE.md) e a política de [segurança](seguranca.md).
+- O agente segue o [`SPECS.md`](../SPECS.md) e a política de [segurança](seguranca.md).
 - Cada integrante precisa ter participação própria visível em commits, issues fechadas e revisões.
 
 ## Divisão de trabalho

@@ -16,7 +16,7 @@ Esta pasta guarda o que orienta a implementação. A baseline de modelagem fica 
 1. **Modelagem.** A baseline em `/docs` é revisada e aprovada.
 2. **Mapa de specs.** O agente propõe a decomposição e para. A equipe revisa.
 3. **Spec.** O agente escreve uma spec por vez. A equipe aprova.
-4. **Implementação.** Em um novo contexto do agente, com apenas a spec aprovada e o `CLAUDE.md`. O código segue a spec.
+4. **Implementação.** Em um novo contexto do agente, com apenas a spec aprovada e o `SPECS.md`. O código segue a spec.
 5. **Verificação.** Testes e critérios de aceite. Divergências são registradas.
 
 ## Situações de uma spec
