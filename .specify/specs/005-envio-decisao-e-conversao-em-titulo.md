@@ -8,8 +8,8 @@
 | **Nome** | Envio, decisão do cliente e conversão em título |
 | **Objetivo** | Levar o orçamento pronto até o cliente, registrar a decisão dele e, na aprovação, gerar o título a receber na mesma operação, com o vencimento calculado pelo prazo combinado. |
 | **Valor entregue** | O Operador Financeiro envia o orçamento com um clique e registra a resposta do cliente; o título nasce sozinho, com o valor e o vencimento certos. A Dona deixa de ter orçamento aprovado que nunca virou cobrança, a primeira dor da [visão](../../docs/visao.md#2-problema). A caixa de saída mostra o que o sistema mandou a cada cliente. |
-| **Situação** | Proposta |
-| **Aprovada por** | *(aguardando)* |
+| **Situação** | **Aprovada** |
+| **Aprovada por** | Renan Gandolpho, em 2026-11-07 |
 
 ## 2. Rastreabilidade
 

@@ -120,7 +120,7 @@ Fonte: [mapa de specs](../.specify/specs/mapa-de-specs.md), aprovado em 2026-11-
 
 | Situação | Specs |
 |---|---|
-| Proposta | [005](../.specify/specs/005-envio-decisao-e-conversao-em-titulo.md) envio, decisão do cliente e conversão em título |
+| Aprovada | [005](../.specify/specs/005-envio-decisao-e-conversao-em-titulo.md) envio, decisão do cliente e conversão em título |
 | Verificadas | [001](../.specify/specs/001-fundacao-camadas-e-auditoria.md) fundação e auditoria; [002](../.specify/specs/002-autenticacao-e-autorizacao.md) autenticação e autorização; [003](../.specify/specs/003-cadastro-de-clientes.md) clientes; [004](../.specify/specs/004-orcamento-itens-valores-e-alcada.md) orçamento e alçada; [006](../.specify/specs/006-titulo-pagamento-baixa-e-estorno.md) título, pagamento, baixa e estorno; [013](../.specify/specs/013-consulta-de-auditoria.md) consulta de auditoria; [017](../.specify/specs/017-interface-web.md) interface web; [018](../.specify/specs/018-contas-a-pagar-e-fornecedores.md) contas a pagar e fornecedores; [019](../.specify/specs/019-troca-da-propria-senha.md) troca da própria senha |
 | A escrever | 007 e 008 régua de cobrança; 009 renegociação; 010 obrigações; 011 lançamentos e IA; 012 apuração; 014 configuração de regras; 015 CSV; 016 painel por perfil |
 

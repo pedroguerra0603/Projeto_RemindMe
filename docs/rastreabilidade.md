@@ -120,7 +120,7 @@ Todo requisito ativo aparece em ao menos uma spec do mapa, exceto RNF-07 e RNF-0
 
 | Spec | Requisitos | Situação da spec |
 |---|---|---|
-| 005 | RF-08, RF-09, RF-11, RF-12, RF-19, RB-05, RB-18 | Proposta |
+| 005 | RF-08, RF-09, RF-11, RF-12, RF-19, RB-05, RB-18 | Aprovada |
 | 007 | RF-32, RF-36, RNF-18, RNF-20, RB-10 | A escrever |
 | 008 | RF-33, RF-34, RF-35, RF-37, RF-38, RF-39, RF-70, RNF-12, RNF-13, RB-10, RB-11, RB-18 | A escrever |
 | 009 | RF-28, RF-29, RF-72, RF-73, RF-74, RF-75, RF-76, RNF-22, RNF-24, RB-11, RB-17, RB-20, RB-27, RB-28 | A escrever |
