@@ -4,7 +4,7 @@ import copy
 from datetime import datetime
 from typing import Dict, List, Optional, Set
 
-from remindme.aplicacao.portas import RegistroErro, Sessao
+from remindme.aplicacao.portas import Mensagem, RegistroErro, Sessao
 from remindme.dominio.auditoria import RegistroAuditoria
 from remindme.dominio.cliente import Cliente
 from remindme.dominio.conta_pagar import ContaPagar
@@ -245,6 +245,25 @@ class RepositorioPermissoesEmMemoria:
         self.matriz = estado
 
 
+class RepositorioMensagensEmMemoria:
+    """Caixa de saída (Spec 005): só acrescenta; desfeita com a transação."""
+
+    def __init__(self):
+        self.dados: List[Mensagem] = []
+
+    def registrar(self, mensagem: Mensagem) -> None:
+        self.dados.append(mensagem)
+
+    def listar(self) -> List[Mensagem]:
+        return list(self.dados)
+
+    def _estado(self):
+        return list(self.dados)
+
+    def _restaurar(self, estado) -> None:
+        self.dados = estado
+
+
 class RegistroErrosEmMemoria:
     """Registro de erro não tratado (RNF-21). Fica fora da unidade de trabalho e não é desfeito."""
 
@@ -285,13 +304,14 @@ class UnidadeDeTrabalhoEmMemoria:
         self.usuarios = usuarios if usuarios is not None else RepositorioUsuariosEmMemoria()
         self.sessoes = sessoes if sessoes is not None else RepositorioSessoesEmMemoria()
         self.permissoes = permissoes if permissoes is not None else RepositorioPermissoesEmMemoria()
+        self.mensagens = RepositorioMensagensEmMemoria()
         self._copia = None
         self._profundidade = 0
 
     def _repositorios(self):
         return (
             self.titulos, self.clientes, self.fornecedores, self.contas_pagar, self.orcamentos, self.empresa, self.auditoria, self.usuarios, self.sessoes,
-            self.permissoes,
+            self.permissoes, self.mensagens,
         )
 
     def __enter__(self):

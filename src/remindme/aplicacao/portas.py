@@ -121,6 +121,31 @@ class ConsultaClientes(Protocol):
     def existe(self, cliente_id: str) -> bool: ...
 
 
+@dataclass(frozen=True)
+class Mensagem:
+    """O que o canal de notificação tentou entregar a um cliente (Spec 005, ADR-002): a caixa de saída."""
+
+    id: str
+    cliente_id: str
+    contato: str
+    assunto: str
+    texto: str
+    enviada_em: datetime
+    resultado: str  # "enviada" ou "falhou"
+    origem: str  # "orcamento <id>"
+
+
+class CanalNotificacao(Protocol):
+    """Entrega uma mensagem ao contato do cliente (ADR-002, RB-18). Devolve se a entrega deu certo."""
+
+    def entregar(self, contato: str, assunto: str, texto: str) -> bool: ...
+
+
+class RepositorioMensagens(Protocol):
+    def registrar(self, mensagem: Mensagem) -> None: ...
+    def listar(self) -> List[Mensagem]: ...
+
+
 class UnidadeDeTrabalho(Protocol):
     """Transação: tudo o que é feito dentro do bloco é gravado junto, ou nada é (RNF-09).
 
@@ -137,6 +162,7 @@ class UnidadeDeTrabalho(Protocol):
     usuarios: RepositorioUsuarios
     sessoes: RepositorioSessoes
     permissoes: RepositorioPermissoes
+    mensagens: RepositorioMensagens
 
     def __enter__(self) -> "UnidadeDeTrabalho": ...
     def __exit__(self, tipo, valor, rastro) -> None: ...
