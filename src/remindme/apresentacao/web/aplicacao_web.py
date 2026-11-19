@@ -30,6 +30,7 @@ from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroT
 from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
+from remindme.apresentacao.web import paginas_empresa as pem
 from remindme.apresentacao.web import paginas_orcamentos as po
 from remindme.apresentacao.web import paginas_titulos as pt
 from remindme.apresentacao.web import paginas_clientes as pc
@@ -860,7 +861,7 @@ class AplicacaoWeb:
                 valores["cnpj"], valores["telefone"] = f.documento(empresa.cnpj), f.contato(empresa.telefone)
         visoes = self._s.titulos.consultar_titulos(sessao, FiltroTitulos(), ctx.hoje) if ctx.pode(Operacao.CONSULTAR_TITULOS) else None
         clientes = len(self._s.clientes.consultar_clientes(sessao)) if ctx.pode(Operacao.CONSULTAR_CLIENTES) else None
-        pagina = p.pagina_empresa(ctx, empresa, visoes, clientes, valores, erros or {}, None if erros else _aviso(req))
+        pagina = pem.pagina_empresa(ctx, empresa, visoes, clientes, valores, erros or {}, None if erros else _aviso(req))
         return Resposta.pagina(pagina, 400 if erros else 200)
 
     def _empresa_salvar(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
