@@ -4,7 +4,7 @@ Vocabulário do domínio. Os termos abaixo são os únicos usados em requisitos,
 
 | Termo | Classe | Definição |
 |---|---|---|
-| Alçada de desconto | `AlcadaDesconto` | Percentual máximo de desconto que um perfil pode conceder sem aprovação do Dono. |
+| Alçada de desconto | `AlcadaDesconto` | Percentual máximo de desconto que um perfil pode conceder sem aprovação do Dono ou do Administrador (OPEN-53). |
 | Apuração do resultado | — | Cálculo de receitas menos despesas dos lançamentos classificados de um período. |
 | Baixa | — | Passagem de um título ao estado Baixado, quando o saldo chega a zero. |
 | Caixa de saída | — | Registro de tudo o que o canal de notificação tentou entregar aos clientes, com o resultado de cada tentativa (Spec 005). |
@@ -16,7 +16,7 @@ Vocabulário do domínio. Os termos abaixo são os únicos usados em requisitos,
 | Divergência | `SugestaoClassificacao` | Diferença entre a categoria sugerida pela IA e a categoria confirmada por uma pessoa. |
 | Empresa | `Empresa` | A empresa que usa o sistema, com razão social, nome fantasia, CNPJ, telefone, e-mail e endereço. Há um único registro, mantido pelo Dono (OPEN-54). |
 | Escalonamento | — | Envio de alerta ao Dono quando uma obrigação permanece Atrasada. |
-| Estorno | — | Anulação de um pagamento registrado. Só o Dono estorna. |
+| Estorno | — | Anulação de um pagamento registrado. Só o Dono estorna; o Administrador também (OPEN-53). |
 | Etapa de cobrança | `EtapaCobranca` | Passo da régua: prazo em dias em relação ao vencimento, mensagem e ação. |
 | Evidência | `Evidencia` | Documento anexado que comprova o cumprimento de uma obrigação. |
 | Fila de revisão | — | Conjunto de lançamentos Pendentes de Classificação que aguardam decisão humana. |

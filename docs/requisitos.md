@@ -68,7 +68,7 @@ A data de referência do sistema ("hoje") é a de America/Sao_Paulo, e os horár
 |---|---|---|---|
 | RF-14 | WHEN o Administrador configurar uma alçada de desconto, THE SYSTEM SHALL associar o percentual máximo ao perfil indicado. | UC-13 | RB-15 |
 | RF-15 | WHEN um usuário informar um desconto em um orçamento, THE SYSTEM SHALL comparar o percentual com a alçada do perfil do usuário. | UC-05 | RB-15 |
-| RF-16 | IF o desconto informado ultrapassar a alçada do usuário, THEN THE SYSTEM SHALL mudar o orçamento para Pendente de Alçada e solicitar a decisão do Dono. | UC-05 | RB-15 |
+| RF-16 | IF o desconto informado ultrapassar a alçada do usuário, THEN THE SYSTEM SHALL mudar o orçamento para Pendente de Alçada e solicitar a decisão do Dono ou do Administrador (OPEN-53). | UC-05 | RB-15 |
 | RF-17 | WHEN o Dono aprovar ou rejeitar um desconto pendente de alçada, THE SYSTEM SHALL registrar o responsável, a decisão e a data, e devolver o orçamento ao estado Rascunho. | UC-05 | RB-15 |
 | RF-18 | WHEN o desconto ou o valor de um orçamento for alterado, THE SYSTEM SHALL registrar o valor anterior e o novo valor. | UC-05 | RB-01 |
 
@@ -256,7 +256,7 @@ Regras de negócio são verdades do domínio que existiriam mesmo sem o sistema.
 | ID | Regra | Aplicada por |
 |---|---|---|
 | RB-01 | Toda mudança de estado de orçamento, título, pagamento, obrigação ou lançamento tem responsável, data e ação registrados. | RF-04, RF-05, RF-61, RF-62 |
-| RB-02 | Somente o Dono estorna um pagamento. | RF-30 |
+| RB-02 | Somente o Dono estorna um pagamento (o Administrador também, por OPEN-53). | RF-30 |
 | RB-03 | O Contador consulta e exporta dados financeiros, mas não cria nem altera registros. | RF-67 |
 | RB-04 | O calendário de obrigações é único para a empresa e visível ao Dono e ao Operador Financeiro. | RF-43 |
 | RB-05 | Orçamento aprovado pelo cliente vira título a receber, e somente orçamento aprovado vira título. | RF-11, RF-12, RF-19 |
@@ -269,7 +269,7 @@ Regras de negócio são verdades do domínio que existiriam mesmo sem o sistema.
 | RB-12 | Lançamento sem classificação confirmada não entra na apuração do resultado. | RF-58, RF-53, RF-54, RF-55, RF-82, RF-86 |
 | RB-13 | Obrigação Aguardando Evidência permanece como pendência visível do Operador Financeiro. | RF-77 |
 | RB-14 | Sugestão da IA que não atende à RB-08 é decidida por uma pessoa. | RF-80 |
-| RB-15 | Cada perfil tem um percentual máximo de desconto (alçada). Desconto acima da alçada de quem informa o desconto depende de aprovação do Dono (OPEN-50). O Dono não tem limite. | RF-14, RF-15, RF-16, RF-17 |
+| RB-15 | Cada perfil tem um percentual máximo de desconto (alçada). Desconto acima da alçada de quem informa o desconto depende de aprovação do Dono ou do Administrador (OPEN-50, OPEN-53). O Dono não tem limite. | RF-14, RF-15, RF-16, RF-17 |
 | RB-16 | Obrigação Atrasada é escalada ao Dono. A tolerância padrão é de 0 dias e pode ser configurada. | RF-49 |
 | RB-17 | Mensagem de cliente da qual não se extrai intenção válida é tratada por uma pessoa. | RF-74 |
 | RB-18 | O canal de notificação é substituível. O canal padrão é o simulado. | RF-08 |
