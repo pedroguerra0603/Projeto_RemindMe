@@ -45,6 +45,13 @@ O Administrador cadastra os demais usuários pela tela **Usuários**, com senha 
 
 **Verificação automática de vencimento.** Com o servidor no ar, os títulos Abertos com vencimento passado passam a Vencido na inicialização e a cada hora, com registro de operação automática na auditoria (OPEN-13, OPEN-48). O "hoje" é o de America/Sao_Paulo (OPEN-26).
 
+**Cópia de segurança.** Não há backup automático: a execução é local, e RNF-08 foi retirado (OPEN-63). Todos os dados, inclusive as sessões, ficam no arquivo do banco (`remindme.db`, ou o informado em `--banco`). Para copiá-lo:
+
+1. Encerre o servidor com `Ctrl+C`.
+2. Copie o arquivo do banco para outro lugar, com a data no nome (por exemplo, `remindme-2026-11-19.db`). O banco usa o modo WAL: se existirem `remindme.db-wal` e `remindme.db-shm` ao lado, copie-os junto, com o mesmo nome-base.
+
+Para restaurar, com o servidor encerrado, ponha a cópia no lugar do arquivo original ou inicie o servidor apontando para ela com `--banco`.
+
 ## Pré-requisitos
 
 - Python 3.11 ou mais recente.
