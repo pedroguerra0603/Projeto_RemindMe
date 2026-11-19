@@ -30,6 +30,7 @@ from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroT
 from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
+from remindme.apresentacao.web import paginas_usuarios as pu
 from remindme.apresentacao.web import paginas_empresa as pem
 from remindme.apresentacao.web import paginas_orcamentos as po
 from remindme.apresentacao.web import paginas_titulos as pt
@@ -442,7 +443,7 @@ class AplicacaoWeb:
         return Resposta.pagina(pc.pagina_clientes(ctx, clientes, termo, _aviso(req)))
 
     def _trocar_senha_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto, erros: Optional[Dict[str, str]] = None) -> Resposta:
-        return Resposta.pagina(p.pagina_trocar_senha(ctx, erros or {}), 400 if erros else 200)
+        return Resposta.pagina(pu.pagina_trocar_senha(ctx, erros or {}), 400 if erros else 200)
 
     def _trocar_senha(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         """RF-95: lê as senhas como digitadas (sem aparar) e nunca as devolve à página."""
@@ -900,11 +901,11 @@ class AplicacaoWeb:
     # Usuários e permissões (Spec 002)
 
     def _usuarios(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
-        return Resposta.pagina(p.pagina_usuarios(ctx, self._s.acesso.listar_usuarios(sessao), _aviso(req)))
+        return Resposta.pagina(pu.pagina_usuarios(ctx, self._s.acesso.listar_usuarios(sessao), _aviso(req)))
 
     def _usuario_novo_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         self._s.acesso.exigir(sessao, Operacao.ADMINISTRAR_USUARIOS)
-        return Resposta.pagina(p.pagina_usuario_formulario(ctx, {}, {}))
+        return Resposta.pagina(pu.pagina_usuario_formulario(ctx, {}, {}))
 
     def _usuario_novo(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         valores = _valores(req, "nome", "email", "perfil")
@@ -914,7 +915,7 @@ class AplicacaoWeb:
         except OperacaoNegada:
             raise
         except OperacaoRecusada as recusa:
-            return Resposta.pagina(p.pagina_usuario_formulario(ctx, valores, _erros(recusa)), 400)
+            return Resposta.pagina(pu.pagina_usuario_formulario(ctx, valores, _erros(recusa)), 400)
         return Resposta.redirecionar(f"/usuarios/{usuario.id}?aviso=usuario")
 
     def _usuario(
@@ -922,7 +923,7 @@ class AplicacaoWeb:
         valores: Optional[Dict[str, str]] = None, erros: Optional[Dict[str, str]] = None,
     ) -> Resposta:
         usuario = self._s.acesso.obter_usuario(sessao, usuario_id)
-        pagina = p.pagina_usuario(ctx, usuario, valores or {}, erros or {}, None if erros else _aviso(req))
+        pagina = pu.pagina_usuario(ctx, usuario, valores or {}, erros or {}, None if erros else _aviso(req))
         return Resposta.pagina(pagina, 400 if erros else 200)
 
     def _usuario_perfil(self, req: Requisicao, sessao: str, ctx: p.Contexto, usuario_id: str) -> Resposta:
@@ -954,7 +955,7 @@ class AplicacaoWeb:
         return Resposta.redirecionar(f"/usuarios/{usuario_id}?aviso=ativacao")
 
     def _permissoes(self, req: Requisicao, sessao: str, ctx: p.Contexto, aviso=None, status: int = 200) -> Resposta:
-        pagina = p.pagina_permissoes(ctx, self._s.acesso.matriz(sessao), aviso or _aviso(req))
+        pagina = pu.pagina_permissoes(ctx, self._s.acesso.matriz(sessao), aviso or _aviso(req))
         return Resposta.pagina(pagina, status)
 
     def _permissao(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
