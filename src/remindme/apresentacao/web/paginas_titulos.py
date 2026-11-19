@@ -10,7 +10,6 @@ from remindme.apresentacao.web.paginas import (
     cabecalho,
     caixa_de_aviso,
     campo,
-    _cartao_historico,
     Contexto,
     erro_geral,
     Erros,
@@ -22,6 +21,7 @@ from remindme.apresentacao.web.paginas import (
     tabela,
     Valores,
 )
+from remindme.apresentacao.web.paginas_auditoria import _cartao_historico
 from remindme.apresentacao.web.paginas_orcamentos import _origem_do_titulo
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.titulo import EstadoTitulo

@@ -8,15 +8,8 @@ from typing import Dict, List, Optional, Tuple
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import graficos as g
 from remindme.apresentacao.web.html import h, Html, juntar
-from remindme.apresentacao.web.paginas import (
-    botao_link,
-    cabecalho,
-    caixa_de_aviso,
-    Contexto,
-    _item_do_historico,
-    layout,
-    tabela,
-)
+from remindme.apresentacao.web.paginas import botao_link, cabecalho, caixa_de_aviso, Contexto, layout, tabela
+from remindme.apresentacao.web.paginas_auditoria import _item_do_historico
 from remindme.apresentacao.web.paginas_orcamentos import _cartao_pendentes
 from remindme.dominio.conta_pagar import EstadoContaPagar
 from remindme.dominio.operacoes import Operacao

@@ -30,6 +30,7 @@ from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroT
 from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
+from remindme.apresentacao.web import paginas_auditoria as pa
 from remindme.apresentacao.web import paginas_usuarios as pu
 from remindme.apresentacao.web import paginas_empresa as pem
 from remindme.apresentacao.web import paginas_orcamentos as po
@@ -896,7 +897,7 @@ class AplicacaoWeb:
             raise
         except OperacaoRecusada as recusa:
             registros, erros = [], {**erros, **_erros(recusa)}
-        return Resposta.pagina(p.pagina_auditoria(ctx, registros, opcoes, valores, erros), 400 if erros else 200)
+        return Resposta.pagina(pa.pagina_auditoria(ctx, registros, opcoes, valores, erros), 400 if erros else 200)
 
     # Usuários e permissões (Spec 002)
 
