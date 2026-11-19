@@ -30,6 +30,7 @@ from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroT
 from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
+from remindme.apresentacao.web import paginas_titulos as pt
 from remindme.apresentacao.web import paginas_clientes as pc
 from remindme.apresentacao.web import paginas_entrada as pe
 from remindme.apresentacao.web import paginas_painel as ppa
@@ -502,13 +503,13 @@ class AplicacaoWeb:
         estado = EstadoTitulo[valores["estado"]] if valores["estado"] in EstadoTitulo.__members__ else None
         filtro = FiltroTitulos(cliente_id=valores["cliente"] or None, estado=estado, vencimento_de=de, vencimento_ate=ate)
         visoes = self._s.titulos.consultar_titulos(sessao, filtro, ctx.hoje)
-        pagina = p.pagina_titulos(ctx, visoes, self._nomes_clientes(sessao, ctx), valores, erros, _aviso(req))
+        pagina = pt.pagina_titulos(ctx, visoes, self._nomes_clientes(sessao, ctx), valores, erros, _aviso(req))
         return Resposta.pagina(pagina)
 
     def _titulo_novo_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         self._s.acesso.exigir(sessao, Operacao.CADASTRAR_TITULO)
         valores = {"cliente": req.consulta.get("cliente", "")}
-        return Resposta.pagina(p.pagina_titulo_formulario(ctx, self._nomes_clientes(sessao, ctx), valores, {}))
+        return Resposta.pagina(pt.pagina_titulo_formulario(ctx, self._nomes_clientes(sessao, ctx), valores, {}))
 
     def _titulo_novo(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         valores = _valores(req, "cliente", "valor", "vencimento", "condicao")
@@ -525,7 +526,7 @@ class AplicacaoWeb:
                 raise
             except OperacaoRecusada as recusa:
                 erros = _erros(recusa)
-        return Resposta.pagina(p.pagina_titulo_formulario(ctx, self._nomes_clientes(sessao, ctx), valores, erros), 400)
+        return Resposta.pagina(pt.pagina_titulo_formulario(ctx, self._nomes_clientes(sessao, ctx), valores, erros), 400)
 
     def _titulo(
         self, req: Requisicao, sessao: str, ctx: p.Contexto, titulo_id: str,
@@ -533,7 +534,7 @@ class AplicacaoWeb:
     ) -> Resposta:
         titulo = self._s.titulos.obter_titulo(sessao, titulo_id)
         nomes = self._nomes_clientes(sessao, ctx)
-        pagina = p.pagina_titulo(
+        pagina = pt.pagina_titulo(
             ctx,
             titulo,
             nomes.get(titulo.cliente_id, "Cliente"),

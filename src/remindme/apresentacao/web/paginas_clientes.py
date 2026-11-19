@@ -16,9 +16,9 @@ from remindme.apresentacao.web.paginas import (
     layout,
     protecao,
     tabela,
-    _tabela_de_titulos,
     Valores,
 )
+from remindme.apresentacao.web.paginas_titulos import _tabela_de_titulos
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.titulo import EstadoTitulo
 
