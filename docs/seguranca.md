@@ -12,7 +12,7 @@ Este documento tem duas partes: a segurança do produto ao longo do desenvolvime
 | Pagamentos | Estorno indevido | Só o Dono estorna, com motivo | RB-02, RF-31 |
 | Dados de um cliente | Acesso por outro cliente | Filtro por cliente dentro da consulta | RNF-25 |
 | Senhas | Vazamento do armazenamento | Hash com salt por algoritmo adaptativo | RNF-04 |
-| Dados em trânsito | Interceptação | Somente HTTPS | RNF-05 |
+| Dados em trânsito | Interceptação | Pela rede, somente HTTPS; sem certificado, só a própria máquina (OPEN-38) | RNF-05 |
 | Trilha de auditoria | Adulteração | Somente inclusão | RNF-06, RB-30 |
 | Dados enviados à IA | Exposição de dados pessoais | Envio apenas de descrição ou texto, sem identificação | RNF-22 |
 | Decisões financeiras | Mensagem de cliente que tenta induzir a IA | Saída da IA validada por regra; a IA não decide | RB-27, ADR-003 |

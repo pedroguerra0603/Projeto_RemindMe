@@ -4,7 +4,7 @@ Issue #48. Característica **Confiabilidade** da ISO/IEC 25010: maturidade, tole
 
 - **Data:** 2026-10-09.
 - **Escopo:** `src/remindme/` na branch `main` em `b17b1ed`, mais as correções desta avaliação.
-- **Requisitos de referência:** RNF-09 (atomicidade), RNF-21 (registro de erro não tratado), RNF-07 e RNF-08 (disponibilidade e backup, ainda **(P)**), INV-7 e E8 da Spec 006.
+- **Requisitos de referência:** RNF-09 (atomicidade), RNF-21 (registro de erro não tratado), RNF-07 e RNF-08 (disponibilidade e backup, ainda **(P)** na data da avaliação; retirados em 2026-11-19 pela OPEN-63), INV-7 e E8 da Spec 006.
 - **Testes:** [`tests/aplicacao/test_confiabilidade.py`](../../tests/aplicacao/test_confiabilidade.py).
 
 ## 1. Operações críticas
@@ -32,7 +32,7 @@ São as operações que alteram dinheiro ou estado. Uma falha no meio delas é o
 | F-07 | O chamador altera o objeto `Titulo` que recebeu | O que está armazenado não muda | — | `test_INV_7_alterar_o_objeto_devolvido_nao_altera_o_armazenado` | Passou |
 | F-08 | Entrada inválida (valor `NaN`, infinito, `float`, texto; motivo que não é texto) | Recusa com motivo, sem alterar dados (E1, E7) | — | [`test_excecoes.py`](../../tests/aplicacao/test_excecoes.py) | Não passava: defeitos D-01 a D-04, corrigidos em #70 |
 | F-09 | Erro não tratado | Registrar data, operação, usuário e identificador de correlação (RNF-21) | — | Não implementado: depende da Spec 001 | Pendente |
-| F-10 | Perda do processo ou da máquina | Os dados sobrevivem; backup diário (RNF-08) | Restauração do backup | Não aplicável: persistência em memória até OPEN-02 | Pendente |
+| F-10 | Perda do processo ou da máquina | Os dados sobrevivem; backup diário (RNF-08) | Restauração do backup | Não aplicável: persistência em memória até OPEN-02 | Pendente. Atualização em 2026-11-19: os dados ficam no SQLite (ADR-007) e sobrevivem ao fim do processo; o backup diário saiu do MVP (OPEN-63), e a cópia manual está em [`execucao.md`](../execucao.md) |
 
 Os testes F-01 a F-03 foram validados por mutação: com a restauração da unidade de trabalho desligada, 7 casos falham.
 
@@ -52,4 +52,4 @@ Os testes F-01 a F-03 foram validados por mutação: com a restauração da unid
 | A atomicidade em memória é feita por cópia de todo o estado; não vale para concorrência entre processos | Usar a transação do banco quando OPEN-02 for decidida e repetir F-01 a F-03 como testes de integração | Spec 001 |
 | Erro não tratado não é registrado | Implementar RNF-21 com identificador de correlação | Spec 001 |
 | Lote de vencimentos é tudo ou nada; um título com problema impede o lote inteiro | Avaliar se o lote deve ser por título quando o agendador existir (OPEN-13) | Spec 008 |
-| Sem backup | Definir as metas de RNF-07 e RNF-08 | OPEN-09 |
+| Sem backup | Definir as metas de RNF-07 e RNF-08 | OPEN-09. Atualização em 2026-11-19: RNF-07 e RNF-08 retirados (OPEN-63); cópia manual em [`execucao.md`](../execucao.md) |

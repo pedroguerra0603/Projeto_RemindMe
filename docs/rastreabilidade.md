@@ -2,7 +2,7 @@
 
 Issue #40. Este documento liga os requisitos aos drivers arquiteturais, às decisões técnicas, à implementação e aos testes. Ele mostra, para cada requisito, de onde ele vem e onde está a evidência de que foi atendido.
 
-- **Data:** 2026-11-07.
+- **Data:** 2026-11-07; atualizado em 2026-11-19 com a retirada de RNF-07 e RNF-08 e a reescrita de RNF-05 (OPEN-63).
 - **Base:** branch `renan-rigan/elegant-archimedes-hgliic`, com a Spec 005 verificada em 2026-11-07. A suíte tem 530 testes, todos passando, com 9 pulados (4 de navegador sem o Playwright, opcional, e 5 marcadores de testes ainda não escritos).
 - **Fontes:** [requisitos](requisitos.md), [arquitetura](arquitetura.md), [ADRs](adr/README.md), [mapa de specs](../.specify/specs/mapa-de-specs.md), as [specs](../.specify/specs/) verificadas, [`src/`](../src/README.md), [`tests/`](../tests/README.md).
 - **Complementa:** a [matriz de critérios de aceite](qualidade/matriz-criterios-de-aceite.md), que parte de cada critério da Spec 006 e chega ao teste, e a seção 8 de cada spec, que registra o teste de cada critério. Este documento parte do requisito e passa pelo driver e pela decisão.
@@ -17,7 +17,7 @@ O identificador é o elo da cadeia. Ele aparece no requisito, na spec, na docstr
 
 ### Como as tabelas foram montadas
 
-1. Os requisitos ativos vêm de [`requisitos.md`](requisitos.md); os retirados (RF-60, RF-63, RF-69, RF-71, RNF-10, RB-26) ficam de fora.
+1. Os requisitos ativos vêm de [`requisitos.md`](requisitos.md); os retirados (RF-60, RF-63, RF-69, RF-71, RNF-07, RNF-08, RNF-10, RB-26) ficam de fora.
 2. As specs de cada requisito vêm das colunas RF, RB e RNF do mapa. Um requisito está **Implementado** quando todas as specs que o citam estão Verificadas; **Parcial** quando só parte delas está; **Sem implementação** quando nenhuma está.
 3. O código é a lista de módulos que citam o identificador; os testes são as funções cujo nome contém o identificador (`test_*RF_24*`) e os arquivos de teste das specs verificadas (`test_spec_NNN_*`).
 4. A situação foi corrigida à mão quando a regra do item 2 não refletia o código, com o motivo na própria linha: RB-01, RB-21, RF-61, RNF-23 (parciais), RNF-11, RNF-25 (parciais, ver lacuna 4) e RF-28, RF-29 (sem implementação, ver lacuna 3).
@@ -123,7 +123,7 @@ Requisitos com situação Implementado ou Parcial. "Specs" lista só as verifica
 
 ## 4. Requisitos ainda sem implementação
 
-Todo requisito ativo aparece em ao menos uma spec do mapa, exceto RNF-07 e RNF-08, que são operacionais. Os requisitos abaixo seguem pela spec indicada; um requisito pode aparecer em mais de uma.
+Todo requisito ativo aparece em ao menos uma spec do mapa. RNF-07 e RNF-08, que eram operacionais, foram retirados em 2026-11-19 (OPEN-63). Os requisitos abaixo seguem pela spec indicada; um requisito pode aparecer em mais de uma.
 
 | Spec | Requisitos | Situação da spec |
 |---|---|---|
@@ -136,16 +136,15 @@ Todo requisito ativo aparece em ao menos uma spec do mapa, exceto RNF-07 e RNF-0
 | 014 | RNF-18, RNF-20, RB-07, RB-08, RB-16, RB-28 | A escrever |
 | 015 | RF-83, RF-84, RF-85, RB-19 | A escrever |
 | 016 | RNF-17, RB-13 | A escrever |
-| Operacionais | RNF-07, RNF-08 | Sem spec; na execução local da apresentação (OPEN-12) não há como medir disponibilidade mensal nem rotina de backup |
 
 ### Cobertura
 
-| Tipo | Ativos | Implementados | Parciais | Sem implementação | Operacionais |
-|---|---|---|---|---|---|
-| RF | 92 | 42 | 4 | 46 | — |
-| RB | 31 | 11 | 3 | 17 | — |
-| RNF | 25 | 9 | 6 | 8 | 2 |
-| **Total** | **148** | **62** | **13** | **71** | **2** |
+| Tipo | Ativos | Implementados | Parciais | Sem implementação |
+|---|---|---|---|---|
+| RF | 92 | 42 | 4 | 46 |
+| RB | 31 | 11 | 3 | 17 |
+| RNF | 23 | 9 | 6 | 8 |
+| **Total** | **146** | **62** | **13** | **71** |
 | Drivers | 10 | 4 (DA-02, DA-03, DA-04, DA-09) | 3 (DA-01, DA-05, DA-07) | 3 (DA-06, DA-08, DA-10) | — |
 
 DA-03 conta como implementado, embora o teste de concorrência real ainda seja um marcador (lacuna 5).

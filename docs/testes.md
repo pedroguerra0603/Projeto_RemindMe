@@ -85,7 +85,7 @@ Fora do ponta a ponta de propósito: régua de cobrança (UC-08), por depender d
 | Cada operação sensível recusa o perfil sem permissão, chamada direto na API | RNF-02, RNF-03 |
 | Cliente não lê título de outro cliente pela API | RNF-25 |
 | Entrada inválida devolve o campo e o motivo | RNF-14 |
-| Requisição sem TLS é recusada ou redirecionada | RNF-05 |
+| Sem certificado, o servidor recusa atender pela rede; com certificado, só fala HTTPS (OPEN-38) | RNF-05 |
 | Resposta de consulta e cadastro em menos de 2 s no P95 | RNF-11 |
 
 ### Ferramentas candidatas
