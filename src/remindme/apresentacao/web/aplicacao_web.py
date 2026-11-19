@@ -30,6 +30,7 @@ from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroT
 from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
+from remindme.apresentacao.web import paginas_entrada as pe
 from remindme.apresentacao.web import paginas_painel as ppa
 from remindme.apresentacao.web import paginas_mensagens as pm
 from remindme.apresentacao.web import paginas_pagar as pp
@@ -351,7 +352,7 @@ class AplicacaoWeb:
         protecao = req.cookies.get(COOKIE_ENTRADA) or secrets.token_urlsafe(24)
         aviso = AVISOS.get(req.consulta.get("aviso", ""), ("", ""))[1]
         volta = _volta(req.formulario.get("volta") or req.consulta.get("volta", ""))
-        pagina = p.pagina_entrar(protecao, email=email, erro=erro, aviso="" if erro else aviso, volta=volta)
+        pagina = pe.pagina_entrar(protecao, email=email, erro=erro, aviso="" if erro else aviso, volta=volta)
         return Resposta.pagina(pagina, status).cookie(COOKIE_ENTRADA, protecao, req.https)
 
     def _entrar(self, req: Requisicao) -> Resposta:
@@ -372,7 +373,7 @@ class AplicacaoWeb:
     ) -> Resposta:
         """OPEN-55. Usa a mesma proteção de formulário da entrada."""
         protecao = req.cookies.get(COOKIE_ENTRADA) or secrets.token_urlsafe(24)
-        pagina = p.pagina_criar_conta(protecao, valores or {}, erros or {}, criada)
+        pagina = pe.pagina_criar_conta(protecao, valores or {}, erros or {}, criada)
         return Resposta.pagina(pagina, 400 if erros else 200).cookie(COOKIE_ENTRADA, protecao, req.https)
 
     def _criar_conta(self, req: Requisicao) -> Resposta:
