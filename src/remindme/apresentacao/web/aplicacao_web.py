@@ -30,6 +30,7 @@ from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroT
 from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
+from remindme.apresentacao.web import paginas_clientes as pc
 from remindme.apresentacao.web import paginas_entrada as pe
 from remindme.apresentacao.web import paginas_painel as ppa
 from remindme.apresentacao.web import paginas_mensagens as pm
@@ -435,7 +436,7 @@ class AplicacaoWeb:
     def _clientes(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         termo = req.consulta.get("q", "").strip()
         clientes = self._s.clientes.consultar_clientes(sessao, termo)
-        return Resposta.pagina(p.pagina_clientes(ctx, clientes, termo, _aviso(req)))
+        return Resposta.pagina(pc.pagina_clientes(ctx, clientes, termo, _aviso(req)))
 
     def _trocar_senha_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto, erros: Optional[Dict[str, str]] = None) -> Resposta:
         return Resposta.pagina(p.pagina_trocar_senha(ctx, erros or {}), 400 if erros else 200)
@@ -453,7 +454,7 @@ class AplicacaoWeb:
 
     def _cliente_novo_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         self._s.acesso.exigir(sessao, Operacao.MANTER_CLIENTES)
-        return Resposta.pagina(p.pagina_cliente_formulario(ctx, {}, {}))
+        return Resposta.pagina(pc.pagina_cliente_formulario(ctx, {}, {}))
 
     def _cliente_novo(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         valores = _valores(req, "nome", "documento", "contato")
@@ -462,7 +463,7 @@ class AplicacaoWeb:
         except OperacaoNegada:
             raise
         except OperacaoRecusada as recusa:
-            return Resposta.pagina(p.pagina_cliente_formulario(ctx, valores, _erros(recusa)), 400)
+            return Resposta.pagina(pc.pagina_cliente_formulario(ctx, valores, _erros(recusa)), 400)
         return Resposta.redirecionar(f"/clientes/{cliente.id}?aviso=cliente")
 
     def _cliente(self, req: Requisicao, sessao: str, ctx: p.Contexto, cliente_id: str) -> Resposta:
@@ -473,13 +474,13 @@ class AplicacaoWeb:
             else []
         )
         historico = self._historico(sessao, ctx, f"cliente {cliente.id}")
-        return Resposta.pagina(p.pagina_cliente(ctx, cliente, visoes, historico, _aviso(req)))
+        return Resposta.pagina(pc.pagina_cliente(ctx, cliente, visoes, historico, _aviso(req)))
 
     def _cliente_editar_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto, cliente_id: str) -> Resposta:
         self._s.acesso.exigir(sessao, Operacao.MANTER_CLIENTES)
         cliente = self._s.clientes.obter_cliente(sessao, cliente_id)
         valores = {"nome": cliente.nome, "documento": f.documento(cliente.documento), "contato": f.contato(cliente.contato)}
-        return Resposta.pagina(p.pagina_cliente_formulario(ctx, valores, {}, cliente.id))
+        return Resposta.pagina(pc.pagina_cliente_formulario(ctx, valores, {}, cliente.id))
 
     def _cliente_editar(self, req: Requisicao, sessao: str, ctx: p.Contexto, cliente_id: str) -> Resposta:
         valores = _valores(req, "nome", "documento", "contato")
@@ -488,7 +489,7 @@ class AplicacaoWeb:
         except OperacaoNegada:
             raise
         except OperacaoRecusada as recusa:
-            return Resposta.pagina(p.pagina_cliente_formulario(ctx, valores, _erros(recusa), cliente_id), 400)
+            return Resposta.pagina(pc.pagina_cliente_formulario(ctx, valores, _erros(recusa), cliente_id), 400)
         return Resposta.redirecionar(f"/clientes/{cliente_id}?aviso=cliente-alterado")
 
     # Títulos (Spec 006)
