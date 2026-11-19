@@ -15,7 +15,6 @@ from remindme.apresentacao.web.paginas import (
     erro_geral,
     Erros,
     layout,
-    _origem_do_titulo,
     protecao,
     selecao,
     selo_estado,
@@ -23,6 +22,7 @@ from remindme.apresentacao.web.paginas import (
     tabela,
     Valores,
 )
+from remindme.apresentacao.web.paginas_orcamentos import _origem_do_titulo
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.titulo import EstadoTitulo
 

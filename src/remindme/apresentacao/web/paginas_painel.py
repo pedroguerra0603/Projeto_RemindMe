@@ -12,12 +12,12 @@ from remindme.apresentacao.web.paginas import (
     botao_link,
     cabecalho,
     caixa_de_aviso,
-    _cartao_pendentes,
     Contexto,
     _item_do_historico,
     layout,
     tabela,
 )
+from remindme.apresentacao.web.paginas_orcamentos import _cartao_pendentes
 from remindme.dominio.conta_pagar import EstadoContaPagar
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.orcamento import EstadoOrcamento

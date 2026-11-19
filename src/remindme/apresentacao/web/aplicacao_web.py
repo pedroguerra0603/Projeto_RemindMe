@@ -30,6 +30,7 @@ from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroT
 from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
+from remindme.apresentacao.web import paginas_orcamentos as po
 from remindme.apresentacao.web import paginas_titulos as pt
 from remindme.apresentacao.web import paginas_clientes as pc
 from remindme.apresentacao.web import paginas_entrada as pe
@@ -639,13 +640,13 @@ class AplicacaoWeb:
         estado = EstadoOrcamento[valores["estado"]] if valores["estado"] in EstadoOrcamento.__members__ else None
         filtro = FiltroOrcamentos(cliente_id=valores["cliente"] or None, estado=estado, criado_de=de, criado_ate=ate)
         orcamentos = self._s.orcamentos.consultar_orcamentos(sessao, filtro)
-        pagina = p.pagina_orcamentos(ctx, orcamentos, self._nomes_clientes(sessao, ctx), valores, erros, _aviso(req))
+        pagina = po.pagina_orcamentos(ctx, orcamentos, self._nomes_clientes(sessao, ctx), valores, erros, _aviso(req))
         return Resposta.pagina(pagina)
 
     def _orcamento_novo_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         self._s.acesso.exigir(sessao, Operacao.CONDUZIR_ORCAMENTO)
         valores = {"cliente": req.consulta.get("cliente", "")}
-        return Resposta.pagina(p.pagina_orcamento_formulario(ctx, self._nomes_clientes(sessao, ctx), valores, {}))
+        return Resposta.pagina(po.pagina_orcamento_formulario(ctx, self._nomes_clientes(sessao, ctx), valores, {}))
 
     def _orcamento_novo(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         valores = _valores(req, "cliente", "condicao")
@@ -654,7 +655,7 @@ class AplicacaoWeb:
         except OperacaoNegada:
             raise
         except OperacaoRecusada as recusa:
-            pagina = p.pagina_orcamento_formulario(ctx, self._nomes_clientes(sessao, ctx), valores, _erros(recusa))
+            pagina = po.pagina_orcamento_formulario(ctx, self._nomes_clientes(sessao, ctx), valores, _erros(recusa))
             return Resposta.pagina(pagina, 400)
         return Resposta.redirecionar(f"/orcamentos/{orcamento.id}?aviso=orcamento")
 
@@ -664,7 +665,7 @@ class AplicacaoWeb:
     ) -> Resposta:
         orcamento = self._s.orcamentos.obter_orcamento(sessao, orcamento_id)
         nomes = self._nomes_clientes(sessao, ctx)
-        pagina = p.pagina_orcamento(
+        pagina = po.pagina_orcamento(
             ctx,
             orcamento,
             nomes.get(orcamento.cliente_id, "Cliente"),
@@ -749,7 +750,7 @@ class AplicacaoWeb:
                 "quantidade": f.numero_para_campo(item.quantidade),
                 "valor_unitario": f.valor_para_campo(item.valor_unitario),
             }
-        return Resposta.pagina(p.pagina_item_formulario(ctx, orcamento, item, valores, erros or {}), 400 if erros else 200)
+        return Resposta.pagina(po.pagina_item_formulario(ctx, orcamento, item, valores, erros or {}), 400 if erros else 200)
 
     def _item_alterar(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str, item_id: str) -> Resposta:
         valores = _valores(req, "descricao", "quantidade", "valor_unitario")
