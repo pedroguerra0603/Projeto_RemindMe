@@ -30,6 +30,7 @@ from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroT
 from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
+from remindme.apresentacao.web import paginas_painel as ppa
 from remindme.apresentacao.web import paginas_mensagens as pm
 from remindme.apresentacao.web import paginas_pagar as pp
 from remindme.apresentacao.web.html import Html
@@ -422,7 +423,7 @@ class AplicacaoWeb:
             if self._s.contas_pagar and ctx.pode(Operacao.CONSULTAR_CONTAS_PAGAR)
             else None
         )
-        pagina = p.pagina_painel(
+        pagina = ppa.pagina_painel(
             ctx, visoes, self._nomes_clientes(sessao, ctx), registros, usuarios, _aviso(req), pendentes, pagamentos, orcamentos,
             contas,
         )
