@@ -4,22 +4,22 @@ from decimal import Decimal
 from typing import Dict, Optional
 
 from remindme.apresentacao.web import formatos as f
-from remindme.apresentacao.web.html import h, Html, juntar
+from remindme.apresentacao.web.html import Html, h, juntar
 from remindme.apresentacao.web.paginas import (
+    Contexto,
+    Erros,
+    Valores,
     botao_link,
     cabecalho,
     caixa_de_aviso,
     campo,
-    Contexto,
     erro_geral,
-    Erros,
     layout,
     protecao,
     selecao,
     selo_estado,
     selo_proximo,
     tabela,
-    Valores,
 )
 from remindme.apresentacao.web.paginas_auditoria import _cartao_historico
 from remindme.apresentacao.web.paginas_orcamentos import _origem_do_titulo

@@ -1,4 +1,8 @@
-"""Páginas HTML da interface web (Spec 017). Só montam o que os serviços devolvem; nenhuma regra aqui (INV-1)."""
+"""Base das páginas HTML da interface web (Spec 017): contexto, estrutura, campos e páginas comuns.
+
+As páginas de cada módulo ficam em `paginas_<módulo>.py` e usam os componentes daqui. Só montam o que os serviços
+devolvem; nenhuma regra aqui (INV-1).
+"""
 
 from dataclasses import dataclass
 from datetime import date
@@ -241,6 +245,9 @@ def tabela(cabecalhos: Sequence[Tuple[str, str]], linhas: List[Html], vazio: str
     return h('<div class="tabela"><table><thead><tr>{c}</tr></thead><tbody>{l}</tbody></table></div>', c=cabeca, l=juntar(linhas))
 
 
+# Páginas comuns: motivo de uma operação e erro
+
+
 def pagina_motivo(
     ctx: Contexto, titulo_pagina: str, explicacao: str, acao: str, voltar: str, botao: str, valores: Valores, erros: Erros,
     secao: str = "titulos",
@@ -260,9 +267,6 @@ def pagina_motivo(
     )
     conteudo = juntar([cabecalho(titulo_pagina, explicacao), h('<section class="cartao">{f}</section>', f=formulario)])
     return layout(titulo_pagina, conteudo, ctx, secao)
-
-
-# Erros
 
 
 def pagina_erro(codigo: int, titulo: str, mensagem: str, correlacao: Optional[str] = None, com_volta: bool = True) -> Html:

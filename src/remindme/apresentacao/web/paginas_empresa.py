@@ -4,17 +4,17 @@ from decimal import Decimal
 from typing import Optional
 
 from remindme.apresentacao.web import formatos as f
-from remindme.apresentacao.web.html import h, Html, juntar
+from remindme.apresentacao.web.html import Html, h, juntar
 from remindme.apresentacao.web.paginas import (
+    Contexto,
+    Erros,
+    Valores,
     cabecalho,
     caixa_de_aviso,
     campo,
-    Contexto,
     erro_geral,
-    Erros,
     layout,
     protecao,
-    Valores,
 )
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.titulo import EstadoTitulo

@@ -31,15 +31,15 @@ from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
 from remindme.apresentacao.web import paginas_auditoria as pa
-from remindme.apresentacao.web import paginas_usuarios as pu
-from remindme.apresentacao.web import paginas_empresa as pem
-from remindme.apresentacao.web import paginas_orcamentos as po
-from remindme.apresentacao.web import paginas_titulos as pt
 from remindme.apresentacao.web import paginas_clientes as pc
+from remindme.apresentacao.web import paginas_empresa as pem
 from remindme.apresentacao.web import paginas_entrada as pe
-from remindme.apresentacao.web import paginas_painel as ppa
 from remindme.apresentacao.web import paginas_mensagens as pm
+from remindme.apresentacao.web import paginas_orcamentos as po
 from remindme.apresentacao.web import paginas_pagar as pp
+from remindme.apresentacao.web import paginas_painel as ppa
+from remindme.apresentacao.web import paginas_titulos as pt
+from remindme.apresentacao.web import paginas_usuarios as pu
 from remindme.apresentacao.web.html import Html
 from remindme.dominio.conta_pagar import EstadoContaPagar
 from remindme.dominio.erros import OperacaoNegada, OperacaoRecusada

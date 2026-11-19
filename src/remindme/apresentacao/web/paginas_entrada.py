@@ -1,14 +1,14 @@
 """Telas públicas da interface web: entrar e criar conta (Specs 017 e 002). Nenhuma regra aqui (INV-1)."""
 
-from remindme.apresentacao.web.html import h, Html
+from remindme.apresentacao.web.html import Html, h
 from remindme.apresentacao.web.paginas import (
+    Erros,
+    Valores,
+    _documento_html,
     caixa_de_aviso,
     campo,
-    _documento_html,
     erro_geral,
-    Erros,
     selecao,
-    Valores,
 )
 from remindme.dominio.usuario import Perfil
 

@@ -2,19 +2,19 @@
 
 from typing import List
 
-from remindme.apresentacao.web.html import h, Html, juntar
+from remindme.apresentacao.web.html import Html, h, juntar
 from remindme.apresentacao.web.paginas import (
+    Contexto,
+    Erros,
+    Valores,
     botao_link,
     cabecalho,
     campo,
-    Contexto,
     erro_geral,
-    Erros,
     layout,
     protecao,
     selecao,
     tabela,
-    Valores,
 )
 from remindme.dominio.usuario import Perfil, Usuario
 

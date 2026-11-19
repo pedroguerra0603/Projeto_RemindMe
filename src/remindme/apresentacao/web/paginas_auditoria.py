@@ -3,18 +3,18 @@
 from typing import Optional, Tuple
 
 from remindme.apresentacao.web import formatos as f
-from remindme.apresentacao.web.html import e, h, Html, juntar
+from remindme.apresentacao.web.html import Html, e, h, juntar
 from remindme.apresentacao.web.paginas import (
+    Contexto,
+    Erros,
+    Valores,
     cabecalho,
     caixa_de_aviso,
     campo,
-    Contexto,
     erro_geral,
-    Erros,
     layout,
     selecao,
     tabela,
-    Valores,
 )
 
 

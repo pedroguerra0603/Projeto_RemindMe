@@ -4,20 +4,20 @@ from typing import Dict, Optional
 
 from remindme.aplicacao.modelos_de_mensagem import numero_do_orcamento
 from remindme.apresentacao.web import formatos as f
-from remindme.apresentacao.web.html import h, Html, juntar
+from remindme.apresentacao.web.html import Html, h, juntar
 from remindme.apresentacao.web.paginas import (
+    Contexto,
+    Erros,
+    Valores,
     botao_link,
     cabecalho,
     caixa_de_aviso,
     campo,
-    Contexto,
     erro_geral,
-    Erros,
     layout,
     protecao,
     selecao,
     tabela,
-    Valores,
 )
 from remindme.apresentacao.web.paginas_auditoria import _cartao_historico
 from remindme.dominio.operacoes import Operacao
