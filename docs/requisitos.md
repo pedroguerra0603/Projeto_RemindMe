@@ -26,7 +26,7 @@ Os termos em itálico do domínio estão definidos no [glossário](glossario.md)
 
 Identificadores: `RF-nn`, `RNF-nn`, `RB-nn`, `UC-nn`. Um identificador nunca é reaproveitado: requisito retirado fica marcado como retirado.
 
-As metas de RNF-07, RNF-08 e RNF-24, antes propostas, foram confirmadas em 2026-10-23 (OPEN-09, em [`.specify/open.md`](../.specify/open.md)).
+As metas de RNF-07, RNF-08 e RNF-24, antes propostas, foram confirmadas em 2026-10-23 (OPEN-09, em [`.specify/open.md`](../.specify/open.md)). RNF-07 e RNF-08 foram retirados em 2026-11-19 (OPEN-63), porque a execução é local (OPEN-12).
 
 A data de referência do sistema ("hoje") é a de America/Sao_Paulo, e os horários são guardados em UTC (OPEN-26).
 
@@ -204,7 +204,7 @@ Incluídos em 2026-10-31 (OPEN-56). Spec 018.
 | RNF-02 | THE SYSTEM SHALL negar por padrão qualquer operação que não esteja explicitamente permitida ao perfil do usuário. | Teste por perfil × operação |
 | RNF-03 | THE SYSTEM SHALL validar permissões e alçadas no servidor, independentemente da interface. | Teste chamando a operação sem a interface |
 | RNF-04 | THE SYSTEM SHALL armazenar senhas somente como hash com salt, gerado por algoritmo adaptativo. | Inspeção do armazenamento |
-| RNF-05 | THE SYSTEM SHALL trafegar dados entre navegador e servidor somente por HTTPS. | Teste de requisição HTTP sem TLS |
+| RNF-05 | THE SYSTEM SHALL trafegar dados entre navegador e servidor pela rede somente por HTTPS; sem certificado, THE SYSTEM SHALL atender somente conexões da própria máquina. Reescrito em 2026-11-19 (OPEN-38, OPEN-63): a execução é local (OPEN-12). | Teste do servidor configurado para a rede, sem e com certificado |
 | RNF-06 | THE SYSTEM SHALL impedir a alteração e a exclusão de registros de auditoria por qualquer perfil. | Teste de tentativa de alteração |
 | RNF-22 | THE SYSTEM SHALL enviar ao serviço de IA apenas a descrição do lançamento ou o texto da mensagem, sem nome, documento ou contato do cliente. | Inspeção do payload enviado |
 | RNF-25 | THE SYSTEM SHALL não revelar, na resposta a uma mensagem de um cliente, dados de títulos de outro cliente. Reescrito em 2026-10-31: o cliente não tem perfil de acesso (OPEN-57). | Teste de acesso a título de outro cliente |
@@ -213,8 +213,8 @@ Incluídos em 2026-10-31 (OPEN-56). Spec 018.
 
 | ID | Cláusula | Verificação |
 |---|---|---|
-| RNF-07 | THE SYSTEM SHOULD estar disponível em 99% do tempo de cada mês. | Monitoramento |
-| RNF-08 | THE SYSTEM SHALL executar backup diário dos dados e manter as cópias dos últimos 7 dias. | Verificação da rotina e de uma restauração |
+| RNF-07 | *Retirado em 2026-11-19 (OPEN-63): a execução é local (OPEN-12), sem hospedagem; não há disponibilidade mensal a medir.* | — |
+| RNF-08 | *Retirado em 2026-11-19 (OPEN-63): a execução é local (OPEN-12), sem rotina de backup; a cópia manual do banco está em [`execucao.md`](execucao.md).* | — |
 | RNF-09 | IF ocorrer falha durante uma operação financeira, THEN THE SYSTEM SHALL desfazer todas as alterações da operação. | Teste com falha injetada |
 | RNF-10 | *Retirado.* Coberto por RNF-09 e RF-84. | |
 | RNF-24 | IF o serviço de IA não responder em 10 segundos, THEN THE SYSTEM SHALL tratar a chamada como falha. | Teste com serviço simulado lento |
