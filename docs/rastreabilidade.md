@@ -158,7 +158,7 @@ DA-03 conta como implementado, embora o teste de concorrência real ainda seja u
 | 3 | A linha da Spec 017 no mapa cita "Telas de … RF-20 a RF-31", o que inclui RF-28 e RF-29 (renegociação). A renegociação não existe; eles seguem pela Spec 009 | Proposta: corrigir a linha da 017 no mapa para RF-20 a RF-27, RF-30 e RF-31 |
 | 4 | RNF-11 e RNF-25 têm testes que passam, mas o mapa os atribui só a specs futuras (012 e 009) | Proposta: incluir RNF-11 nas linhas 006 e 017, e RNF-25 na linha 002 do mapa |
 | 5 | Dois marcadores pulados já podiam ser testes: `test_RB_15_desconto_percentual_nao_perde_centavos` ("pendente da Spec 004", verificada) e `test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo` ("pendente de OPEN-02", decidida; o SQLite existe) | Escrever os dois testes |
-| 6 | RB-02 diz "somente o Dono estorna", mas o Administrador também estorna (OPEN-53); RB-33 já cita a exceção | Proposta: reescrever RB-02 e RB-15 com a exceção do Administrador |
+| 6 | RB-02 diz "somente o Dono estorna", mas o Administrador também estorna (OPEN-53); RB-33 já cita a exceção | **Resolvida** em 2026-11-19: RB-02, RB-15, RF-16 e o glossário citam a exceção do Administrador (OPEN-53). Se o Administrador pode aprovar o próprio desconto ficou em OPEN-64 |
 | 7 | 70 das 474 funções de teste não levam identificador no nome, contra o princípio 2 de [`testes.md`](testes.md). São, em geral, testes de infraestrutura, de integração, de contrato e de interface | Registrado em [divergências](qualidade/divergencias.md), DV-14, ainda em proposta |
 
 As divergências entre código, spec e baseline estão em [`qualidade/divergencias.md`](qualidade/divergencias.md).
