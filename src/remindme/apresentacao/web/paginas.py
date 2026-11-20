@@ -41,6 +41,7 @@ MENU = (
     ("mensagens", "/mensagens", "Mensagens enviadas", "✉", Operacao.CONSULTAR_MENSAGENS),
     ("clientes", "/clientes", "Clientes", "◉", Operacao.CONSULTAR_CLIENTES),
     ("contas", "/contas-a-pagar", "Contas a pagar", "▥", Operacao.CONSULTAR_CONTAS_PAGAR),
+    ("obrigacoes", "/obrigacoes", "Obrigações", "◷", Operacao.GERENCIAR_OBRIGACOES),
     ("fornecedores", "/fornecedores", "Fornecedores", "◍", Operacao.CONSULTAR_FORNECEDORES),
     ("auditoria", "/auditoria", "Auditoria", "⌕", Operacao.CONSULTAR_AUDITORIA),
     ("usuarios", "/usuarios", "Usuários", "◎", Operacao.ADMINISTRAR_USUARIOS),
@@ -364,6 +365,7 @@ def pagina_painel(
     pagamentos: Optional[list] = None,
     orcamentos: Optional[list] = None,
     contas: Optional[list] = None,
+    obrigacoes: Optional[Html] = None,
 ) -> Html:
     partes: List[Html] = []
     acoes = []
@@ -378,6 +380,8 @@ def pagina_painel(
     if visoes is not None or contas is not None:
         partes.append(_regua_do_caixa(visoes, nomes_clientes, ctx, contas))
 
+    if obrigacoes is not None:
+        partes.append(obrigacoes)  # Spec 010: RNF-15 e RF-77
     if pendentes:
         partes.append(_cartao_pendentes(pendentes, nomes_clientes))
     partes.append(_graficos_do_perfil(ctx, visoes or [], registros or [], pagamentos or [], orcamentos or []))
@@ -404,7 +408,7 @@ def pagina_painel(
                 lista=h('<ul class="historico">{i}</ul>', i=juntar(itens)) if itens else h('<p class="vazio">{t}</p>', t="Nenhuma operação registrada ainda."),
             )
         )
-    if visoes is None and usuarios is None and registros is None and contas is None:
+    if visoes is None and usuarios is None and registros is None and contas is None and obrigacoes is None:
         partes.append(caixa_de_aviso("info", "O seu perfil ainda não tem funcionalidades nesta versão."))
     return layout("Painel", juntar(partes), ctx, "painel", aviso)
 
@@ -1374,6 +1378,8 @@ def _descrever(registro: str) -> Tuple[str, Optional[str]]:
         return ("Pagamento da conta " if len(partes) > 1 else "Conta a pagar ") + chave[:8], f"/contas-a-pagar/{chave}"
     if tipo == "usuario":
         return "Usuário " + chave[:8], f"/usuarios/{chave}"
+    if tipo == "obrigacao":
+        return ("Evidência da obrigação " if len(partes) > 1 else "Obrigação ") + chave[:8], f"/obrigacoes/{chave}"
     return registro, "/permissoes" if registro == "permissões" else None
 
 

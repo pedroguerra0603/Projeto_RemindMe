@@ -7,7 +7,7 @@ verificação automática roda pelo agendador, sem usuário (OPEN-13, OPEN-48), 
 import uuid
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from remindme.aplicacao.acesso import Autorizacao
 from remindme.aplicacao.auditoria import OperacaoAuditada, RegistroErrosNoLog
@@ -192,6 +192,11 @@ class ServicoObrigacoes:
         with self._execucao.operacao("consultar obrigações", sessao, _GERENCIAR) as op:
             usuarios = op.uow.usuarios.listar()
         return sorted((u for u in usuarios if responsavel_valido(u)), key=lambda u: (u.nome, u.id))
+
+    def nomes_dos_usuarios(self, sessao: Optional[str]) -> Dict[str, str]:
+        """Os nomes de todos os usuários, ativos ou não, para o histórico e a caixa de saída."""
+        with self._execucao.operacao("consultar obrigações", sessao, _GERENCIAR) as op:
+            return {u.id: u.nome for u in op.uow.usuarios.listar()}
 
     # Agendador
 

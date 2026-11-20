@@ -14,7 +14,7 @@ from http import HTTPStatus
 from http.cookies import CookieError, SimpleCookie
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
-from urllib.parse import parse_qs, urlencode
+from urllib.parse import parse_qs, quote, urlencode
 
 from remindme.aplicacao.acesso import SessaoInvalida
 from remindme.aplicacao.portas import RegistroErro, RegistroErros, Relogio
@@ -25,16 +25,20 @@ from remindme.aplicacao.servico_contas_pagar import FiltroContas, ServicoContasP
 from remindme.aplicacao.servico_empresa import ServicoEmpresa
 from remindme.aplicacao.servico_fornecedores import ServicoFornecedores
 from remindme.aplicacao.servico_mensagens import ServicoMensagens
+from remindme.aplicacao.servico_obrigacoes import ServicoObrigacoes
 from remindme.aplicacao.servico_orcamentos import FiltroOrcamentos, ServicoOrcamentos
 from remindme.aplicacao.servico_titulos import ANTECEDENCIA_PADRAO_DIAS, FiltroTitulos, ServicoTitulos
 from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
 from remindme.apresentacao.web import paginas_mensagens as pm
+from remindme.apresentacao.web import paginas_obrigacoes as po
 from remindme.apresentacao.web import paginas_pagar as pp
 from remindme.apresentacao.web.html import Html
+from remindme.apresentacao.web.multipart import ArquivoEnviado, ler_multipart
 from remindme.dominio.conta_pagar import EstadoContaPagar
 from remindme.dominio.erros import OperacaoNegada, OperacaoRecusada
+from remindme.dominio.obrigacao import ArquivoDeEvidencia, EstadoObrigacao
 from remindme.dominio.empresa import CAMPOS as CAMPOS_DA_EMPRESA
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.orcamento import EstadoOrcamento
@@ -44,6 +48,8 @@ from remindme.dominio.usuario import Perfil
 COOKIE_SESSAO = "remindme_sessao"
 COOKIE_ENTRADA = "remindme_entrada"
 LIMITE_DO_CORPO = 64 * 1024
+# Spec 010 (foco de revisão 3): multipart só nas rotas de upload da evidência, até 6 MB (5 MB de arquivo e folga).
+LIMITE_DO_UPLOAD = 6 * 1024 * 1024
 ESTATICO = Path(__file__).resolve().parent.joinpath("estatico")
 ARQUIVOS_ESTATICOS = {
     "estilo.css": "text/css; charset=utf-8",
@@ -53,6 +59,7 @@ ARQUIVOS_ESTATICOS = {
     "plex-sans-600.woff2": "font/woff2",
 }
 ID = "[0-9a-f]{32}"
+ROTAS_COM_UPLOAD = re.compile(rf"/obrigacoes/{ID}/(cumprimento|evidencias)")
 
 POLITICA_DE_CONTEUDO = (
     "default-src 'none'; style-src 'self'; img-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; "
@@ -97,6 +104,11 @@ AVISOS = {
     "estorno-conta": ("sucesso", "Pagamento estornado."),
     "cancelamento-conta": ("sucesso", "Conta a pagar cancelada."),
     "ativacao": ("sucesso", "Usuário ativado. Ele já pode entrar."),
+    "obrigacao": ("sucesso", "Obrigação cadastrada. Ela aparece no calendário."),
+    "obrigacao-alterada": ("sucesso", "Obrigação alterada. A alteração está no histórico."),
+    "cumprimento": ("sucesso", "Cumprimento registrado."),
+    "cumprimento-sem-evidencia": ("info", "Cumprimento registrado. Falta anexar a evidência exigida."),
+    "evidencia": ("sucesso", "Evidência anexada."),
 }
 
 _CORRELACAO = re.compile(r"Identificador de correlação: ([0-9a-f]+)")
@@ -113,6 +125,7 @@ class Servicos:
     fornecedores: Optional[ServicoFornecedores] = None
     contas_pagar: Optional[ServicoContasPagar] = None
     mensagens: Optional[ServicoMensagens] = None
+    obrigacoes: Optional[ServicoObrigacoes] = None
 
 
 class CorpoGrandeDemais(Exception):
@@ -131,17 +144,22 @@ class Requisicao:
         except CookieError:
             self.cookies = {}
         self.formulario: Dict[str, str] = {}
+        self.arquivos: Dict[str, ArquivoEnviado] = {}
         if self.metodo == "POST":
             try:
                 tamanho = int(ambiente.get("CONTENT_LENGTH") or 0)
             except ValueError:
                 tamanho = 0
-            if tamanho > LIMITE_DO_CORPO:
+            tipo = ambiente.get("CONTENT_TYPE", "")
+            upload = tipo.startswith("multipart/form-data") and ROTAS_COM_UPLOAD.fullmatch(self.caminho) is not None
+            if tamanho > (LIMITE_DO_UPLOAD if upload else LIMITE_DO_CORPO):
                 raise CorpoGrandeDemais()
             corpo = ambiente["wsgi.input"].read(tamanho) if tamanho > 0 else b""
-            if ambiente.get("CONTENT_TYPE", "").startswith("application/x-www-form-urlencoded"):
+            if tipo.startswith("application/x-www-form-urlencoded"):
                 texto = corpo.decode("utf-8", errors="replace")
                 self.formulario = _primeiros(parse_qs(texto, keep_blank_values=True))
+            elif upload:
+                self.formulario, self.arquivos = ler_multipart(corpo, tipo)
 
     def campo(self, nome: str) -> str:
         return self.formulario.get(nome, "").strip()
@@ -244,6 +262,15 @@ class AplicacaoWeb:
         r.append(("POST", conta_estorno, self._conta_estorno, protegida))
         r.append(("GET", f"/contas-a-pagar/(?P<conta_id>{ID})/cancelamento", self._conta_cancelamento_pagina, protegida))
         r.append(("POST", f"/contas-a-pagar/(?P<conta_id>{ID})/cancelamento", self._conta_cancelamento, protegida))
+        r.append(("GET", "/obrigacoes", self._obrigacoes, protegida))
+        r.append(("GET", "/obrigacoes/nova", self._obrigacao_nova_pagina, protegida))
+        r.append(("POST", "/obrigacoes/nova", self._obrigacao_nova, protegida))
+        r.append(("GET", f"/obrigacoes/(?P<obrigacao_id>{ID})", self._obrigacao, protegida))
+        r.append(("POST", f"/obrigacoes/(?P<obrigacao_id>{ID})/prazo", self._obrigacao_prazo, protegida))
+        r.append(("POST", f"/obrigacoes/(?P<obrigacao_id>{ID})/responsavel", self._obrigacao_responsavel, protegida))
+        r.append(("POST", f"/obrigacoes/(?P<obrigacao_id>{ID})/cumprimento", self._obrigacao_cumprimento, protegida))
+        r.append(("POST", f"/obrigacoes/(?P<obrigacao_id>{ID})/evidencias", self._obrigacao_evidencia, protegida))
+        r.append(("GET", f"/obrigacoes/(?P<obrigacao_id>{ID})/evidencias/(?P<evidencia_id>{ID})", self._evidencia, protegida))
         r.append(("GET", "/empresa", self._empresa, protegida))
         r.append(("POST", "/empresa", self._empresa_salvar, protegida))
         r.append(("GET", "/auditoria", self._auditoria, protegida))
@@ -422,9 +449,14 @@ class AplicacaoWeb:
             if self._s.contas_pagar and ctx.pode(Operacao.CONSULTAR_CONTAS_PAGAR)
             else None
         )
+        obrigacoes = (
+            self._s.obrigacoes.consultar_calendario(sessao)
+            if self._s.obrigacoes and ctx.pode(Operacao.GERENCIAR_OBRIGACOES)
+            else None
+        )
         pagina = p.pagina_painel(
             ctx, visoes, self._nomes_clientes(sessao, ctx), registros, usuarios, _aviso(req), pendentes, pagamentos, orcamentos,
-            contas,
+            contas, po.cartoes_do_painel(obrigacoes, ctx.hoje, ctx) if obrigacoes is not None else None,
         )
         return Resposta.pagina(pagina)
 
@@ -713,7 +745,8 @@ class AplicacaoWeb:
 
     def _mensagens(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         mensagens = self._s.mensagens.consultar(sessao)
-        return Resposta.pagina(pm.pagina_mensagens(ctx, mensagens, self._nomes_clientes(sessao, ctx)))
+        usuarios = self._nomes_usuarios(sessao, ctx)
+        return Resposta.pagina(pm.pagina_mensagens(ctx, mensagens, self._nomes_clientes(sessao, ctx), usuarios))
 
     def _item_novo(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str) -> Resposta:
         valores = _valores(req, "descricao", "quantidade", "valor_unitario")
@@ -1162,6 +1195,126 @@ class AplicacaoWeb:
         if not ctx.pode(Operacao.CONSULTAR_AUDITORIA):
             return {ctx.usuario.id: ctx.usuario.nome}
         return dict(self._s.auditoria.opcoes_de_filtro(sessao).responsaveis)
+
+    # Obrigações (Spec 010)
+
+    def _nomes_usuarios(self, sessao: str, ctx: p.Contexto) -> Dict[str, str]:
+        if not self._s.obrigacoes or not ctx.pode(Operacao.GERENCIAR_OBRIGACOES):
+            return {}
+        return self._s.obrigacoes.nomes_dos_usuarios(sessao)
+
+    def _obrigacoes(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        filtro = req.consulta.get("estado", "")
+        visoes = self._s.obrigacoes.consultar_calendario(sessao)
+        if filtro in EstadoObrigacao.__members__:
+            visoes = [v for v in visoes if v.estado is EstadoObrigacao[filtro]]
+        elif filtro != "todas":
+            filtro = ""
+            visoes = [v for v in visoes if v.estado is not EstadoObrigacao.CUMPRIDA]
+        return Resposta.pagina(po.pagina_calendario(ctx, visoes, filtro, _aviso(req)))
+
+    def _obrigacao_nova_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        responsaveis = self._s.obrigacoes.responsaveis_possiveis(sessao)
+        valores = {"responsavel": ctx.usuario.id, "exige_evidencia": "nao"}
+        return Resposta.pagina(po.pagina_obrigacao_formulario(ctx, responsaveis, valores, {}))
+
+    def _obrigacao_nova(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
+        valores = _valores(req, "nome", "tipo", "periodicidade", "prazo", "responsavel", "exige_evidencia")
+        erros: Dict[str, str] = {}
+        prazo = f.ler_data(valores["prazo"]) if valores["prazo"] else None
+        if valores["prazo"] and prazo is None:
+            erros["prazo"] = "Informe uma data válida."
+        try:
+            obrigacao = self._s.obrigacoes.cadastrar_obrigacao(
+                sessao, valores["nome"], valores["tipo"], valores["periodicidade"], prazo, valores["responsavel"],
+                valores["exige_evidencia"] == "sim",
+            )
+            if not erros:
+                return Resposta.redirecionar(f"/obrigacoes/{obrigacao.id}?aviso=obrigacao")
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            erros = {**_erros(recusa), **erros}
+        responsaveis = self._s.obrigacoes.responsaveis_possiveis(sessao)
+        return Resposta.pagina(po.pagina_obrigacao_formulario(ctx, responsaveis, valores, erros), 400)
+
+    def _obrigacao(
+        self, req: Requisicao, sessao: str, ctx: p.Contexto, obrigacao_id: str,
+        valores: Optional[Dict[str, str]] = None, erros: Optional[Dict[str, str]] = None, formulario: str = "",
+    ) -> Resposta:
+        servico = self._s.obrigacoes
+        obrigacao = servico.obter_obrigacao(sessao, obrigacao_id)
+        responsaveis = servico.responsaveis_possiveis(sessao)
+        pagina = po.pagina_obrigacao(
+            ctx, obrigacao, servico.ocorrencias_da_serie(sessao, obrigacao.serie), servico.nomes_dos_usuarios(sessao),
+            responsaveis, any(u.id == obrigacao.responsavel_id for u in responsaveis), valores or {}, erros or {},
+            formulario, None if erros else _aviso(req),
+        )
+        return Resposta.pagina(pagina, 400 if erros else 200)
+
+    def _obrigacao_prazo(self, req: Requisicao, sessao: str, ctx: p.Contexto, obrigacao_id: str) -> Resposta:
+        valores = _valores(req, "prazo")
+        prazo = f.ler_data(valores["prazo"]) if valores["prazo"] else None
+        try:
+            if valores["prazo"] and prazo is None:
+                raise OperacaoRecusada("Informe uma data válida.", {"prazo": "Informe uma data válida."})
+            self._s.obrigacoes.alterar_prazo(sessao, obrigacao_id, prazo)
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return self._obrigacao(req, sessao, ctx, obrigacao_id, valores, _erros(recusa), "prazo")
+        return Resposta.redirecionar(f"/obrigacoes/{obrigacao_id}?aviso=obrigacao-alterada")
+
+    def _obrigacao_responsavel(self, req: Requisicao, sessao: str, ctx: p.Contexto, obrigacao_id: str) -> Resposta:
+        valores = _valores(req, "responsavel")
+        try:
+            self._s.obrigacoes.alterar_responsavel(sessao, obrigacao_id, valores["responsavel"])
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return self._obrigacao(req, sessao, ctx, obrigacao_id, valores, _erros(recusa), "responsavel")
+        return Resposta.redirecionar(f"/obrigacoes/{obrigacao_id}?aviso=obrigacao-alterada")
+
+    def _obrigacao_cumprimento(self, req: Requisicao, sessao: str, ctx: p.Contexto, obrigacao_id: str) -> Resposta:
+        valores = _valores(req, "data", "descricao")
+        data = f.ler_data(valores["data"]) if valores["data"] else None
+        enviado = req.arquivos.get("arquivo")
+        arquivo = ArquivoDeEvidencia(enviado.nome, enviado.conteudo) if enviado else None
+        try:
+            if valores["data"] and data is None:
+                raise OperacaoRecusada("Informe uma data válida.", {"data": "Informe uma data válida."})
+            obrigacao = self._s.obrigacoes.registrar_cumprimento(sessao, obrigacao_id, data, arquivo, valores["descricao"])
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return self._obrigacao(req, sessao, ctx, obrigacao_id, valores, _erros(recusa), "cumprimento")
+        aviso = "cumprimento-sem-evidencia" if obrigacao.aguarda_evidencia else "cumprimento"
+        return Resposta.redirecionar(f"/obrigacoes/{obrigacao_id}?aviso={aviso}")
+
+    def _obrigacao_evidencia(self, req: Requisicao, sessao: str, ctx: p.Contexto, obrigacao_id: str) -> Resposta:
+        valores = _valores(req, "descricao")
+        enviado = req.arquivos.get("arquivo")
+        try:
+            if enviado is None:
+                raise OperacaoRecusada("Escolha o arquivo da evidência.", {"arquivo": "Escolha o arquivo da evidência."})
+            self._s.obrigacoes.anexar_evidencia(
+                sessao, obrigacao_id, ArquivoDeEvidencia(enviado.nome, enviado.conteudo), valores["descricao"]
+            )
+        except OperacaoNegada:
+            raise
+        except OperacaoRecusada as recusa:
+            return self._obrigacao(req, sessao, ctx, obrigacao_id, valores, _erros(recusa), "evidencia")
+        return Resposta.redirecionar(f"/obrigacoes/{obrigacao_id}?aviso=evidencia")
+
+    def _evidencia(self, req: Requisicao, sessao: str, ctx: p.Contexto, obrigacao_id: str, evidencia_id: str) -> Resposta:
+        """Foco de revisão 1: sempre como anexo, com o tipo conferido no upload e o nome em UTF-8."""
+        evidencia, conteudo = self._s.obrigacoes.conteudo_da_evidencia(sessao, obrigacao_id, evidencia_id)
+        resposta = Resposta(200, conteudo, evidencia.tipo_arquivo)
+        simples = "".join(c if c.isascii() and c.isprintable() and c not in '"\\;' else "_" for c in evidencia.nome_arquivo)
+        resposta.cabecalhos.append(
+            ("Content-Disposition", f"attachment; filename=\"{simples}\"; filename*=UTF-8''{quote(evidencia.nome_arquivo, safe='')}")
+        )
+        return resposta
 
     def _historico(self, sessao: str, ctx: p.Contexto, registro: str):
         if not ctx.pode(Operacao.CONSULTAR_AUDITORIA):
