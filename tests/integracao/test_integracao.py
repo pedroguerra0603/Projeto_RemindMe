@@ -137,7 +137,7 @@ class ServicoComInfraestrutura(ComSessoes, unittest.TestCase):
         with self.assertRaises(OperacaoRecusada):
             self.servico.registrar_pagamento(self.sessao(OPERADOR), t.id, Decimal("1.00"), HOJE)
 
-    def test_consulta_de_clientes_e_feita_a_cada_cadastro(self):
+    def test_RF_20_consulta_de_clientes_e_feita_a_cada_cadastro(self):
         self.servico.cadastrar_titulo(self.sessao(OPERADOR), "c1", Decimal("100.00"), HOJE)
         self.clientes.ids.discard("c1")
         with self.assertRaisesRegex(OperacaoRecusada, "Cliente"):
@@ -146,7 +146,7 @@ class ServicoComInfraestrutura(ComSessoes, unittest.TestCase):
         self.servico.cadastrar_titulo(self.sessao(OPERADOR), "c2", Decimal("100.00"), HOJE)
         self.assertEqual(len(self.titulos.listar()), 2)
 
-    def test_recusa_nao_grava_auditoria(self):
+    def test_RB_01_recusa_nao_grava_auditoria(self):
         t = self.servico.cadastrar_titulo(self.sessao(OPERADOR), "c1", Decimal("100.00"), HOJE)
         antes = list(self.auditoria.registros)
         for operacao in (
@@ -159,7 +159,7 @@ class ServicoComInfraestrutura(ComSessoes, unittest.TestCase):
                 operacao()
         self.assertEqual(self.auditoria.registros, antes)
 
-    def test_verificacao_de_vencimentos_sem_mudanca_nao_grava(self):
+    def test_RF_24_verificacao_de_vencimentos_sem_mudanca_nao_grava(self):
         self.servico.cadastrar_titulo(self.sessao(OPERADOR), "c1", Decimal("100.00"), HOJE + timedelta(days=1))
         antes = list(self.auditoria.registros)
         self.assertEqual(self.servico.verificar_vencimentos(self.sessao(OPERADOR), HOJE), [])

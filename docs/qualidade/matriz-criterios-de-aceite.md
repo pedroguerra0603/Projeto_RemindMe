@@ -58,7 +58,7 @@ Pastas abreviadas: `aceite` = `tests/aplicacao/test_spec_006_aceite.py`; `confia
 | E6 — Cancelamento de título Baixado | CA-19 | Passou |
 | E7 — Dados inválidos no cadastro | CA-02; `test_E7_*` (exceções) | Passou após a correção de #70 |
 | E8 — Falha durante a operação | CA-23, `test_RNF_09_*` (confiab.) | Passou |
-| "Toda recusa informa o motivo e não altera nenhum dado" | `test_RNF_14_cada_recusa_informa_o_campo_ou_a_condicao` (usab.); `test_recusa_nao_grava_auditoria` (integração) | Passou |
+| "Toda recusa informa o motivo e não altera nenhum dado" | `test_RNF_14_cada_recusa_informa_o_campo_ou_a_condicao` (usab.); `test_RB_01_recusa_nao_grava_auditoria` (integração) | Passou |
 
 ## 3. Invariantes da Spec 006
 
