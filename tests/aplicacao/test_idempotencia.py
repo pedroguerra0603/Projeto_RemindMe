@@ -2,17 +2,15 @@
 
 Risco: registrar duas vezes o mesmo pagamento, baixar o título duas vezes ou repetir uma etapa da régua
 (Americanas 2023, ViaQuatro 2022). As repetições são em sequência, no mesmo processo, com a unidade de trabalho em
-memória; a concorrência real, com duas transações ao mesmo tempo, é testada no SQLite (ADR-007). Catálogo em
+memória; a concorrência real, com duas transações ao mesmo tempo, é testada no SQLite em
+tests/integracao/test_concorrencia_sqlite.py (ADR-007). Catálogo em
 docs/qualidade/concorrencia-e-idempotencia.md.
 """
 
 import copy
-import tempfile
-import threading
 import unittest
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 from decimal import Decimal
-from pathlib import Path
 
 from remindme.aplicacao.servico_titulos import ServicoTitulos
 from remindme.dominio.erros import OperacaoRecusada
@@ -21,13 +19,11 @@ from remindme.dominio.usuario import Perfil, Usuario
 from remindme.infraestrutura.memoria import (
     AuditoriaEmMemoria,
     ClientesEmMemoria,
-    RegistroErrosEmMemoria,
     RelogioFixo,
     RepositorioTitulosEmMemoria,
     UnidadeDeTrabalhoEmMemoria,
 )
-from remindme.inicializacao import montar
-from tests.apoio import CIFRADOR_DE_TESTE, ComSessoes
+from tests.apoio import ComSessoes
 
 HOJE = date(2026, 10, 3)
 FUTURO = HOJE + timedelta(days=30)
@@ -166,47 +162,6 @@ class FalhaNoMeioDoPagamento(Base):
         self.servico.registrar_pagamento(self.sessao(OPERADOR), self.titulo.id, Decimal("100.00"), HOJE)
         self.assertEqual(len(self.salvo().pagamentos), 1)
         self.assertIs(self.salvo().estado, EstadoTitulo.BAIXADO)
-
-
-class ConcorrenciaNoBanco(unittest.TestCase):
-    """RNF-09 no SQLite (ADR-007): cada operação é uma transação `BEGIN IMMEDIATE`, que serializa as escritas.
-    A unidade de trabalho em memória não é segura para threads; por isso este caso usa o banco de verdade."""
-
-    RODADAS = 10
-
-    def test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo(self):
-        with tempfile.TemporaryDirectory() as pasta:
-            relogio = RelogioFixo(datetime(2026, 10, 3, 15, 0, tzinfo=timezone.utc))
-            sistema = montar(str(Path(pasta, "remindme.db")), relogio, CIFRADOR_DE_TESTE, RegistroErrosEmMemoria())
-            acesso, titulos = sistema.servicos.acesso, sistema.servicos.titulos
-            acesso.criar_primeiro_administrador("Ana Admin", "admin@exemplo.com", "senha-de-teste")
-            admin = acesso.entrar("admin@exemplo.com", "senha-de-teste").identificador
-            acesso.cadastrar_usuario(admin, "Diego Ramos", "diego@exemplo.com", Perfil.OPERADOR_FINANCEIRO, "senha-de-teste")
-            operador = acesso.entrar("diego@exemplo.com", "senha-de-teste").identificador
-            cliente = sistema.servicos.clientes.cadastrar_cliente(operador, "Padaria Ltda", "11.222.333/0001-81", "p@padaria.com")
-            for rodada in range(self.RODADAS):
-                with self.subTest(rodada=rodada):
-                    titulo = titulos.cadastrar_titulo(operador, cliente.id, Decimal("100.00"), HOJE + timedelta(days=10))
-                    largada = threading.Barrier(2)
-                    resultados = []
-
-                    def pagar():
-                        largada.wait()
-                        try:
-                            titulos.registrar_pagamento(operador, titulo.id, Decimal("60.00"), HOJE)
-                            resultados.append("aceito")
-                        except OperacaoRecusada:
-                            resultados.append("recusado")
-
-                    corredores = [threading.Thread(target=pagar) for _ in range(2)]
-                    for corredor in corredores:
-                        corredor.start()
-                    for corredor in corredores:
-                        corredor.join(timeout=30)
-                    self.assertEqual(sorted(resultados), ["aceito", "recusado"])
-                    salvo = titulos.obter_titulo(operador, titulo.id)
-                    self.assertEqual(salvo.saldo, Decimal("40.00"))
-                    self.assertEqual(len(salvo.pagamentos), 1)
 
 
 class Pendentes(unittest.TestCase):
