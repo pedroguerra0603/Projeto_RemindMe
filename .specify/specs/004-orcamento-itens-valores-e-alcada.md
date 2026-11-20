@@ -135,6 +135,8 @@ Os testes levam no nome o critério ou a regra, como `test_CA_09_RNF_03_...` e `
 
 Implementada e verificada em 2026-10-29. Suíte completa: 383 testes, verdes em Python 3.11, 3.12 e 3.13.
 
+**Nota de processo** (registrada em 2026-11-19 por Renan Gandolpho). Esta spec não tem plano em `.specify/plans/` nem arquivo de tarefas. A spec e a implementação entraram no mesmo commit, em 2026-10-29, e a aprovação foi registrada depois, em 2026-11-07, contra a ordem do fluxo do [`SPECS.md`](../../SPECS.md) (regra 1). Não foi escrito plano retroativo; o que foi feito está descrito nesta seção e na mensagem do commit da implementação.
+
 | Critério | Teste (`tests/aplicacao/test_spec_004_aceite.py`) | Resultado |
 |---|---|---|
 | CA-01 | `test_CA_01_RF_06_cria_em_rascunho_para_cliente_cadastrado_e_audita` | Passou |

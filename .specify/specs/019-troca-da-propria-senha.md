@@ -151,7 +151,7 @@ Os testes de navegador rodaram com Playwright 1.63.0 e Chromium: `python3 -m uni
 | CA-07 | `test_CA_07_outras_sessoes_sao_encerradas` | Passou |
 | CA-08 | `test_CA_08_sessoes_de_outro_usuario_continuam` | Passou |
 | CA-09 | `test_CA_09_sem_sessao_valida_e_recusada` | Passou |
-| CA-10 | `test_CA_10_hash_e_salt_novos_e_auditoria_sem_senha` e `test_CifradorScrypt_gera_salt_novo_e_confere` | Passou |
+| CA-10 | `test_CA_10_hash_e_salt_novos_e_auditoria_sem_senha` e `test_RNF_04_CifradorScrypt_gera_salt_novo_e_confere` | Passou |
 | CA-11 | `test_CA_11_falha_na_auditoria_desfaz_tudo` | Passou |
 | CA-12 | `test_CA_12_todos_os_perfis_trocam_sem_permissao_da_matriz` e `test_CA_12_contador_sem_nenhuma_permissao_da_matriz_troca_a_senha` | Passou |
 | CA-13 | `test_CA_13_sem_sessao_get_e_post_levam_a_entrada` | Passou |
@@ -166,7 +166,7 @@ Os testes de navegador rodaram com Playwright 1.63.0 e Chromium: `python3 -m uni
 
 | Invariante | Como foi verificada | Resultado |
 |---|---|---|
-| INV-1 | CA-10, CA-15 e `test_auditoria_mostra_a_troca_sem_a_senha` | Passou |
+| INV-1 | CA-10, CA-15 e `test_RF_04_auditoria_mostra_a_troca_sem_a_senha` | Passou |
 | INV-2 | CA-02 e CA-01 | Passou |
 | INV-3 | CA-07, CA-08 e CA-17 | Passou |
 | INV-4 | CA-11 e `test_RNF_09_INV_4_falha_na_auditoria_desfaz_no_banco` (SQLite) | Passou |

@@ -266,7 +266,7 @@ class DecisoesDaSpec002(Base):
         self.assertNotIn(SENHA, texto)
         self.assertNotIn(sessao, texto)
 
-    def test_sair_encerra_a_sessao(self):
+    def test_OPEN_03_sair_encerra_a_sessao(self):
         _, sessao = self.usuario_e_sessao(Perfil.CONTADOR, "helena@exemplo.com")
         self.acesso.sair(sessao)
         with self.assertRaises(SessaoInvalida):
@@ -280,7 +280,7 @@ class DecisoesDaSpec002(Base):
         with self.assertRaises(SessaoInvalida):
             self.acesso.sessao_ativa(sessao)
 
-    def test_o_identificador_da_sessao_nao_fica_no_armazenamento(self):
+    def test_OPEN_03_o_identificador_da_sessao_nao_fica_no_armazenamento(self):
         _, sessao = self.usuario_e_sessao(Perfil.CONTADOR, "helena@exemplo.com")
         self.assertNotIn(sessao, repr(self.uow.sessoes.dados))
 

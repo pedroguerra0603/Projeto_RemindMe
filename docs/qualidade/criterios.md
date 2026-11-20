@@ -43,10 +43,10 @@ Para cada característica: as subcaracterísticas que mais pesam, os requisitos 
 |---|---|---|---|
 | Tolerância a falhas | Falha no meio de uma operação financeira não deixa alteração parcial | RNF-09 (SHALL) | Teste com falha injetada ([confiabilidade](confiabilidade.md)) |
 | Tolerância a falhas | Falha ou demora do serviço de IA não impede a operação de terminar | RNF-24; DA-06 | Teste com IA simulada lenta ou com falha (Specs 009 e 011) |
-| Disponibilidade | 99% do tempo de cada mês | RNF-07 (SHOULD, **P**) | Monitoramento, depois de OPEN-09 e OPEN-12 |
-| Recuperabilidade | Backup diário com 7 dias de retenção, e uma restauração testada | RNF-08 (SHALL, **P**) | Verificação da rotina, depois de OPEN-09 e OPEN-12 |
+| Disponibilidade | Fora do MVP: execução local, sem hospedagem | RNF-07, retirado (OPEN-63) | Não se aplica |
+| Recuperabilidade | Os dados sobrevivem ao fim do processo; cópia manual do arquivo do banco, sem rotina de backup | ADR-007; RNF-08, retirado (OPEN-63) | Testes de integração com SQLite; procedimento em [`execucao.md`](../execucao.md) |
 
-**Meta:** zero alteração parcial em falha injetada. Disponibilidade, backup e tempo limite da IA aguardam a confirmação dos valores (P) em OPEN-09.
+**Meta:** zero alteração parcial em falha injetada. O tempo limite da IA foi confirmado em OPEN-09; disponibilidade e backup saíram do MVP (OPEN-63).
 
 ### 2.3 Segurança — prioridade alta
 
@@ -57,7 +57,7 @@ Para cada característica: as subcaracterísticas que mais pesam, os requisitos 
 | Integridade | Permissões e alçadas verificadas no servidor, sem depender da interface | RNF-03, RB-02, RB-15 | Teste chamando a operação sem interface |
 | Responsabilização | Toda mudança de estado tem responsável, data e ação | RB-01, RF-61, RF-62 | Teste de auditoria por operação |
 | Não repúdio | Registro de auditoria não é alterado nem excluído | RB-30, RNF-06 | Teste de tentativa de alteração |
-| Autenticidade | Senha só como hash com salt; tráfego só por HTTPS | RNF-04, RNF-05 | Inspeção; teste sem TLS (depois de OPEN-03 e OPEN-12) |
+| Autenticidade | Senha só como hash com salt; pela rede, tráfego só por HTTPS, e sem certificado só a própria máquina (OPEN-38) | RNF-04, RNF-05 | Inspeção; teste do servidor configurado para a rede, sem e com certificado (CA-16 da Spec 017) |
 
 **Meta:** nenhuma célula perfil × operação permitida sem estar explicitamente prevista. Toda mudança de estado auditada.
 

@@ -26,7 +26,7 @@ Os termos em itálico do domínio estão definidos no [glossário](glossario.md)
 
 Identificadores: `RF-nn`, `RNF-nn`, `RB-nn`, `UC-nn`. Um identificador nunca é reaproveitado: requisito retirado fica marcado como retirado.
 
-As metas de RNF-07, RNF-08 e RNF-24, antes propostas, foram confirmadas em 2026-10-23 (OPEN-09, em [`.specify/open.md`](../.specify/open.md)).
+As metas de RNF-07, RNF-08 e RNF-24, antes propostas, foram confirmadas em 2026-10-23 (OPEN-09, em [`.specify/open.md`](../.specify/open.md)). RNF-07 e RNF-08 foram retirados em 2026-11-19 (OPEN-63), porque a execução é local (OPEN-12).
 
 A data de referência do sistema ("hoje") é a de America/Sao_Paulo, e os horários são guardados em UTC (OPEN-26).
 
@@ -68,7 +68,7 @@ A data de referência do sistema ("hoje") é a de America/Sao_Paulo, e os horár
 |---|---|---|---|
 | RF-14 | WHEN o Administrador configurar uma alçada de desconto, THE SYSTEM SHALL associar o percentual máximo ao perfil indicado. | UC-13 | RB-15 |
 | RF-15 | WHEN um usuário informar um desconto em um orçamento, THE SYSTEM SHALL comparar o percentual com a alçada do perfil do usuário. | UC-05 | RB-15 |
-| RF-16 | IF o desconto informado ultrapassar a alçada do usuário, THEN THE SYSTEM SHALL mudar o orçamento para Pendente de Alçada e solicitar a decisão do Dono. | UC-05 | RB-15 |
+| RF-16 | IF o desconto informado ultrapassar a alçada do usuário, THEN THE SYSTEM SHALL mudar o orçamento para Pendente de Alçada e solicitar a decisão do Dono ou do Administrador (OPEN-53). | UC-05 | RB-15 |
 | RF-17 | WHEN o Dono aprovar ou rejeitar um desconto pendente de alçada, THE SYSTEM SHALL registrar o responsável, a decisão e a data, e devolver o orçamento ao estado Rascunho. | UC-05 | RB-15 |
 | RF-18 | WHEN o desconto ou o valor de um orçamento for alterado, THE SYSTEM SHALL registrar o valor anterior e o novo valor. | UC-05 | RB-01 |
 
@@ -204,7 +204,7 @@ Incluídos em 2026-10-31 (OPEN-56). Spec 018.
 | RNF-02 | THE SYSTEM SHALL negar por padrão qualquer operação que não esteja explicitamente permitida ao perfil do usuário. | Teste por perfil × operação |
 | RNF-03 | THE SYSTEM SHALL validar permissões e alçadas no servidor, independentemente da interface. | Teste chamando a operação sem a interface |
 | RNF-04 | THE SYSTEM SHALL armazenar senhas somente como hash com salt, gerado por algoritmo adaptativo. | Inspeção do armazenamento |
-| RNF-05 | THE SYSTEM SHALL trafegar dados entre navegador e servidor somente por HTTPS. | Teste de requisição HTTP sem TLS |
+| RNF-05 | THE SYSTEM SHALL trafegar dados entre navegador e servidor pela rede somente por HTTPS; sem certificado, THE SYSTEM SHALL atender somente conexões da própria máquina. Reescrito em 2026-11-19 (OPEN-38, OPEN-63): a execução é local (OPEN-12). | Teste do servidor configurado para a rede, sem e com certificado |
 | RNF-06 | THE SYSTEM SHALL impedir a alteração e a exclusão de registros de auditoria por qualquer perfil. | Teste de tentativa de alteração |
 | RNF-22 | THE SYSTEM SHALL enviar ao serviço de IA apenas a descrição do lançamento ou o texto da mensagem, sem nome, documento ou contato do cliente. | Inspeção do payload enviado |
 | RNF-25 | THE SYSTEM SHALL não revelar, na resposta a uma mensagem de um cliente, dados de títulos de outro cliente. Reescrito em 2026-10-31: o cliente não tem perfil de acesso (OPEN-57). | Teste de acesso a título de outro cliente |
@@ -213,8 +213,8 @@ Incluídos em 2026-10-31 (OPEN-56). Spec 018.
 
 | ID | Cláusula | Verificação |
 |---|---|---|
-| RNF-07 | THE SYSTEM SHOULD estar disponível em 99% do tempo de cada mês. | Monitoramento |
-| RNF-08 | THE SYSTEM SHALL executar backup diário dos dados e manter as cópias dos últimos 7 dias. | Verificação da rotina e de uma restauração |
+| RNF-07 | *Retirado em 2026-11-19 (OPEN-63): a execução é local (OPEN-12), sem hospedagem; não há disponibilidade mensal a medir.* | — |
+| RNF-08 | *Retirado em 2026-11-19 (OPEN-63): a execução é local (OPEN-12), sem rotina de backup; a cópia manual do banco está em [`execucao.md`](execucao.md).* | — |
 | RNF-09 | IF ocorrer falha durante uma operação financeira, THEN THE SYSTEM SHALL desfazer todas as alterações da operação. | Teste com falha injetada |
 | RNF-10 | *Retirado.* Coberto por RNF-09 e RF-84. | |
 | RNF-24 | IF o serviço de IA não responder em 10 segundos, THEN THE SYSTEM SHALL tratar a chamada como falha. | Teste com serviço simulado lento |
@@ -256,7 +256,7 @@ Regras de negócio são verdades do domínio que existiriam mesmo sem o sistema.
 | ID | Regra | Aplicada por |
 |---|---|---|
 | RB-01 | Toda mudança de estado de orçamento, título, pagamento, obrigação ou lançamento tem responsável, data e ação registrados. | RF-04, RF-05, RF-61, RF-62 |
-| RB-02 | Somente o Dono estorna um pagamento. | RF-30 |
+| RB-02 | Somente o Dono estorna um pagamento (o Administrador também, por OPEN-53). | RF-30 |
 | RB-03 | O Contador consulta e exporta dados financeiros, mas não cria nem altera registros. | RF-67 |
 | RB-04 | O calendário de obrigações é único para a empresa e visível ao Dono e ao Operador Financeiro. | RF-43 |
 | RB-05 | Orçamento aprovado pelo cliente vira título a receber, e somente orçamento aprovado vira título. | RF-11, RF-12, RF-19 |
@@ -269,7 +269,7 @@ Regras de negócio são verdades do domínio que existiriam mesmo sem o sistema.
 | RB-12 | Lançamento sem classificação confirmada não entra na apuração do resultado. | RF-58, RF-53, RF-54, RF-55, RF-82, RF-86 |
 | RB-13 | Obrigação Aguardando Evidência permanece como pendência visível do Operador Financeiro. | RF-77 |
 | RB-14 | Sugestão da IA que não atende à RB-08 é decidida por uma pessoa. | RF-80 |
-| RB-15 | Cada perfil tem um percentual máximo de desconto (alçada). Desconto acima da alçada de quem informa o desconto depende de aprovação do Dono (OPEN-50). O Dono não tem limite. | RF-14, RF-15, RF-16, RF-17 |
+| RB-15 | Cada perfil tem um percentual máximo de desconto (alçada). Desconto acima da alçada de quem informa o desconto depende de aprovação do Dono ou do Administrador (OPEN-50, OPEN-53). O Dono não tem limite. | RF-14, RF-15, RF-16, RF-17 |
 | RB-16 | Obrigação Atrasada é escalada ao Dono. A tolerância padrão é de 0 dias e pode ser configurada. | RF-49 |
 | RB-17 | Mensagem de cliente da qual não se extrai intenção válida é tratada por uma pessoa. | RF-74 |
 | RB-18 | O canal de notificação é substituível. O canal padrão é o simulado. | RF-08 |

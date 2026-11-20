@@ -22,9 +22,9 @@
 ## Foco de revisão
 
 1. Topo da página num celular de 360 e de 320 px: o link novo não pode criar rolagem horizontal nem empurrar "Sair" para fora da tela. Teste e2e: `test_foco_1_topo_com_o_link_nao_estoura_no_celular` (tarefa 3).
-2. Senha com espaços nas pontas, acentos e emoji: precisa ser guardada exatamente como digitada e entrar depois. Teste web: `test_senha_com_espacos_e_acentos_e_guardada_como_digitada` (tarefa 2).
-3. Formulário enviado duas vezes (duplo clique): o primeiro troca; o segundo é recusado com "A senha atual não confere.", e a sessão continua válida. Teste web: `test_envio_repetido_nao_derruba_a_sessao` (tarefa 2).
-4. Tela de Auditoria do Administrador: mostra a troca como "senha: — → alterada", sem a senha. Teste web: `test_auditoria_mostra_a_troca_sem_a_senha` (tarefa 2).
+2. Senha com espaços nas pontas, acentos e emoji: precisa ser guardada exatamente como digitada e entrar depois. Teste web: `test_RF_95_senha_com_espacos_e_acentos_e_guardada_como_digitada` (tarefa 2).
+3. Formulário enviado duas vezes (duplo clique): o primeiro troca; o segundo é recusado com "A senha atual não confere.", e a sessão continua válida. Teste web: `test_RF_96_envio_repetido_nao_derruba_a_sessao` (tarefa 2).
+4. Tela de Auditoria do Administrador: mostra a troca como "senha: — → alterada", sem a senha. Teste web: `test_RF_04_auditoria_mostra_a_troca_sem_a_senha` (tarefa 2).
 5. Gerenciador de senhas do navegador: o campo da senha atual usa `autocomplete="current-password"`, e os outros dois usam `autocomplete="new-password"`. Teste web: `test_campos_de_senha_orientam_o_gerenciador_de_senhas` (tarefa 2).
 
 ---
@@ -48,8 +48,8 @@
 
 - [ ] **Passo 1: testes de unidade de `motivo_da_senha`** em `tests/aplicacao/test_senhas.py`:
   - `test_OPEN_44_limites_de_tamanho`: 7 caracteres dão "A senha deve ter pelo menos 8 caracteres."; 8 e 256 dão `""`; 257 dão "A senha deve ter no máximo 256 caracteres.".
-  - `test_senha_ausente_usa_a_mensagem_pedida`: `motivo_da_senha("", ausente="Informe a nova senha.") == "Informe a nova senha."`; `motivo_da_senha(None) == "Informe a senha provisória."`.
-  - `test_CifradorScrypt_gera_salt_novo_e_confere`: dois `gerar("x" * 8)` diferem; `conferir` aceita a certa e recusa a errada.
+  - `test_RNF_14_senha_ausente_usa_a_mensagem_pedida`: `motivo_da_senha("", ausente="Informe a nova senha.") == "Informe a nova senha."`; `motivo_da_senha(None) == "Informe a senha provisória."`.
+  - `test_RNF_04_CifradorScrypt_gera_salt_novo_e_confere`: dois `gerar("x" * 8)` diferem; `conferir` aceita a certa e recusa a errada.
 - [ ] **Passo 2: testes de aceite** em `tests/aplicacao/test_spec_019_aceite.py`:
   - Base no molde de `test_spec_002_aceite.Base`: `UnidadeDeTrabalhoEmMemoria`, `RelogioFixo(datetime(2026, 11, 6, 10, 0))`, `CIFRADOR_DE_TESTE`, Administrador criado e um Operador `diego@exemplo.com` com a senha `"senha-antiga-1"`.
   - Um teste por critério, com os valores da spec:
@@ -102,7 +102,7 @@
   - `test_CA_15_erros_voltam_com_400_por_campo_sem_as_senhas`: `id="erro-senha_atual"`, `id="erro-nova_senha"` e `id="erro-confirmacao"` presentes; as senhas digitadas ausentes do HTML.
   - `test_CA_16_sem_protecao_e_recusado`: 403, e a senha antiga continua entrando.
   - `test_CA_17_troca_leva_ao_painel_e_derruba_o_outro_navegador`: 303 para `/painel?aviso=senha`, e o painel mostra o aviso; o segundo `ClienteWeb` recebe 303 com destino começando por `/entrar?aviso=sessao-encerrada`.
-  - Focos 2 a 5: `test_senha_com_espacos_e_acentos_e_guardada_como_digitada` (nova `"  pão de açúcar 🙂  "`, depois `entrar` com ela exata dá 303 para `/painel`), `test_envio_repetido_nao_derruba_a_sessao`, `test_auditoria_mostra_a_troca_sem_a_senha` e `test_campos_de_senha_orientam_o_gerenciador_de_senhas`.
+  - Focos 2 a 5: `test_RF_95_senha_com_espacos_e_acentos_e_guardada_como_digitada` (nova `"  pão de açúcar 🙂  "`, depois `entrar` com ela exata dá 303 para `/painel`), `test_RF_96_envio_repetido_nao_derruba_a_sessao`, `test_RF_04_auditoria_mostra_a_troca_sem_a_senha` e `test_campos_de_senha_orientam_o_gerenciador_de_senhas`.
 - [ ] **Passo 2: rodar** `python3 -m unittest tests.apresentacao.test_spec_019_web -v`. Esperado: falha, com 404 em `/trocar-senha` e o link ausente.
 - [ ] **Passo 3: implementar.**
   - `_trocar_senha` lê as três senhas com `req.formulario.get`. Se o serviço recusar, devolve `_trocar_senha_pagina(req, sessao, ctx, _erros(recusa))` com status 400.

@@ -24,7 +24,7 @@ class Spec005Web(Base):
         with UnidadeDeTrabalhoSQLite(self.caminho) as uow:
             return uow.orcamentos.obter(pagina.rsplit("/", 1)[1])
 
-    def test_fluxo_operador_envia_e_registra_aprovacao(self):
+    def test_RF_08_RF_11_fluxo_operador_envia_e_registra_aprovacao(self):
         diego = self.navegador("diego@exemplo.com")
         pagina = self.orcamento_pronto(diego)
         resposta = diego.enviar(pagina, f"{pagina}/envio", {})
@@ -39,7 +39,7 @@ class Spec005Web(Base):
         self.assertIn("Prazo para pagamento", texto)
         self.assertIn(f'href="/orcamentos/{orcamento.id}"', diego.get(f"/titulos/{orcamento.titulo_id}").texto)
 
-    def test_contadora_ve_a_origem_do_titulo_sem_link_que_ela_nao_pode_abrir(self):
+    def test_RF_21_contadora_ve_a_origem_do_titulo_sem_link_que_ela_nao_pode_abrir(self):
         diego = self.navegador("diego@exemplo.com")
         pagina = self.orcamento_pronto(diego)
         diego.enviar(pagina, f"{pagina}/envio", {})
@@ -61,7 +61,7 @@ class Spec005Web(Base):
         self.assertIn(f'action="{pagina}/resposta-do-cliente"', texto)
         self.assertIn('value="2026-10-22"', texto)  # a data padrão é hoje
 
-    def test_erros_por_campo_em_prazo_e_data(self):
+    def test_RNF_14_erros_por_campo_em_prazo_e_data(self):
         diego = self.navegador("diego@exemplo.com")
         pagina = self.orcamento_pronto(diego)
         resposta = diego.enviar(pagina, f"{pagina}/condicao", {"condicao": "Pix", "prazo": "abc"})
@@ -74,7 +74,7 @@ class Spec005Web(Base):
             self.assertIn('id="erro-data"', resposta.texto)
         self.assertIs(self.salvo(pagina).estado, EstadoOrcamento.ENVIADO)
 
-    def test_texto_da_mensagem_e_escapado(self):
+    def test_ADR_006_texto_da_mensagem_e_escapado(self):
         diego = self.navegador("diego@exemplo.com")
         pagina = self.orcamento_pronto(diego, "<script>alert(1)</script>")
         diego.enviar(pagina, f"{pagina}/envio", {})
@@ -83,7 +83,7 @@ class Spec005Web(Base):
             self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", texto)
             self.assertNotIn("<script>alert(1)", texto)
 
-    def test_caixa_de_saida_exige_sessao_e_nega_o_contador(self):
+    def test_RNF_01_RNF_02_caixa_de_saida_exige_sessao_e_nega_o_contador(self):
         self.assertEqual(self.navegador().get("/mensagens").destino, "/entrar")
         helena = self.navegador("helena@exemplo.com")
         self.assertEqual(helena.get("/mensagens").status, 403)
@@ -111,7 +111,7 @@ class Spec005Web(Base):
 class FalhaDoCanalNaInterface(Base):
     canal = CanalQueFalha()
 
-    def test_falha_do_canal_aparece_na_pagina(self):
+    def test_RF_08_falha_do_canal_aparece_na_pagina(self):
         diego = self.navegador("diego@exemplo.com")
         pagina = Spec005Web.orcamento_pronto(self, diego)
         resposta = diego.enviar(pagina, f"{pagina}/envio", {})

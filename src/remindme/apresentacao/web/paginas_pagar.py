@@ -9,7 +9,6 @@ from remindme.apresentacao.web.paginas import (
     Contexto,
     Erros,
     Valores,
-    _cartao_historico,
     botao_link,
     cabecalho,
     caixa_de_aviso,
@@ -20,6 +19,7 @@ from remindme.apresentacao.web.paginas import (
     selecao,
     tabela,
 )
+from remindme.apresentacao.web.paginas_auditoria import _cartao_historico
 from remindme.dominio.conta_pagar import ESTADOS_EM_ABERTO, EstadoContaPagar
 from remindme.dominio.operacoes import Operacao
 

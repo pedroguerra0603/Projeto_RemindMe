@@ -14,7 +14,7 @@ Este texto é a fonte. O diagrama é uma vista dele e deve ser regerado quando o
 | `Cliente` | Identifica quem recebe orçamentos e deve títulos. Não é usuário do sistema (OPEN-57). | — |
 | `Orcamento` | Conduz a proposta comercial do rascunho à conversão em título. Calcula seus valores e controla seu estado. | RB-05, RB-15, RB-24 |
 | `ItemOrcamento` | Descreve um produto ou serviço orçado, com quantidade e valor. | RB-24 |
-| `AprovacaoDesconto` | Registra a decisão do Dono sobre um desconto acima da alçada. | RB-15 |
+| `AprovacaoDesconto` | Registra a decisão do Dono ou do Administrador (OPEN-53) sobre um desconto acima da alçada. | RB-15 |
 | `Titulo` | Representa um valor a receber. Controla saldo, vencimento e estado. É a classe central do modelo. | RB-10, RB-11, RB-21, RB-22, RB-23 |
 | `Pagamento` | Registra um valor recebido para um título ou pago para uma conta a pagar. Pode ser estornado. | RB-02, RB-23, RB-32 |
 | `Renegociacao` | Registra a mudança de condições de um título, preservando as condições originais. | RB-20, RB-28 |

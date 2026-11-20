@@ -123,7 +123,7 @@ Para aprovar ou recusar, responda a esta mensagem.
   - `test_RB_27_texto_tem_empresa_numero_itens_valores_e_prazo`: um orçamento de 2 × R$ 1.234,50 com 10% de desconto e prazo de 30 dias. As asserções conferem as linhas exatas: "- Revisão: 2 × R$ 1.234,50 = R$ 2.469,00", "Desconto: 10% (R$ 246,90)", "Valor líquido: R$ 2.222,10" e "Prazo para pagamento: 30 dias a partir da aprovação".
   - `test_RB_27_prazo_zero_e_sem_desconto_nem_condicao`: o texto tem "à vista, na aprovação" e não tem as linhas "Desconto" nem "Condição".
   - `test_foco_2_sem_empresa_cadastrada_usa_nossa_empresa`.
-  - `test_nome_fantasia_vazio_usa_razao_social`.
+  - `test_OPEN_54_nome_fantasia_vazio_usa_razao_social`.
 - [ ] **Passo 2: teste** em `test_memoria.py`: `test_mensagens_sao_desfeitas_com_a_transacao`. Uma mensagem registrada dentro de `with uow:` que lança exceção não aparece depois.
 - [ ] **Passo 3: rodar** os módulos novos. Esperado: falha com `ModuleNotFoundError`.
 - [ ] **Passo 4: implementar.**
@@ -223,12 +223,12 @@ Para aprovar ou recusar, responda a esta mensagem.
 - Testes: `tests/apresentacao/test_spec_005_web.py`, no molde de `test_spec_004_web.py`.
 
 - [ ] **Passo 1: testes web.**
-  - `test_fluxo_operador_envia_e_registra_aprovacao`: prazo → envio → aprovação. A página do título mostra o link para o orçamento, e a do orçamento mostra o link para o título.
+  - `test_RF_08_RF_11_fluxo_operador_envia_e_registra_aprovacao`: prazo → envio → aprovação. A página do título mostra o link para o orçamento, e a do orçamento mostra o link para o título.
   - `test_botoes_conforme_o_estado`: "Enviar ao cliente" só em Rascunho pronto, e "Registrar decisão do cliente" só em Enviado.
-  - `test_erros_por_campo_em_prazo_e_data`: `id="erro-prazo"` e `id="erro-data"` com status 400.
-  - `test_texto_da_mensagem_e_escapado`: um item com `<script>` aparece escapado em `/mensagens` e na página do orçamento.
-  - `test_caixa_de_saida_exige_sessao_e_nega_o_contador`: sem sessão, redireciona para a entrada; o Contador recebe 403 e não vê o item de menu.
-  - `test_falha_do_canal_aparece_na_pagina`: com `montar(canal=CanalQueFalha())`, a resposta mostra a recusa, e a caixa de saída mostra "falhou".
+  - `test_RNF_14_erros_por_campo_em_prazo_e_data`: `id="erro-prazo"` e `id="erro-data"` com status 400.
+  - `test_ADR_006_texto_da_mensagem_e_escapado`: um item com `<script>` aparece escapado em `/mensagens` e na página do orçamento.
+  - `test_RNF_01_RNF_02_caixa_de_saida_exige_sessao_e_nega_o_contador`: sem sessão, redireciona para a entrada; o Contador recebe 403 e não vê o item de menu.
+  - `test_RF_08_falha_do_canal_aparece_na_pagina`: com `montar(canal=CanalQueFalha())`, a resposta mostra a recusa, e a caixa de saída mostra "falhou".
   - `test_foco_3_aprovacao_enviada_duas_vezes_gera_um_titulo`.
   - `test_demonstracao_tem_orcamentos_enviado_convertido_e_rejeitado`.
 - [ ] **Passo 2: rodar** `python3 -m unittest tests.apresentacao.test_spec_005_web -v`. Esperado: falha.

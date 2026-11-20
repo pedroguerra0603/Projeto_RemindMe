@@ -5,7 +5,7 @@
 ## Princípios
 
 1. **Cada cláusula obrigatória vira ao menos um teste.** Todo RF com SHALL e toda RB têm teste.
-2. **O teste leva o identificador no nome.** Exemplo: `RB-23_recusa_pagamento_maior_que_o_saldo`.
+2. **O teste leva o identificador no nome.** Exemplo: `RB-23_recusa_pagamento_maior_que_o_saldo`. Exceção (DV-14, aceita em 2026-11-20 por Renan Gandolpho): o teste que não verifica regra, requisito nem critério de aceite, como os de infraestrutura, de contrato do repositório, de objetos auxiliares e de desenho da interface, pode ficar sem identificador. Teste de regra continua com o identificador; a revisão do PR confere.
 3. **Regra de domínio é testada sem banco e sem interface.**
 4. **A suíte roda sem credencial externa**, com canal de notificação e serviço de IA simulados (RNF-23).
 5. **O critério de aceite é binário.** Cada critério de uma spec, no formato Dado, Quando, Então, corresponde a um teste que passa ou não passa.
@@ -18,6 +18,7 @@
 | Aplicação | Casos de uso: permissão, transação, auditoria | Repositórios em memória; canal e IA simulados |
 | Integração | Persistência, atomicidade, unicidade | Banco de dados de teste |
 | Aceite | Critérios Dado, Quando, Então de cada spec | Sistema completo com simuladores |
+| Documentação | Links relativos dos `.md` e identificadores citados (RF, RNF, RB, UC, OPEN, ADR, DA, DT, spec) existentes na baseline (OPEN-66) | Só os arquivos do repositório |
 
 ## Pirâmide de testes
 
@@ -56,7 +57,7 @@ Percentuais sobre os 523 testes dos cinco níveis (530 menos os 7 transversais).
 
 1. **A pirâmide se inverteu.** O risco registrado em 2026-10-16 se confirmou: cada spec nova trouxe seus testes de aceite e de interface, e quase nenhum de unidade. Aceite e interface somam 49,1% da suíte, contra um alvo de até 20%; a unidade caiu de 50,3% para 36,1%. Proposta: nas próximas specs, testar cada regra nova no domínio primeiro, deixar no aceite só um teste por critério e, na interface, só o que depende da tela (sessão, formulário, erro por campo, escape de HTML).
 2. **Não há cone de sorvete na prática, ainda.** Os testes de aceite usam repositórios em memória, e os de interface chamam a aplicação WSGI no próprio processo, sem servidor nem navegador; a suíte inteira roda em cerca de 16 s. Só os 4 testes de `tests/ponta_a_ponta/` abrem o navegador, e são pulados sem o Playwright. O custo da inversão hoje é de manutenção (mudar uma tela quebra muitos testes), e não de tempo.
-3. **Integração abaixo do alvo.** O banco existe desde a Spec 017 (SQLite, ADR-007), mas a maior parte dos testes que o usam está em `tests/infraestrutura/`, contada como unidade. A atomicidade com duas transações simultâneas continua como marcador pulado (`test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo`). Proposta: escrever esse teste contra o SQLite e rever se os testes do SQLite são unidade ou integração.
+3. **Integração abaixo do alvo.** O banco existe desde a Spec 017 (SQLite, ADR-007), mas a maior parte dos testes que o usam está em `tests/infraestrutura/`, contada como unidade. A atomicidade com duas transações simultâneas é testada contra o SQLite desde 2026-11-20, em `tests/integracao/test_concorrencia_sqlite.py` (`test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo`). Proposta: rever se os testes do SQLite são unidade ou integração.
 4. **Sem medição de cobertura.** A pirâmide mede quantidade de testes, e não o que eles exercitam. Por OPEN-27, coverage.py é opcional, só no desenvolvimento.
 
 Seção aprovada por Renan Gandolpho em 2026-11-07.
@@ -85,7 +86,7 @@ Fora do ponta a ponta de propósito: régua de cobrança (UC-08), por depender d
 | Cada operação sensível recusa o perfil sem permissão, chamada direto na API | RNF-02, RNF-03 |
 | Cliente não lê título de outro cliente pela API | RNF-25 |
 | Entrada inválida devolve o campo e o motivo | RNF-14 |
-| Requisição sem TLS é recusada ou redirecionada | RNF-05 |
+| Sem certificado, o servidor recusa atender pela rede; com certificado, só fala HTTPS (OPEN-38) | RNF-05 |
 | Resposta de consulta e cadastro em menos de 2 s no P95 | RNF-11 |
 
 ### Ferramentas candidatas
@@ -154,7 +155,7 @@ Uma issue de implementação está pronta quando:
 
 1. o código implementa a spec aprovada, sem comportamento além dela;
 2. todos os critérios de aceite da spec têm teste passando;
-3. a suíte inteira passa;
+3. a suíte inteira passa, inclusive a verificação da documentação (OPEN-66);
 4. spec e código foram alterados no mesmo PR, quando o comportamento mudou;
 5. o PR foi revisado por um colega e fecha a issue com `Closes #N`.
 
