@@ -20,7 +20,7 @@ O identificador é o elo da cadeia. Ele aparece no requisito, na spec, na docstr
 1. Os requisitos ativos vêm de [`requisitos.md`](requisitos.md); os retirados (RF-60, RF-63, RF-69, RF-71, RNF-07, RNF-08, RNF-10, RB-26) ficam de fora.
 2. As specs de cada requisito vêm das colunas RF, RB e RNF do mapa. Um requisito está **Implementado** quando todas as specs que o citam estão Verificadas; **Parcial** quando só parte delas está; **Sem implementação** quando nenhuma está.
 3. O código é a lista de módulos que citam o identificador; os testes são as funções cujo nome contém o identificador (`test_*RF_24*`) e os arquivos de teste das specs verificadas (`test_spec_NNN_*`).
-4. A situação foi corrigida à mão quando a regra do item 2 não refletia o código, com o motivo na própria linha: RB-01, RB-21, RF-61, RNF-23 (parciais), RNF-11, RNF-25 (parciais, ver lacuna 4) e RF-28, RF-29 (sem implementação, ver lacuna 3).
+4. A situação foi corrigida à mão quando a regra do item 2 não refletia o código, com o motivo na própria linha: RB-01, RB-21, RF-61 e RNF-23 (parciais). Depois das correções do mapa (lacunas 3 e 4), RNF-11, RNF-25, RF-28 e RF-29 seguem a regra do item 2.
 
 ## 2. Drivers → decisões → implementação → testes
 
@@ -97,9 +97,9 @@ Requisitos com situação Implementado ou Parcial. "Specs" lista só as verifica
 | RNF-04 | 002, 019 | `aplicacao/portas.py`; `aplicacao/senhas.py`; `aplicacao/servico_acesso.py` | `test_*RNF_04*` (1); testes da Spec 002, Spec 019 | Implementado |
 | RNF-05 | 002, 017 | `inicializacao.py` | `test_*RNF_05*` (2); testes da Spec 002, Spec 017 | Implementado |
 | RNF-06 | 001, 013, 017 | `aplicacao/portas.py`; `infraestrutura/sqlite.py` | `test_*RNF_06*` (3); testes da Spec 001, Spec 013, Spec 017 | Implementado |
-| RNF-25 | — | — | `test_*RNF_25*` (2) | Parcial. A recusa por perfil não revela dados do título; a resposta a mensagens de cliente é da Spec 009 |
+| RNF-25 | 002 | — | `test_*RNF_25*` (2); testes da Spec 002 | Parcial. A recusa por perfil não revela dados do título; falta a parte da Spec 009 (resposta a mensagens de cliente) |
 | RNF-09 | 001, 005, 006, 017, 018, 019 | `aplicacao/portas.py`; `aplicacao/servico_acesso.py`; `aplicacao/servico_orcamentos.py` … | `test_*RNF_09*` (15); testes da Spec 001, Spec 005, Spec 006, Spec 017, Spec 018, Spec 019 | Parcial. Falta a parte da Spec 015 |
-| RNF-11 | — | — | `test_*RNF_11*` (3) | Parcial. Medido para cadastro, consulta, pagamento e cancelamento; o mapa o atribui só à Spec 012 |
+| RNF-11 | 006, 017 | — | `test_*RNF_11*` (3); testes da Spec 006, Spec 017 | Parcial. Medido para cadastro, consulta, pagamento e cancelamento; falta a parte da Spec 012 |
 | RNF-14 | 003, 017, 018, 019 | `apresentacao/web/requisicao.py`; `dominio/cliente.py`; `dominio/empresa.py` … | `test_*RNF_14*` (10); testes da Spec 003, Spec 017, Spec 018, Spec 019 | Implementado |
 | RNF-15 | 018 | — | `test_*RNF_15*` (1); testes da Spec 018 | Parcial. Falta a parte das Specs 010, 016 |
 | RNF-16 | 017 | `aplicacao/servico_titulos.py` | testes da Spec 017 | Parcial. Falta a parte da Spec 016 |
@@ -155,8 +155,8 @@ DA-03 conta como implementado, embora o teste de concorrência real ainda seja u
 |---|---|---|
 | 1 | RF-23 fala em "número de dias configurado", mas nenhuma spec verificada configura essa antecedência | Resolvida por OPEN-21 e OPEN-37: parâmetro da Spec 014, com padrão de 5 dias até lá. RF-23 segue Parcial |
 | 2 | RF-31 exigia motivo para "alteração de valor", operação que não existe | Resolvida por OPEN-22: o valor do título não muda depois de criado |
-| 3 | A linha da Spec 017 no mapa cita "Telas de … RF-20 a RF-31", o que inclui RF-28 e RF-29 (renegociação). A renegociação não existe; eles seguem pela Spec 009 | Proposta: corrigir a linha da 017 no mapa para RF-20 a RF-27, RF-30 e RF-31 |
-| 4 | RNF-11 e RNF-25 têm testes que passam, mas o mapa os atribui só a specs futuras (012 e 009) | Proposta: incluir RNF-11 nas linhas 006 e 017, e RNF-25 na linha 002 do mapa |
+| 3 | A linha da Spec 017 no mapa cita "Telas de … RF-20 a RF-31", o que inclui RF-28 e RF-29 (renegociação). A renegociação não existe; eles seguem pela Spec 009 | **Resolvida** em 2026-11-20: a linha da 017 no mapa cita RF-20 a RF-27, RF-30 e RF-31 |
+| 4 | RNF-11 e RNF-25 têm testes que passam, mas o mapa os atribui só a specs futuras (012 e 009) | **Resolvida** em 2026-11-20: RNF-11 nas linhas 006 e 017, e RNF-25 na linha 002 do mapa |
 | 5 | Dois marcadores pulados já podiam ser testes: `test_RB_15_desconto_percentual_nao_perde_centavos` ("pendente da Spec 004", verificada) e `test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo` ("pendente de OPEN-02", decidida; o SQLite existe) | Escrever os dois testes |
 | 6 | RB-02 diz "somente o Dono estorna", mas o Administrador também estorna (OPEN-53); RB-33 já cita a exceção | **Resolvida** em 2026-11-19: RB-02, RB-15, RF-16 e o glossário citam a exceção do Administrador (OPEN-53). Se o Administrador pode aprovar o próprio desconto ficou em OPEN-64 |
 | 7 | 70 das 474 funções de teste não levam identificador no nome, contra o princípio 2 de [`testes.md`](testes.md). São, em geral, testes de infraestrutura, de integração, de contrato e de interface | Registrado em [divergências](qualidade/divergencias.md), DV-14, ainda em proposta |
