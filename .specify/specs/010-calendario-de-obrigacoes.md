@@ -74,6 +74,7 @@
 | Responsável | Usuário ativo, Dono ou Operador Financeiro (OPEN-64). |
 | Exige evidência | Sim ou não. |
 | Dia-base | O dia do prazo da primeira ocorrência, guardado para a recorrência (OPEN-65). |
+| Prazo de referência | O prazo calculado pela periodicidade, de onde sai a próxima ocorrência. Nasce igual ao prazo e não muda quando o prazo é alterado (OPEN-65). |
 | Série | Identificador comum a todas as ocorrências geradas a partir do mesmo cadastro. |
 
 ### Fluxo principal
@@ -86,8 +87,8 @@
 
 ### Recorrência
 
-- O próximo prazo é o prazo da ocorrência anterior avançado 1, 3, 6 ou 12 meses, no dia-base. Quando o dia-base não existe no mês, vale o último dia do mês: 31/01 → 28/02 → 31/03 (OPEN-65).
-- O prazo novo conta do prazo anterior, e não da data do cumprimento: o DAS de fevereiro pago com atraso não muda o prazo do DAS de março.
+- O próximo prazo é o prazo de referência da ocorrência anterior avançado 1, 3, 6 ou 12 meses, no dia-base. Quando o dia-base não existe no mês, vale o último dia do mês: 31/01 → 28/02 → 31/03 (OPEN-65).
+- O prazo novo conta do prazo de referência anterior, e não da data do cumprimento nem do prazo alterado: o DAS de fevereiro pago com atraso, ou prorrogado, não muda o prazo do DAS de março.
 - A ocorrência nova copia nome, tipo, periodicidade, responsável, exigência de evidência, dia-base e série. Nasce sem evidência e sem histórico próprio, além do registro "gerada a partir de".
 - Se o prazo novo já passou, ela é marcada Atrasada na mesma operação.
 - Periodicidade Única não gera ocorrência.
@@ -118,7 +119,7 @@
 
 - **A1 — Obrigação sem exigência de evidência.** No passo 3, o cumprimento é registrado sem anexo, e a obrigação passa a Cumprida (UC-09, A1).
 - **A2 — Cumprimento sem a evidência exigida.** No passo 3, o cumprimento é registrado sem anexo. A obrigação passa a Aguardando Evidência, com a data e o usuário do cumprimento, e aparece no quadro "Obrigações aguardando evidência" do painel do Operador Financeiro (RF-46, RF-77, RB-13). Quando a evidência é anexada, passa a Cumprida, e a próxima ocorrência nasce nesse momento.
-- **A3 — Alteração de prazo ou responsável.** Um usuário autorizado altera o prazo ou o responsável. O histórico guarda o valor anterior e o novo (RF-41). O prazo só muda em Pendente ou Aguardando Evidência, e o novo prazo não pode ser anterior a hoje; um prazo estourado não se apaga. O responsável muda em qualquer estado diferente de Cumprida. Mudar o prazo libera um novo aviso para o prazo novo.
+- **A3 — Alteração de prazo ou responsável.** Um usuário autorizado altera o prazo ou o responsável. O histórico guarda o valor anterior e o novo (RF-41). O prazo só muda em Pendente ou Aguardando Evidência, e o novo prazo não pode ser anterior a hoje; um prazo estourado não se apaga. O responsável muda em qualquer estado diferente de Cumprida. Mudar o prazo libera um novo aviso para o prazo novo. A alteração vale só para esta ocorrência: o prazo de referência e o dia-base não mudam, e a próxima volta ao ritmo da série (OPEN-65).
 - **A4 — Cumprimento de obrigação Atrasada.** A obrigação Atrasada passa a Cumprida com o cumprimento completo: com evidência, quando exigida. Se o cumprimento é registrado sem a evidência exigida, ela continua Atrasada, com o cumprimento registrado, até o anexo; não volta a Aguardando Evidência.
 - **A5 — Aguardando Evidência que estoura o prazo.** O prazo passa enquanto a evidência não chega: a obrigação passa a Atrasada, mantendo a data e o usuário do cumprimento, e o anexo da evidência a leva a Cumprida. Ela continua no quadro "Obrigações aguardando evidência", que mostra toda obrigação com cumprimento registrado e sem a evidência exigida, Aguardando Evidência ou Atrasada (RB-13).
 - **A6 — Responsável inativo.** A obrigação continua no calendário, com o aviso "responsável inativo", e os avisos vão aos Donos ativos (OPEN-64).
@@ -178,6 +179,7 @@ Datas dos exemplos com hoje = 20/11/2026.
 | CA-21 | um Contador autenticado | ele tenta abrir o calendário, cadastrar, alterar, registrar cumprimento e baixar uma evidência, pela tela e pelo serviço | todas as operações são negadas, e nada muda | E6, RB-03, RB-04, RNF-03 |
 | CA-22 | obrigações Atrasadas | o Dono e o Operador abrem o painel | as Atrasadas aparecem em destaque | RNF-15 |
 | CA-23 | um canal que falha | o agendador tenta avisar e depois roda de novo com o canal funcionando | a primeira mensagem fica "falhou", e a segunda rodada entrega o aviso; há um único aviso entregue | ADR-002, INV-5 |
+| CA-24 | uma obrigação Mensal com prazo 20/12/2026, alterado para 05/01/2027 | ela é Cumprida | a próxima nasce com prazo 20/01/2027, e não 05/02/2027 | A3, RF-42, OPEN-65 |
 
 Os testes levam no nome o critério ou a regra, como `test_CA_10_RF_42_...` e `test_RB_29_...`.
 
@@ -187,14 +189,14 @@ Os testes levam no nome o critério ou a regra, como `test_CA_10_RF_42_...` e `t
 |---|---|---|
 | OPEN-63 | Como a evidência é guardada? | Decidida em 2026-11-20 por Renan Gandolpho: arquivo PDF, PNG ou JPG de até 5 MB, conferido pelo conteúdo, com descrição obrigatória. |
 | OPEN-64 | Quem pode ser responsável, e quem registra o cumprimento? | Decidida em 2026-11-20 por Renan Gandolpho: responsável é um usuário ativo Dono ou Operador Financeiro; qualquer usuário com "Gerenciar obrigações" registra o cumprimento; com responsável inativo, a obrigação é sinalizada e os avisos vão aos Donos. |
-| OPEN-65 | Quais periodicidades, e como se calcula o próximo prazo? | Decidida em 2026-11-20 por Renan Gandolpho: Única, Mensal, Trimestral, Semestral e Anual; mesmo dia-base, ou o último dia do mês; conta do prazo anterior; a próxima nasce no cumprimento; sem ajuste para dia útil. |
+| OPEN-65 | Quais periodicidades, e como se calcula o próximo prazo? | Decidida em 2026-11-20 por Renan Gandolpho: Única, Mensal, Trimestral, Semestral e Anual; mesmo dia-base, ou o último dia do mês; conta do prazo de referência anterior; alteração de prazo vale só para a ocorrência; a próxima nasce no cumprimento; sem ajuste para dia útil. |
 | OPEN-66 | O que é o tipo, e quais os valores de aviso e escalonamento até a Spec 014? | Decidida em 2026-11-20 por Renan Gandolpho: tipo de lista fixa (Fiscal, Trabalhista, Contratual, Outra) e nome livre; aviso com 7 dias, uma vez; Atrasada no dia seguinte ao prazo; escalonamento com tolerância 0, uma vez, só aos Donos ativos. |
 
 Nenhuma bloqueia a implementação.
 
 ### Alterações na baseline, no mesmo PR
 
-- `docs/modelo-dominio.md` e `docs/uml/dominio-v2.mmd` (e o `.png`): `Obrigacao` ganha `nome`, `diaBase`, `serie`, `cumpridaEm` e as operações `alterarPrazo()`, `alterarResponsavel()`, `anexarEvidencia()`, `marcarAtrasada()`; `Evidencia` ganha `nomeArquivo`, `tipoArquivo` e `tamanho`; linha nova no histórico.
+- `docs/modelo-dominio.md` e `docs/uml/dominio-v2.mmd` (e o `.png`): `Obrigacao` ganha `nome`, `diaBase`, `prazoReferencia`, `serie`, `cumpridaEm` e as operações `alterarPrazo()`, `alterarResponsavel()`, `anexarEvidencia()`, `marcarAtrasada()`; `Evidencia` ganha `nomeArquivo`, `tipoArquivo` e `tamanho`; linha nova no histórico.
 - `docs/glossario.md`: "Tipo de obrigação", "Periodicidade", "Ocorrência", "Aviso de obrigação" e "Responsável".
 - `docs/uml/estados.md`: cláusulas de A4 e A5 (Atrasada com cumprimento registrado só passa a Cumprida com a evidência) e do prazo que não muda em Atrasada. As transições do diagrama não mudam.
 - `docs/casos-de-uso/UC-09-gerenciar-obrigacoes.md`: passo 4 e A2 sem exigir que seja o responsável (OPEN-64).
