@@ -1,8 +1,8 @@
 """Acurácia dos valores monetários (ISO/IEC 25010, Funcionalidade). Issue #78.
 
 Saldo, soma de pagamentos e estorno não podem perder centavos por arredondamento ou ponto flutuante
-(RF-25, RF-26, RB-22, RB-23). Casos de desconto (RB-15) e de apuração do resultado (UC-11) dependem
-das Specs 004 e 012 e estão pendentes. Catálogo em docs/qualidade/acuracia-monetaria.md.
+(RF-25, RF-26, RB-22, RB-23), nem o desconto percentual do orçamento (RB-15, Spec 004). A apuração do
+resultado (UC-11) depende da Spec 012 e está pendente. Catálogo em docs/qualidade/acuracia-monetaria.md.
 """
 
 import ast
@@ -12,7 +12,9 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from remindme.dominio.erros import OperacaoRecusada
+from remindme.dominio.orcamento import EstadoOrcamento, Orcamento, alcada_do_perfil
 from remindme.dominio.titulo import EstadoTitulo, Titulo
+from remindme.dominio.usuario import Perfil
 
 HOJE = date(2026, 10, 3)
 FUTURO = HOJE + timedelta(days=30)
@@ -174,13 +176,37 @@ class ValoresComMuitosDigitos(unittest.TestCase):
         self.assertEqual(t.saldo, t.valor)
 
 
+class DescontoDoOrcamento(unittest.TestCase):
+    """RB-15 e OPEN-51 (Spec 004): o desconto percentual é arredondado ao centavo, e bruto = desconto + líquido."""
+
+    def test_RB_15_desconto_percentual_nao_perde_centavos(self):
+        alcada = alcada_do_perfil(Perfil.OPERADOR_FINANCEIRO)
+        self.assertEqual(alcada, Decimal("10.00"))
+
+        def orcamento(unitario):
+            o = Orcamento.criar("o1", "c1", "operador", HOJE)
+            o.incluir_item("i1", "Serviço", Decimal("1"), Decimal(unitario))
+            return o
+
+        # 10% de R$ 33,33 = R$ 3,333: desconto de R$ 3,33 (OPEN-51), líquido de R$ 30,00, sem resíduo.
+        o = orcamento("33.33")
+        self.assertFalse(o.informar_desconto(Decimal("10"), "operador", alcada))
+        self.assertEqual((o.valor_bruto, o.valor_desconto, o.valor_liquido), (Decimal("33.33"), Decimal("3.33"), Decimal("30.00")))
+        self.assertEqual(o.valor_desconto + o.valor_liquido, o.valor_bruto)
+        self.assertEqual(o.valor_desconto.as_tuple().exponent, -2)
+
+        # Desconto igual à alçada é aplicado; um centésimo de ponto percentual acima fica Pendente de Alçada.
+        igual = orcamento("100.00")
+        self.assertFalse(igual.informar_desconto(Decimal("10.00"), "operador", alcada))
+        self.assertEqual((igual.estado, igual.valor_desconto), (EstadoOrcamento.RASCUNHO, Decimal("10.00")))
+        acima = orcamento("100.00")
+        self.assertTrue(acima.informar_desconto(Decimal("10.01"), "operador", alcada))
+        self.assertEqual(acima.estado, EstadoOrcamento.PENDENTE_DE_ALCADA)
+        self.assertEqual(acima.valor_desconto, Decimal("0.00"))
+
+
 class PendentesDeOutrasSpecs(unittest.TestCase):
     """Casos que dependem de specs ainda não aprovadas. Nenhum código é escrito antes (regra 1 do CLAUDE.md)."""
-
-    @unittest.skip("Pendente da Spec 004: desconto percentual sobre o valor do orçamento (RB-15). "
-                   "Casos: 10% de R$ 33,33; desconto igual à alçada; um centavo acima da alçada.")
-    def test_RB_15_desconto_percentual_nao_perde_centavos(self):
-        pass
 
     @unittest.skip("Pendente da Spec 012: apuração do resultado (RF-51, RF-55, UC-11). "
                    "Casos: soma de recebimentos e despesas ao centavo; estorno refletido sem resíduo.")

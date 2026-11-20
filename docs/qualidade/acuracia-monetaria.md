@@ -28,7 +28,7 @@ Issue #78. Subcaracterística **Acurácia** (Adequação funcional, ISO/IEC 2501
 | Valor de 20 dígitos (R$ 99.999.999.999.999.999.999,99): centavo preservado, baixa exata | `test_RF_25_valor_de_vinte_digitos_...`, `test_RB_22_valor_de_vinte_digitos_...` | Passou |
 | Valor de 28 dígitos significativos (26 inteiros + 2 casas) | `test_RF_25_valor_de_vinte_e_seis_digitos_...` | Passou |
 | **Valor de 34 dígitos: o saldo é arredondado e o centavo se perde** | `test_D_06_valor_acima_de_28_digitos_...` | **Falha esperada: defeito D-06** |
-| Desconto percentual (RB-15) | `test_RB_15_desconto_percentual_...` | Pendente da Spec 004 |
+| Desconto percentual (RB-15): 10% de R$ 33,33 dá R$ 3,33 e líquido de R$ 30,00; 10,00% aplica, 10,01% fica Pendente de Alçada | `test_RB_15_desconto_percentual_nao_perde_centavos` | Passou (escrito em 2026-11-20, depois da Spec 004) |
 | Apuração do resultado (RF-51, UC-11) | `test_RF_51_apuracao_do_resultado_...` | Pendente da Spec 012 |
 
 ## 3. Achado: D-06, perda silenciosa de centavos acima de 28 dígitos
@@ -53,6 +53,5 @@ Não há arredondamento no sistema: toda operação monetária é soma ou subtra
 
 | Caso | Depende de |
 |---|---|
-| Desconto na alçada, um centavo acima e abaixo, sobre valor com centavos (R$ 33,33 × 10%) | Spec 004 (RB-15) |
 | Soma de recebimentos e despesas ao centavo; estorno refletido no resultado sem resíduo | Spec 012 (RF-51, RF-55, UC-11) |
 | Decisão do limite de valor e da precisão | OPEN-24 e OPEN-20 |
