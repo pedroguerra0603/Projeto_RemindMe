@@ -17,6 +17,15 @@ from remindme.dominio.cliente import Cliente
 from remindme.dominio.conta_pagar import ContaPagar, EstadoContaPagar
 from remindme.dominio.empresa import CAMPOS as CAMPOS_DA_EMPRESA, Empresa
 from remindme.dominio.fornecedor import Fornecedor
+from remindme.dominio.obrigacao import (
+    EstadoObrigacao,
+    EventoObrigacao,
+    Evidencia,
+    Obrigacao,
+    Periodicidade,
+    TipoEvento,
+    TipoObrigacao,
+)
 from remindme.dominio.orcamento import AprovacaoDesconto, EstadoOrcamento, ItemOrcamento, Orcamento, PendenciaDesconto
 from remindme.dominio.operacoes import Operacao
 from remindme.dominio.permissoes import MatrizPermissoes
@@ -208,7 +217,67 @@ CREATE TABLE mensagens (
 CREATE INDEX mensagens_por_data ON mensagens (enviada_em);
 """
 
-MIGRACOES = [_ESQUEMA_1, _ESQUEMA_2, _ESQUEMA_3, _ESQUEMA_4, _ESQUEMA_5]
+# Spec 010: obrigações, histórico e evidências. As mensagens a usuários ficam numa tabela própria, porque
+# `mensagens.cliente_id` é NOT NULL, e mudá-lo no SQLite exigiria reconstruir a tabela (sem DROP).
+_ESQUEMA_6 = """
+CREATE TABLE obrigacoes (
+    id TEXT PRIMARY KEY,
+    nome TEXT NOT NULL,
+    tipo TEXT NOT NULL,
+    periodicidade TEXT NOT NULL,
+    prazo TEXT NOT NULL,
+    prazo_referencia TEXT NOT NULL,
+    dia_base INTEGER NOT NULL,
+    responsavel_id TEXT NOT NULL REFERENCES usuarios (id),
+    exige_evidencia INTEGER NOT NULL,
+    serie TEXT NOT NULL,
+    estado TEXT NOT NULL,
+    cumprimento_em TEXT,
+    cumprimento_por TEXT,
+    proxima_id TEXT
+);
+CREATE INDEX obrigacoes_por_prazo ON obrigacoes (prazo);
+CREATE INDEX obrigacoes_por_serie ON obrigacoes (serie);
+CREATE TABLE eventos_obrigacao (
+    obrigacao_id TEXT NOT NULL REFERENCES obrigacoes (id),
+    ordem INTEGER NOT NULL,
+    quando TEXT NOT NULL,
+    tipo TEXT NOT NULL,
+    usuario_id TEXT,
+    detalhe TEXT NOT NULL,
+    destinatario_id TEXT,
+    prazo TEXT,
+    PRIMARY KEY (obrigacao_id, ordem)
+);
+CREATE TABLE evidencias (
+    id TEXT PRIMARY KEY,
+    obrigacao_id TEXT NOT NULL REFERENCES obrigacoes (id),
+    ordem INTEGER NOT NULL,
+    descricao TEXT NOT NULL,
+    nome_arquivo TEXT NOT NULL,
+    tipo_arquivo TEXT NOT NULL,
+    tamanho INTEGER NOT NULL,
+    anexada_em TEXT NOT NULL,
+    usuario_id TEXT NOT NULL
+);
+CREATE TABLE conteudos_evidencia (
+    evidencia_id TEXT PRIMARY KEY,
+    conteudo BLOB NOT NULL
+);
+CREATE TABLE mensagens_usuarios (
+    id TEXT PRIMARY KEY,
+    usuario_id TEXT NOT NULL REFERENCES usuarios (id),
+    contato TEXT NOT NULL,
+    assunto TEXT NOT NULL,
+    texto TEXT NOT NULL,
+    enviada_em TEXT NOT NULL,
+    resultado TEXT NOT NULL,
+    origem TEXT NOT NULL
+);
+CREATE INDEX mensagens_usuarios_por_data ON mensagens_usuarios (enviada_em);
+"""
+
+MIGRACOES = [_ESQUEMA_1, _ESQUEMA_2, _ESQUEMA_3, _ESQUEMA_4, _ESQUEMA_5, _ESQUEMA_6]
 
 
 def preparar_banco(caminho: str) -> None:
@@ -282,6 +351,7 @@ class UnidadeDeTrabalhoSQLite:
         self.empresa = RepositorioEmpresaSQLite(self)
         self.fornecedores = RepositorioFornecedoresSQLite(self)
         self.contas_pagar = RepositorioContasPagarSQLite(self)
+        self.obrigacoes = RepositorioObrigacoesSQLite(self)
         self.auditoria = AuditoriaSQLite(self)
         self.usuarios = RepositorioUsuariosSQLite(self)
         self.sessoes = RepositorioSessoesSQLite(self)
@@ -530,6 +600,99 @@ class RepositorioContasPagarSQLite(_Repositorio):
         )
 
 
+class RepositorioObrigacoesSQLite(_Repositorio):
+    """Spec 010. O histórico e as evidências só são acrescentados; o conteúdo da evidência fica em
+    `conteudos_evidencia` e não é lido com a obrigação."""
+
+    _COLUNAS = (
+        "id, nome, tipo, periodicidade, prazo, prazo_referencia, dia_base, responsavel_id, exige_evidencia, serie, "
+        "estado, cumprimento_em, cumprimento_por, proxima_id"
+    )
+
+    def obter(self, obrigacao_id: str) -> Optional[Obrigacao]:
+        linha = self._executar(f"SELECT {self._COLUNAS} FROM obrigacoes WHERE id = ?", (obrigacao_id,)).fetchone()
+        if linha is None:
+            return None
+        eventos, evidencias = self._filhos(obrigacao_id)
+        return self._montar(linha, eventos.get(obrigacao_id, []), evidencias.get(obrigacao_id, []))
+
+    def salvar(self, o: Obrigacao) -> None:
+        self._executar(
+            f"""INSERT INTO obrigacoes ({self._COLUNAS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT (id) DO UPDATE SET prazo = excluded.prazo, responsavel_id = excluded.responsavel_id,
+                   estado = excluded.estado, cumprimento_em = excluded.cumprimento_em,
+                   cumprimento_por = excluded.cumprimento_por, proxima_id = excluded.proxima_id""",
+            (
+                o.id, o.nome, o.tipo.name, o.periodicidade.name, o.prazo.isoformat(), o.prazo_referencia.isoformat(),
+                o.dia_base, o.responsavel_id, int(o.exige_evidencia), o.serie, o.estado.name, _iso(o.cumprimento_em),
+                o.cumprimento_por, o.proxima_id,
+            ),
+        )
+        for ordem, e in enumerate(o.historico):
+            self._executar(
+                """INSERT INTO eventos_obrigacao (obrigacao_id, ordem, quando, tipo, usuario_id, detalhe, destinatario_id, prazo)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING""",
+                (o.id, ordem, e.quando.isoformat(), e.tipo.name, e.usuario_id, e.detalhe, e.destinatario_id, _iso(e.prazo)),
+            )
+        for ordem, e in enumerate(o.evidencias):
+            self._executar(
+                """INSERT INTO evidencias (id, obrigacao_id, ordem, descricao, nome_arquivo, tipo_arquivo, tamanho, anexada_em, usuario_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING""",
+                (e.id, o.id, ordem, e.descricao, e.nome_arquivo, e.tipo_arquivo, e.tamanho, e.anexada_em.isoformat(), e.usuario_id),
+            )
+
+    def listar(self) -> List[Obrigacao]:
+        linhas = self._executar(f"SELECT {self._COLUNAS} FROM obrigacoes ORDER BY prazo, id").fetchall()
+        eventos, evidencias = self._filhos(None)
+        return [self._montar(l, eventos.get(l[0], []), evidencias.get(l[0], [])) for l in linhas]
+
+    def guardar_conteudo(self, evidencia_id: str, conteudo: bytes) -> None:
+        self._executar(
+            "INSERT INTO conteudos_evidencia (evidencia_id, conteudo) VALUES (?, ?)", (evidencia_id, bytes(conteudo))
+        )
+
+    def conteudo_de(self, evidencia_id: str) -> Optional[bytes]:
+        linha = self._executar(
+            "SELECT conteudo FROM conteudos_evidencia WHERE evidencia_id = ?", (evidencia_id,)
+        ).fetchone()
+        return bytes(linha[0]) if linha else None
+
+    def _filhos(self, obrigacao_id: Optional[str]):
+        filtro, parametros = ("WHERE obrigacao_id = ?", (obrigacao_id,)) if obrigacao_id else ("", ())
+        eventos, evidencias = {}, {}
+        for dono, quando, tipo, usuario, detalhe, destinatario, prazo in self._executar(
+            f"""SELECT obrigacao_id, quando, tipo, usuario_id, detalhe, destinatario_id, prazo FROM eventos_obrigacao
+                {filtro} ORDER BY obrigacao_id, ordem""",
+            parametros,
+        ).fetchall():
+            eventos.setdefault(dono, []).append(
+                EventoObrigacao(
+                    datetime.fromisoformat(quando), TipoEvento[tipo], usuario, detalhe, destinatario,
+                    date.fromisoformat(prazo) if prazo else None,
+                )
+            )
+        for dono, id_, descricao, nome, tipo, tamanho, anexada, usuario in self._executar(
+            f"""SELECT obrigacao_id, id, descricao, nome_arquivo, tipo_arquivo, tamanho, anexada_em, usuario_id
+                FROM evidencias {filtro} ORDER BY obrigacao_id, ordem""",
+            parametros,
+        ).fetchall():
+            evidencias.setdefault(dono, []).append(
+                Evidencia(id_, descricao, nome, tipo, tamanho, datetime.fromisoformat(anexada), usuario)
+            )
+        return eventos, evidencias
+
+    @staticmethod
+    def _montar(linha, eventos, evidencias) -> Obrigacao:
+        (id_, nome, tipo, periodicidade, prazo, referencia, dia_base, responsavel, exige, serie, estado,
+         cumprimento_em, cumprimento_por, proxima_id) = linha
+        return Obrigacao(
+            id_, nome, TipoObrigacao[tipo], Periodicidade[periodicidade], date.fromisoformat(prazo),
+            date.fromisoformat(referencia), dia_base, responsavel, bool(exige), serie, EstadoObrigacao[estado],
+            date.fromisoformat(cumprimento_em) if cumprimento_em else None, cumprimento_por, proxima_id,
+            evidencias, eventos,
+        )
+
+
 class RepositorioEmpresaSQLite(_Repositorio):
     def obter(self) -> Optional[Empresa]:
         linha = self._executar(f"SELECT {', '.join(CAMPOS_DA_EMPRESA)} FROM empresa WHERE id = 1").fetchone()
@@ -667,24 +830,35 @@ class RepositorioOrcamentosSQLite(_Repositorio):
 
 
 class RepositorioMensagensSQLite(_Repositorio):
-    """Caixa de saída (Spec 005): só acrescenta."""
+    """Caixa de saída (Spec 005): só acrescenta. As mensagens a usuários (Spec 010) ficam em `mensagens_usuarios`."""
 
     def registrar(self, mensagem: Mensagem) -> None:
+        tabela, destinatario = (
+            ("mensagens_usuarios", "usuario_id") if mensagem.cliente_id is None else ("mensagens", "cliente_id")
+        )
         self._executar(
-            """INSERT INTO mensagens (id, cliente_id, contato, assunto, texto, enviada_em, resultado, origem)
+            f"""INSERT INTO {tabela} (id, {destinatario}, contato, assunto, texto, enviada_em, resultado, origem)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                mensagem.id, mensagem.cliente_id, mensagem.contato, mensagem.assunto, mensagem.texto,
-                mensagem.enviada_em.isoformat(), mensagem.resultado, mensagem.origem,
+                mensagem.id, mensagem.cliente_id if mensagem.cliente_id is not None else mensagem.usuario_id,
+                mensagem.contato, mensagem.assunto, mensagem.texto, mensagem.enviada_em.isoformat(),
+                mensagem.resultado, mensagem.origem,
             ),
         )
 
     def listar(self) -> List[Mensagem]:
-        linhas = self._executar("SELECT * FROM mensagens ORDER BY enviada_em, rowid").fetchall()
+        linhas = self._executar(
+            """SELECT id, cliente_id, NULL AS usuario_id, contato, assunto, texto, enviada_em, resultado, origem, 0 AS lado, rowid AS r
+               FROM mensagens
+               UNION ALL
+               SELECT id, NULL, usuario_id, contato, assunto, texto, enviada_em, resultado, origem, 1, rowid
+               FROM mensagens_usuarios
+               ORDER BY enviada_em, lado, r"""
+        ).fetchall()
         return [
             Mensagem(
                 l["id"], l["cliente_id"], l["contato"], l["assunto"], l["texto"],
-                datetime.fromisoformat(l["enviada_em"]), l["resultado"], l["origem"],
+                datetime.fromisoformat(l["enviada_em"]), l["resultado"], l["origem"], l["usuario_id"],
             )
             for l in linhas
         ]

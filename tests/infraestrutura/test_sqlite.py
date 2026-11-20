@@ -239,6 +239,125 @@ class Spec017Persistencia(ComBanco):
             )
 
 
+class Spec010NoSQLite(ComBanco):
+    """Migração 6: obrigações, histórico, evidências e mensagens a usuários (Spec 010)."""
+
+    AGORA = datetime(2026, 11, 20, 9, 0)
+
+    def setUp(self):
+        super().setUp()
+        self.operador = Usuario("u1", "Diego", Perfil.OPERADOR_FINANCEIRO, "diego@demo.example")
+        with self.uow as uow:
+            uow.usuarios.salvar(self.operador)
+
+    def obrigacao(self):
+        from remindme.dominio.obrigacao import ArquivoDeEvidencia, Evidencia, Obrigacao, TipoAlerta
+
+        o = Obrigacao.cadastrar("o1", "DAS", "Fiscal", "Mensal", date(2026, 11, 25), self.operador, True, self.AGORA.date(), "u1", self.AGORA)
+        o.registrar_alerta(TipoAlerta.AVISO, "u1", True, self.AGORA)
+        o.alterar_prazo(date(2026, 11, 30), self.AGORA.date(), "u1", self.AGORA)
+        o.registrar_cumprimento(self.AGORA.date(), self.AGORA.date(), "u1", self.AGORA)
+        o.anexar_evidencia(Evidencia.conferir("e1", ArquivoDeEvidencia("das.pdf", b"%PDF-1.4"), "Guia paga", self.AGORA, "u1"), self.AGORA)
+        return o
+
+    def test_spec_010_obrigacao_ida_e_volta_com_historico_e_evidencias(self):
+        o = self.obrigacao()
+        proxima = o.gerar_proxima_ocorrencia("o2", self.AGORA.date(), self.AGORA)
+        with self.uow as uow:
+            uow.obrigacoes.salvar(o)
+            uow.obrigacoes.salvar(proxima)
+        with self.uow as uow:
+            self.assertEqual(uow.obrigacoes.obter("o1"), o)
+            self.assertEqual(uow.obrigacoes.obter("o2"), proxima)
+            self.assertEqual([x.id for x in uow.obrigacoes.listar()], ["o1", "o2"])
+            self.assertIsNone(uow.obrigacoes.obter("o3"))
+        aviso = o.historico[1]
+        self.assertEqual((aviso.destinatario_id, aviso.prazo), ("u1", date(2026, 11, 25)))
+
+    def test_spec_010_salvar_de_novo_acrescenta_eventos_sem_duplicar(self):
+        from remindme.dominio.obrigacao import ArquivoDeEvidencia, Evidencia, Obrigacao
+
+        o = Obrigacao.cadastrar("o1", "DAS", "Fiscal", "Mensal", date(2026, 11, 25), self.operador, True, self.AGORA.date(), "u1", self.AGORA)
+        with self.uow as uow:
+            uow.obrigacoes.salvar(o)
+        o.registrar_cumprimento(self.AGORA.date(), self.AGORA.date(), "u1", self.AGORA)
+        o.anexar_evidencia(Evidencia.conferir("e1", ArquivoDeEvidencia("das.pdf", b"%PDF-1.4"), "Guia", self.AGORA, "u1"), self.AGORA)
+        with self.uow as uow:
+            uow.obrigacoes.salvar(o)
+            uow.obrigacoes.salvar(o)
+        with self.uow as uow:
+            self.assertEqual(uow.obrigacoes.obter("o1"), o)
+
+    def test_spec_010_conteudo_da_evidencia_ida_e_volta(self):
+        with self.uow as uow:
+            uow.obrigacoes.salvar(self.obrigacao())
+            uow.obrigacoes.guardar_conteudo("e1", b"%PDF-1.4 conteudo")
+        with self.uow as uow:
+            self.assertEqual(uow.obrigacoes.conteudo_de("e1"), b"%PDF-1.4 conteudo")
+            self.assertIsNone(uow.obrigacoes.conteudo_de("e2"))
+
+    def test_spec_010_mensagem_a_usuario_e_a_cliente_listadas_juntas_em_ordem(self):
+        from remindme.aplicacao.portas import Mensagem
+
+        cliente = Mensagem("m1", "c1", "a@b.com", "A", "T", datetime(2026, 11, 20, 10, 0), "enviada", "orcamento o1")
+        usuario = Mensagem("m2", None, "diego@demo.example", "B", "T", datetime(2026, 11, 20, 9, 0), "falhou", "obrigacao o1", "u1")
+        with self.uow as uow:
+            uow.mensagens.registrar(cliente)
+            uow.mensagens.registrar(usuario)
+        with self.uow as uow:
+            self.assertEqual(uow.mensagens.listar(), [usuario, cliente])
+
+    def test_CA_20_RNF_09_falha_na_auditoria_do_cumprimento_nao_deixa_nada_no_banco(self):
+        from unittest import mock
+
+        from remindme.aplicacao.servico_obrigacoes import ServicoObrigacoes
+        from remindme.dominio.obrigacao import ArquivoDeEvidencia, EstadoObrigacao
+        from tests.apoio import abrir_sessao
+
+        servico = ServicoObrigacoes(self.uow, RelogioFixo(self.AGORA))
+        with self.uow as uow:
+            sessao = abrir_sessao(uow, self.operador)
+        o = servico.cadastrar_obrigacao(sessao, "DAS", "Fiscal", "Mensal", date(2026, 12, 20), "u1", True)
+        registrar = self.uow.auditoria.registrar
+
+        def falhar_no_cumprimento(registro):
+            if registro.campo == "estado" and registro.valor_novo == "Cumprida":
+                raise RuntimeError("Falha simulada na auditoria do cumprimento.")
+            registrar(registro)
+
+        with mock.patch.object(self.uow.auditoria, "registrar", side_effect=falhar_no_cumprimento):
+            with self.assertRaises(RuntimeError):
+                servico.registrar_cumprimento(sessao, o.id, self.AGORA.date(), ArquivoDeEvidencia("das.pdf", b"%PDF-1.4"), "Guia")
+        with self.uow as uow:
+            gravada = uow.obrigacoes.obter(o.id)
+            self.assertEqual((gravada.estado, gravada.evidencias), (EstadoObrigacao.PENDENTE, []))
+            self.assertEqual(len(uow.obrigacoes.listar()), 1)
+        self.assertEqual(self.sql("SELECT COUNT(*) FROM conteudos_evidencia"), [(0,)])
+
+    def test_spec_010_banco_da_versao_5_ganha_as_tabelas_sem_perder_dados(self):
+        from remindme.aplicacao.portas import Mensagem
+
+        antigo = str(Path(self._pasta.name) / "versao5.db")
+        with closing(sqlite3.connect(antigo, isolation_level=None)) as conexao:
+            for script in MIGRACOES[:5]:
+                for comando in _comandos(script):
+                    conexao.execute(comando)
+            conexao.execute("INSERT INTO clientes VALUES ('c9', 'Cliente Antigo', '52998224725', 'a@b.com')")
+            conexao.execute(
+                "INSERT INTO mensagens VALUES ('m9', 'c9', 'a@b.com', 'A', 'T', '2026-11-07T12:00:00', 'enviada', 'orcamento o9')"
+            )
+            conexao.execute("PRAGMA user_version = 5")
+        preparar_banco(antigo)
+        with UnidadeDeTrabalhoSQLite(antigo) as uow:
+            self.assertEqual(
+                uow.mensagens.listar(),
+                [Mensagem("m9", "c9", "a@b.com", "A", "T", datetime(2026, 11, 7, 12, 0), "enviada", "orcamento o9")],
+            )
+            self.assertEqual(uow.obrigacoes.listar(), [])
+        with closing(sqlite3.connect(antigo)) as conexao:
+            self.assertEqual(conexao.execute("PRAGMA user_version").fetchone()[0], 6)
+
+
 if __name__ == "__main__":
     unittest.main()
 
@@ -392,7 +511,7 @@ class Spec005NoSQLite(ComBanco):
         self.assertTrue(matriz.permite(Perfil.DONO, Operacao.CONSULTAR_MENSAGENS))
         self.assertFalse(matriz.permite(Perfil.CONTADOR, Operacao.CONSULTAR_MENSAGENS))
         with closing(sqlite3.connect(antigo)) as conexao:
-            self.assertEqual(conexao.execute("PRAGMA user_version").fetchone()[0], 5)
+            self.assertEqual(conexao.execute("PRAGMA user_version").fetchone()[0], len(MIGRACOES))
 
 
 class Spec005ConversaoAtomicaNoSQLite(ComBanco):
