@@ -4,8 +4,9 @@ Cada ocorrência é uma `Obrigacao`; as ocorrências geradas a partir do mesmo c
 (RF-50) é a lista de `EventoObrigacao`, acrescentada por cada operação que muda a obrigação.
 """
 
-from dataclasses import dataclass, field
-from datetime import date, datetime
+import calendar
+from dataclasses import dataclass, field, replace
+from datetime import date, datetime, timedelta
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
@@ -16,6 +17,10 @@ from remindme.dominio.valores import recusar
 TAMANHO_DO_NOME = 120
 TAMANHO_DA_DESCRICAO = 200
 TAMANHO_MAXIMO_DA_EVIDENCIA = 5 * 1024 * 1024  # OPEN-63
+
+# RB-07 e RB-16, com os valores padrão de OPEN-66, até a Spec 014 torná-los configuráveis (INV-9).
+ANTECEDENCIA_DO_AVISO_DIAS = 7
+TOLERANCIA_DO_ESCALONAMENTO_DIAS = 0
 
 PERFIS_RESPONSAVEIS = (Perfil.DONO, Perfil.OPERADOR_FINANCEIRO)  # OPEN-64
 
@@ -73,6 +78,17 @@ class TipoEvento(Enum):
     CUMPRIMENTO_REGISTRADO = "cumprimento registrado"
     EVIDENCIA_ANEXADA = "evidência anexada"
     CUMPRIDA = "cumprida"
+
+
+class TipoAlerta(Enum):
+    AVISO = "aviso"
+    ESCALONAMENTO = "escalonamento"
+
+
+_EVENTOS_DO_ALERTA = {
+    TipoAlerta.AVISO: (TipoEvento.AVISO_ENVIADO, TipoEvento.AVISO_FALHOU),
+    TipoAlerta.ESCALONAMENTO: (TipoEvento.ESCALADA, TipoEvento.ESCALONAMENTO_FALHOU),
+}
 
 
 @dataclass(frozen=True)
@@ -274,6 +290,62 @@ class Obrigacao:
             return True
         return False
 
+    def gerar_proxima_ocorrencia(self, novo_id: str, hoje: date, quando: datetime) -> Optional["Obrigacao"]:
+        """RF-42, OPEN-65: a próxima nasce do prazo de referência, avançado pela periodicidade no dia-base, e não
+        da data do cumprimento nem do prazo alterado. INV-4: cada ocorrência gera no máximo uma próxima."""
+        if self.estado is not EstadoObrigacao.CUMPRIDA:
+            raise OperacaoRecusada("Só obrigação Cumprida gera a próxima ocorrência (RF-42).")
+        if self.proxima_id is not None:
+            raise OperacaoRecusada("A próxima ocorrência desta obrigação já foi gerada (RF-42).")
+        if self.periodicidade is Periodicidade.UNICA:
+            return None
+        prazo = avancar_meses(self.prazo_referencia, self.periodicidade.meses, self.dia_base)
+        proxima = replace(
+            self,
+            id=novo_id,
+            prazo=prazo,
+            prazo_referencia=prazo,
+            estado=EstadoObrigacao.PENDENTE,
+            cumprimento_em=None,
+            cumprimento_por=None,
+            proxima_id=None,
+            evidencias=[],
+            historico=[EventoObrigacao(quando, TipoEvento.GERADA, None, self.id)],
+        )
+        proxima.marcar_atrasada(hoje, quando)
+        self.proxima_id = novo_id
+        return proxima
+
+    def destinatarios_do_aviso(self, hoje: date, responsavel: Optional[Usuario], donos_ativos: List[str]) -> List[str]:
+        """RF-44, RB-07: Pendente com prazo entre hoje e hoje + 7 dias avisa o responsável, uma vez por prazo e por
+        destinatário. Responsável inativo: avisa os Donos ativos (A6, OPEN-64)."""
+        if self.estado is not EstadoObrigacao.PENDENTE:
+            return []
+        if not hoje <= self.prazo <= hoje + timedelta(days=ANTECEDENCIA_DO_AVISO_DIAS):
+            return []
+        candidatos = [responsavel.id] if responsavel_valido(responsavel) else donos_ativos
+        return self._ainda_sem(TipoAlerta.AVISO, candidatos)
+
+    def destinatarios_do_escalonamento(self, hoje: date, donos_ativos: List[str]) -> List[str]:
+        """RF-49, RB-16: Atrasada há pelo menos a tolerância escala a cada Dono ativo, uma vez por prazo."""
+        if self.estado is not EstadoObrigacao.ATRASADA:
+            return []
+        if hoje < self.prazo + timedelta(days=1 + TOLERANCIA_DO_ESCALONAMENTO_DIAS):
+            return []
+        return self._ainda_sem(TipoAlerta.ESCALONAMENTO, donos_ativos)
+
+    def registrar_alerta(self, tipo: TipoAlerta, destinatario_id: str, entregue: bool, quando: datetime) -> None:
+        enviado, falhou = _EVENTOS_DO_ALERTA[tipo]
+        self.historico.append(
+            EventoObrigacao(quando, enviado if entregue else falhou, None, "", destinatario_id, self.prazo)
+        )
+
+    def _ainda_sem(self, tipo: TipoAlerta, candidatos: List[str]) -> List[str]:
+        enviado = _EVENTOS_DO_ALERTA[tipo][0]
+        ja_recebidos = {e.destinatario_id for e in self.historico if e.tipo is enviado and e.prazo == self.prazo}
+        unicos = list(dict.fromkeys(candidatos))
+        return [u for u in unicos if u not in ja_recebidos]
+
     def _avaliar_cumprimento(self, quando: datetime, usuario_id: Optional[str]) -> None:
         if self.cumprimento_em is None:
             return
@@ -289,6 +361,14 @@ class Obrigacao:
 
     def _registrar(self, quando: datetime, tipo: TipoEvento, usuario_id: Optional[str], detalhe: str = "") -> None:
         self.historico.append(EventoObrigacao(quando, tipo, usuario_id, detalhe))
+
+
+def avancar_meses(data: date, meses: int, dia_base: int) -> date:
+    """OPEN-65: o mesmo dia-base, ou o último dia do mês quando ele não existe (31/01 → 28/02 → 31/03)."""
+    total = data.year * 12 + (data.month - 1) + meses
+    ano, mes = divmod(total, 12)
+    mes += 1
+    return date(ano, mes, min(dia_base, calendar.monthrange(ano, mes)[1]))
 
 
 def nome_base(nome: object) -> str:

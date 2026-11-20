@@ -5,7 +5,11 @@ from datetime import date, datetime, timedelta
 
 from remindme.dominio.erros import OperacaoRecusada
 from remindme.dominio.obrigacao import (
+    ANTECEDENCIA_DO_AVISO_DIAS,
+    TOLERANCIA_DO_ESCALONAMENTO_DIAS,
     ArquivoDeEvidencia,
+    TipoAlerta,
+    avancar_meses,
     EstadoObrigacao,
     Evidencia,
     Obrigacao,
@@ -307,6 +311,147 @@ class EvidenciaConferida(unittest.TestCase):
         self.assertEqual(evidencia(nome="C:\\fakepath\\DAS março.pdf").nome_arquivo, "DAS março.pdf")
         self.assertEqual(evidencia(nome='../../a"b.pdf').nome_arquivo, "ab.pdf")
         self.assertEqual(evidencia(nome="a\x00\nb.pdf").nome_arquivo, "ab.pdf")
+
+
+def cumprir(o: Obrigacao, data=HOJE, hoje=HOJE):
+    o.registrar_cumprimento(data, hoje, OPERADOR.id, AGORA)
+    return o
+
+
+class Recorrencia(unittest.TestCase):
+    def test_RF_42_OPEN_65_mensal_no_fim_do_mes(self):
+        o = obrigacao(prazo=date(2027, 1, 31))
+        cumprir(o)
+        fevereiro = o.gerar_proxima_ocorrencia("o2", HOJE, AGORA)
+        self.assertEqual((fevereiro.prazo, fevereiro.prazo_referencia, fevereiro.serie), (date(2027, 2, 28), date(2027, 2, 28), "o1"))
+        self.assertEqual((fevereiro.estado, fevereiro.dia_base, o.proxima_id), (EstadoObrigacao.PENDENTE, 31, "o2"))
+        self.assertEqual(
+            (fevereiro.nome, fevereiro.tipo, fevereiro.periodicidade, fevereiro.responsavel_id, fevereiro.exige_evidencia),
+            (o.nome, o.tipo, o.periodicidade, o.responsavel_id, o.exige_evidencia),
+        )
+        self.assertEqual((fevereiro.evidencias, fevereiro.cumprimento_em), ([], None))
+        self.assertEqual([(e.tipo, e.detalhe) for e in fevereiro.historico], [(TipoEvento.GERADA, "o1")])
+        cumprir(fevereiro)
+        marco = fevereiro.gerar_proxima_ocorrencia("o3", HOJE, AGORA)
+        self.assertEqual(marco.prazo, date(2027, 3, 31))
+
+    def test_RF_42_prazo_conta_do_anterior_e_nao_do_cumprimento(self):
+        o = obrigacao(prazo=date(2026, 10, 20))
+        self.assertIs(o.estado, EstadoObrigacao.ATRASADA)
+        cumprir(o)
+        proxima = o.gerar_proxima_ocorrencia("o2", HOJE, AGORA)
+        self.assertEqual((proxima.prazo, proxima.estado), (date(2026, 11, 20), EstadoObrigacao.PENDENTE))
+
+    def test_A3_OPEN_65_alteracao_de_prazo_vale_so_para_a_ocorrencia(self):
+        o = obrigacao(prazo=date(2026, 12, 20))
+        o.alterar_prazo(date(2027, 1, 5), HOJE, OPERADOR.id, AGORA)
+        cumprir(o)
+        self.assertEqual(o.gerar_proxima_ocorrencia("o2", HOJE, AGORA).prazo, date(2027, 1, 20))
+
+    def test_RF_42_unica_nao_gera_e_INV_4_segunda_geracao_e_recusada(self):
+        unica = cumprir(obrigacao(periodicidade="Única"))
+        self.assertIsNone(unica.gerar_proxima_ocorrencia("o2", HOJE, AGORA))
+        self.assertIsNone(unica.proxima_id)
+        mensal = cumprir(obrigacao())
+        mensal.gerar_proxima_ocorrencia("o2", HOJE, AGORA)
+        with self.assertRaises(OperacaoRecusada):
+            mensal.gerar_proxima_ocorrencia("o3", HOJE, AGORA)
+        self.assertEqual(mensal.proxima_id, "o2")
+
+    def test_RF_42_so_obrigacao_cumprida_gera_a_proxima(self):
+        o = obrigacao(exige_evidencia=True)
+        cumprir(o)
+        with self.assertRaises(OperacaoRecusada):
+            o.gerar_proxima_ocorrencia("o2", HOJE, AGORA)
+
+    def test_RF_42_proxima_ja_vencida_nasce_atrasada(self):
+        o = cumprir(obrigacao(prazo=date(2026, 9, 10)))
+        proxima = o.gerar_proxima_ocorrencia("o2", HOJE, AGORA)
+        self.assertEqual((proxima.prazo, proxima.estado), (date(2026, 10, 10), EstadoObrigacao.ATRASADA))
+
+    def test_foco_5_dia_base_volta_quando_o_mes_permite(self):
+        anos = [avancar_meses(date(2028, 2, 29), 12 * n, 29) for n in range(5)]
+        self.assertEqual(
+            anos, [date(2028, 2, 29), date(2029, 2, 28), date(2030, 2, 28), date(2031, 2, 28), date(2032, 2, 29)]
+        )
+        o = Obrigacao.cadastrar("o1", "DEFIS", "Fiscal", "Anual", date(2028, 2, 29), OPERADOR, False, HOJE, OPERADOR.id, AGORA)
+        prazos = []
+        for n in range(4):
+            cumprir(o)
+            o = o.gerar_proxima_ocorrencia(f"o{n + 2}", HOJE, AGORA)
+            prazos.append(o.prazo)
+        self.assertEqual(prazos, [date(2029, 2, 28), date(2030, 2, 28), date(2031, 2, 28), date(2032, 2, 29)])
+        self.assertEqual(
+            [avancar_meses(date(2027, 1, 31), 3 * n, 31) for n in range(1, 4)],
+            [date(2027, 4, 30), date(2027, 7, 31), date(2027, 10, 31)],
+        )
+        self.assertEqual(avancar_meses(date(2026, 11, 30), 3, 30), date(2027, 2, 28))
+        self.assertEqual(avancar_meses(date(2026, 7, 31), 6, 31), date(2027, 1, 31))
+
+
+class Alertas(unittest.TestCase):
+    DONOS = [DONO.id, "dono2"]
+
+    def test_INV_9_valores_padrao(self):
+        self.assertEqual((ANTECEDENCIA_DO_AVISO_DIAS, TOLERANCIA_DO_ESCALONAMENTO_DIAS), (7, 0))
+
+    def test_RB_07_aviso_na_janela_de_7_dias_uma_vez_por_prazo(self):
+        o = obrigacao(prazo=date(2026, 11, 27))
+        self.assertEqual(o.destinatarios_do_aviso(HOJE, OPERADOR, self.DONOS), [OPERADOR.id])
+        self.assertEqual(obrigacao(prazo=date(2026, 11, 28)).destinatarios_do_aviso(HOJE, OPERADOR, self.DONOS), [])
+        self.assertEqual(obrigacao(prazo=HOJE).destinatarios_do_aviso(HOJE, OPERADOR, self.DONOS), [OPERADOR.id])
+        o.registrar_alerta(TipoAlerta.AVISO, OPERADOR.id, True, AGORA)
+        evento = o.historico[-1]
+        self.assertEqual(
+            (evento.tipo, evento.destinatario_id, evento.prazo), (TipoEvento.AVISO_ENVIADO, OPERADOR.id, date(2026, 11, 27))
+        )
+        self.assertEqual(o.destinatarios_do_aviso(HOJE, OPERADOR, self.DONOS), [])
+        o.alterar_prazo(date(2026, 11, 25), HOJE, OPERADOR.id, AGORA)
+        self.assertEqual(o.destinatarios_do_aviso(HOJE, OPERADOR, self.DONOS), [OPERADOR.id])
+
+    def test_ADR_002_aviso_que_falhou_e_tentado_de_novo(self):
+        o = obrigacao(prazo=date(2026, 11, 27))
+        o.registrar_alerta(TipoAlerta.AVISO, OPERADOR.id, False, AGORA)
+        self.assertIs(o.historico[-1].tipo, TipoEvento.AVISO_FALHOU)
+        self.assertEqual(o.destinatarios_do_aviso(HOJE, OPERADOR, self.DONOS), [OPERADOR.id])
+
+    def test_RB_07_aguardando_evidencia_e_cumprida_nao_recebem_aviso(self):
+        aguardando = cumprir(obrigacao(prazo=date(2026, 11, 25), exige_evidencia=True))
+        self.assertIs(aguardando.estado, EstadoObrigacao.AGUARDANDO_EVIDENCIA)
+        self.assertEqual(aguardando.destinatarios_do_aviso(HOJE, OPERADOR, self.DONOS), [])
+        cumprida = cumprir(obrigacao(prazo=date(2026, 11, 25)))
+        self.assertEqual(cumprida.destinatarios_do_aviso(HOJE, OPERADOR, self.DONOS), [])
+
+    def test_A6_responsavel_inativo_avisa_os_donos(self):
+        o = obrigacao(prazo=date(2026, 11, 23))
+        inativo = Usuario(OPERADOR.id, OPERADOR.nome, OPERADOR.perfil, OPERADOR.email, ativo=False)
+        self.assertEqual(o.destinatarios_do_aviso(HOJE, inativo, self.DONOS), self.DONOS)
+        self.assertEqual(o.destinatarios_do_aviso(HOJE, None, self.DONOS), self.DONOS)
+
+    def test_RB_16_escalonamento_aos_donos_ativos_uma_vez_por_prazo(self):
+        no_prazo = obrigacao(prazo=HOJE)
+        self.assertEqual(no_prazo.destinatarios_do_escalonamento(HOJE, self.DONOS), [])
+        o = obrigacao(prazo=HOJE - timedelta(days=1))
+        self.assertEqual(o.destinatarios_do_escalonamento(HOJE, self.DONOS), self.DONOS)
+        o.registrar_alerta(TipoAlerta.ESCALONAMENTO, DONO.id, True, AGORA)
+        self.assertIs(o.historico[-1].tipo, TipoEvento.ESCALADA)
+        o.registrar_alerta(TipoAlerta.ESCALONAMENTO, "dono2", False, AGORA)
+        self.assertIs(o.historico[-1].tipo, TipoEvento.ESCALONAMENTO_FALHOU)
+        self.assertEqual(o.destinatarios_do_escalonamento(HOJE, self.DONOS), ["dono2"])
+
+    def test_RB_16_atrasada_a_espera_da_evidencia_continua_escalada(self):
+        o = cumprir(obrigacao(prazo=HOJE - timedelta(days=2), exige_evidencia=True))
+        self.assertTrue(o.aguarda_evidencia)
+        self.assertEqual(o.destinatarios_do_escalonamento(HOJE, self.DONOS), self.DONOS)
+        self.assertEqual(o.destinatarios_do_aviso(HOJE, OPERADOR, self.DONOS), [])
+
+    def test_foco_4_dono_responsavel_nao_recebe_alerta_duplicado(self):
+        o = obrigacao(prazo=date(2026, 11, 23), responsavel=DONO)
+        self.assertEqual(o.destinatarios_do_aviso(HOJE, DONO, [DONO.id, DONO.id]), [DONO.id])
+        atrasada = obrigacao(prazo=HOJE - timedelta(days=1), responsavel=DONO)
+        self.assertEqual(atrasada.destinatarios_do_escalonamento(HOJE, [DONO.id, DONO.id]), [DONO.id])
+        atrasada.registrar_alerta(TipoAlerta.ESCALONAMENTO, DONO.id, True, AGORA)
+        self.assertEqual(atrasada.destinatarios_do_escalonamento(HOJE, [DONO.id]), [])
 
 
 if __name__ == "__main__":
