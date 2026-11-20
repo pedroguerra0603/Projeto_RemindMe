@@ -5,7 +5,7 @@
 ## Princípios
 
 1. **Cada cláusula obrigatória vira ao menos um teste.** Todo RF com SHALL e toda RB têm teste.
-2. **O teste leva o identificador no nome.** Exemplo: `RB-23_recusa_pagamento_maior_que_o_saldo`.
+2. **O teste leva o identificador no nome.** Exemplo: `RB-23_recusa_pagamento_maior_que_o_saldo`. Exceção (DV-14, aceita em 2026-11-20 por Renan Gandolpho): o teste que não verifica regra, requisito nem critério de aceite, como os de infraestrutura, de contrato do repositório, de objetos auxiliares e de desenho da interface, pode ficar sem identificador. Teste de regra continua com o identificador; a revisão do PR confere.
 3. **Regra de domínio é testada sem banco e sem interface.**
 4. **A suíte roda sem credencial externa**, com canal de notificação e serviço de IA simulados (RNF-23).
 5. **O critério de aceite é binário.** Cada critério de uma spec, no formato Dado, Quando, Então, corresponde a um teste que passa ou não passa.

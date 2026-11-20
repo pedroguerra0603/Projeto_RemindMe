@@ -24,7 +24,7 @@ Issue #57. Comparação entre o código, a Spec 006 e a baseline (`docs/`), com 
 | DV-11 | RF-20, RF-25 e RB-03 × código | Os RF exigem "usuário autorizado", e RB-03 proíbe o Contador de criar ou alterar registros. Hoje o Contador cadastra título e registra pagamento | Cenários C-07 e C-08 em [funcionalidade](funcionalidade.md) | Já registrada na seção 8 da Spec 006. Depende da Spec 002 |
 | DV-12 | README, `testes.md` e `arquitetura.md` × OPEN-01 e Spec 006 | Esses documentos diziam que não há código e que nenhuma tecnologia foi escolhida. OPEN-01 foi decidida em 2026-10-03, e a Spec 006 está implementada e verificada | README: "sem código"; `testes.md`: "O projeto ainda não tem código"; `arquitetura.md`, seção 5: OPEN-01 "ainda não decidida" | **Corrigido** em #59 (seção 4) |
 | DV-13 | ADR-001 a ADR-004 e mapa × Spec 006 e `SPECS.md` | Os quatro ADRs e o mapa estão "Proposto, aguardando aprovação". Mesmo assim, a Spec 006 foi aprovada e implementada sobre o ADR-001, e o `SPECS.md` (regras 9 e 10) trata ADR-001 e ADR-003 como regra | `docs/adr/README.md`; mapa, "Situação do mapa" | **Decisão da equipe:** aprovar ou revisar os ADRs e o mapa, e registrar a aprovação. Nada alterado. **Resolvida** em 2026-11-07: Renan Gandolpho aceitou os ADR-001 a ADR-004 e aprovou o mapa de specs |
-| DV-14 | `testes.md` (princípio 2) × `tests/` | 20 dos 132 testes não levam identificador no nome: 7 de `infraestrutura/`, 8 de `integracao/`, 4 de `dominio/test_unidades.py` e 1 de `aplicacao/test_excecoes.py`. Testam infraestrutura, contrato do repositório e objetos auxiliares, e não uma regra | `grep -rhoE "def test_[a-z]" tests` | **Proposta à equipe:** aceitar a exceção para testes que não verificam regra nem critério, e registrá-la em `testes.md`; ou renomear os testes |
+| DV-14 | `testes.md` (princípio 2) × `tests/` | 20 dos 132 testes não levam identificador no nome: 7 de `infraestrutura/`, 8 de `integracao/`, 4 de `dominio/test_unidades.py` e 1 de `aplicacao/test_excecoes.py`. Testam infraestrutura, contrato do repositório e objetos auxiliares, e não uma regra | `grep -rhoE "def test_[a-z]" tests` | **Proposta à equipe:** aceitar a exceção para testes que não verificam regra nem critério, e registrá-la em `testes.md`; ou renomear os testes. **Resolvida** em 2026-11-20: Renan Gandolpho aceitou a exceção, registrada no princípio 2 de [`testes.md`](../testes.md) |
 | DV-15 | RF-24 × código | RF-24 diz que o título passa a Vencido quando o vencimento passa. O código só muda o estado quando `verificar_vencimentos` é chamada. Até lá, a consulta mostra Aberto um título já vencido, sem a sinalização de próximo do vencimento | `ServicoTitulos.verificar_vencimentos`; docstring "O disparo periódico é da Spec 008" | Escopo declarado: o disparo periódico é da Spec 008 (OPEN-13). Nada a fazer agora; a Spec 008 deve cobrir este caso |
 
 ## 2. Divergências já registradas antes desta análise
@@ -46,8 +46,8 @@ Não foram repetidas na tabela acima.
 |---|---|
 | Nova questão em aberto | DV-01 (OPEN-23), DV-02 (OPEN-22), DV-03 (OPEN-21) |
 | Questão em aberto já existente | DV-04 (OPEN-10), DV-08 (OPEN-20) |
-| Proposta à equipe, sem alteração | DV-14 |
 | Resolvida depois, em 2026-11-07 | DV-06, DV-07, DV-13 |
+| Resolvida depois, em 2026-11-20 | DV-14 |
 | Pendente de spec futura | DV-05, DV-11, DV-15 |
 | Escopo declarado, nada a fazer | DV-10 |
 | Corrigido neste PR | DV-09, DV-12 |
