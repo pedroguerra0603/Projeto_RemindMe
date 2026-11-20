@@ -30,7 +30,7 @@ Os dez drivers de [`arquitetura.md`](arquitetura.md#2-drivers-arquiteturais), co
 |---|---|---|---|---|---|---|
 | DA-01 — Transições de estado são invariantes de domínio | RB-21, RB-05, RB-22, RF-12, RF-24 | DT-01, ADR-001 | 004, 005, 006, 018; 009, 010 | `dominio/titulo.py`, `dominio/orcamento.py`, `dominio/conta_pagar.py`: estados e transições nos próprios objetos, inclusive `Orcamento.converter` e `Titulo.gerar_de_orcamento` | `test_RB_21_*`, `test_RB_31_*`, `tests/dominio/test_orcamento.py`, `test_INV_*`, aceite da Spec 005 | Parcial: título (sem Em Renegociação), orçamento completo até a conversão e conta a pagar. Obrigação (010) pendente |
 | DA-02 — Toda mudança de estado é auditada, e a auditoria é imutável | RB-01, RB-30, RNF-06 | DT-04, ADR-004 | 001, 013 e todas as que alteram dados | `dominio/auditoria.py` (`RegistroAuditoria` imutável); `aplicacao/auditoria.py`; `infraestrutura/sqlite.py` (triggers que recusam alterar e excluir) | `test_RB_01_*`, `test_RB_30_*`, aceite das Specs 001 e 013 | Implementado para as entidades que existem |
-| DA-03 — Operações financeiras são atômicas | RNF-09, RB-19 | DT-05 | 001, 005, 006, 018, 019; 015 | `infraestrutura/sqlite.py`: uma transação por operação, com `BEGIN IMMEDIATE`; `infraestrutura/memoria.py` para os testes | `test_RNF_09_*`, `test_CA_23_falha_na_auditoria_desfaz_o_pagamento`, `tests/integracao/` | Implementado; o teste de concorrência real continua como marcador (lacuna 5) |
+| DA-03 — Operações financeiras são atômicas | RNF-09, RB-19 | DT-05 | 001, 005, 006, 018, 019; 015 | `infraestrutura/sqlite.py`: uma transação por operação, com `BEGIN IMMEDIATE`; `infraestrutura/memoria.py` para os testes | `test_RNF_09_*`, `test_CA_23_falha_na_auditoria_desfaz_o_pagamento`, `tests/integracao/` | Implementado; a concorrência real é testada no SQLite (`test_RNF_09_duas_transacoes_simultaneas_*`) |
 | DA-04 — Acesso negado por padrão; o cliente não acessa o sistema (OPEN-57) | RNF-02, RNF-03, RNF-25, RB-03 | DT-06 | 002, 017, 018 | `dominio/permissoes.py` (matriz perfil × operação); `aplicacao/acesso.py`, chamado pelo serviço antes do domínio | `test_RNF_02_*`, `test_RNF_03_*`, `test_RB_03_*`, aceite da Spec 002 | Implementado |
 | DA-05 — Processamento por tempo não degrada o uso interativo | RF-24, RF-33, RF-34, RF-44, RF-48, RNF-12, RNF-13 | DT-07 | 006, 017, 018; 008, 010 | `entradas/agendador.py` (`AgendadorDeVencimentos`, na inicialização e a cada hora, OPEN-48) | `test_RF_24_*`, `test_RF_90_*`; lote de vencimentos medido em [eficiência](qualidade/eficiencia.md) | Parcial: vencimento de títulos e contas a pagar. Régua (008) e obrigações (010) pendentes |
 | DA-06 — A IA é falível e nunca decide | RB-08, RB-14, RB-17, RB-27, RNF-24 | DT-03, ADR-003 | 009, 011 | — | — | Pendente |
@@ -147,7 +147,7 @@ Todo requisito ativo aparece em ao menos uma spec do mapa. RNF-07 e RNF-08, que 
 | **Total** | **146** | **62** | **13** | **71** |
 | Drivers | 10 | 4 (DA-02, DA-03, DA-04, DA-09) | 3 (DA-01, DA-05, DA-07) | 3 (DA-06, DA-08, DA-10) | — |
 
-DA-03 conta como implementado, embora o teste de concorrência real ainda seja um marcador (lacuna 5).
+DA-03 conta como implementado; o teste de concorrência real foi escrito em 2026-11-20 (lacuna 5).
 
 ## 5. Lacunas encontradas
 
@@ -157,7 +157,7 @@ DA-03 conta como implementado, embora o teste de concorrência real ainda seja u
 | 2 | RF-31 exigia motivo para "alteração de valor", operação que não existe | Resolvida por OPEN-22: o valor do título não muda depois de criado |
 | 3 | A linha da Spec 017 no mapa cita "Telas de … RF-20 a RF-31", o que inclui RF-28 e RF-29 (renegociação). A renegociação não existe; eles seguem pela Spec 009 | **Resolvida** em 2026-11-20: a linha da 017 no mapa cita RF-20 a RF-27, RF-30 e RF-31 |
 | 4 | RNF-11 e RNF-25 têm testes que passam, mas o mapa os atribui só a specs futuras (012 e 009) | **Resolvida** em 2026-11-20: RNF-11 nas linhas 006 e 017, e RNF-25 na linha 002 do mapa |
-| 5 | Dois marcadores pulados já podiam ser testes: `test_RB_15_desconto_percentual_nao_perde_centavos` ("pendente da Spec 004", verificada) e `test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo` ("pendente de OPEN-02", decidida; o SQLite existe) | Escrever os dois testes |
+| 5 | Dois marcadores pulados já podiam ser testes: `test_RB_15_desconto_percentual_nao_perde_centavos` ("pendente da Spec 004", verificada) e `test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo` ("pendente de OPEN-02", decidida; o SQLite existe) | **Resolvida** em 2026-11-20: os dois testes foram escritos e passam; o de RNF-09 roda contra o SQLite |
 | 6 | RB-02 diz "somente o Dono estorna", mas o Administrador também estorna (OPEN-53); RB-33 já cita a exceção | **Resolvida** em 2026-11-19: RB-02, RB-15, RF-16 e o glossário citam a exceção do Administrador (OPEN-53). Se o Administrador pode aprovar o próprio desconto ficou em OPEN-64 |
 | 7 | 70 das 474 funções de teste não levam identificador no nome, contra o princípio 2 de [`testes.md`](testes.md). São, em geral, testes de infraestrutura, de integração, de contrato e de interface | Registrado em [divergências](qualidade/divergencias.md), DV-14, ainda em proposta |
 

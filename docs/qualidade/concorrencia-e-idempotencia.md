@@ -5,7 +5,7 @@ Issue #76. Lições dos casos Americanas (2023), em que cliques repetidos em "Fi
 - **Data:** 2026-10-16.
 - **Objeto:** Spec 006.
 - **Requisitos e regras:** RF-25, RF-26, RF-30, RNF-09, RB-22, RB-23; DA-08, DA-09.
-- **Testes:** [`tests/aplicacao/test_idempotencia.py`](../../tests/aplicacao/test_idempotencia.py) (13 testes: 11 passam, 2 pulados).
+- **Testes:** [`tests/aplicacao/test_idempotencia.py`](../../tests/aplicacao/test_idempotencia.py) (13 testes: 11 passam, 2 pulados, na data da avaliação; desde 2026-11-20, 12 passam e 1 é pulado).
 
 ## 1. Casos de teste
 
@@ -37,7 +37,7 @@ Não é defeito da Spec 006: nenhum requisito pede identificação de pedido rep
 | Caso | Depende de | Observação |
 |---|---|---|
 | Execução repetida da régua não repete etapa (DA-08) | Spec 008 | Teste `test_DA_08_...` registrado como pulado, sem código antecipado (regra 1 do SPECS.md) |
-| Duas transações simultâneas no mesmo título não estouram o saldo | OPEN-02 (banco) | `test_RNF_09_duas_transacoes_simultaneas_...` registrado como pulado |
+| Duas transações simultâneas no mesmo título não estouram o saldo | — | **Escrito em 2026-11-20** contra o SQLite (ADR-007): `test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo`, 10 rodadas de dois pagamentos de R$ 60,00 em paralelo sobre R$ 100,00; um é aceito, o outro recusado (RB-23), saldo R$ 40,00. Com `BEGIN` no lugar de `BEGIN IMMEDIATE`, o teste falha |
 | Chave de idempotência para pagamento parcial | OPEN-25 | Ver seção 2 |
 
-**Por que a concorrência real não é testada agora.** A unidade de trabalho em memória guarda uma cópia e a restaura em caso de falha; ela não tem trava e **não é segura para threads**. Um teste com threads aqui mediria o dublê, e não o comportamento do sistema. A garantia real virá da transação e das restrições do banco (por exemplo, atualização condicional do saldo ou trava de linha), e a escolha é do banco (OPEN-02). A dependência fica registrada em vez de a solução ser escolhida agora.
+**Por que a concorrência real não era testada (até 2026-11-20).** A unidade de trabalho em memória guarda uma cópia e a restaura em caso de falha; ela não tem trava e **não é segura para threads**. Um teste com threads aqui mediria o dublê, e não o comportamento do sistema. A garantia real virá da transação e das restrições do banco (por exemplo, atualização condicional do saldo ou trava de linha), e a escolha é do banco (OPEN-02). A dependência fica registrada em vez de a solução ser escolhida agora.
