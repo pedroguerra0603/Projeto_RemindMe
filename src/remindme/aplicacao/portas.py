@@ -9,6 +9,7 @@ from remindme.dominio.cliente import Cliente
 from remindme.dominio.conta_pagar import ContaPagar
 from remindme.dominio.empresa import Empresa
 from remindme.dominio.fornecedor import Fornecedor
+from remindme.dominio.obrigacao import Obrigacao
 from remindme.dominio.orcamento import Orcamento
 from remindme.dominio.permissoes import MatrizPermissoes
 from remindme.dominio.titulo import Titulo
@@ -25,6 +26,16 @@ class RepositorioContasPagar(Protocol):
     def obter(self, conta_id: str) -> Optional[ContaPagar]: ...
     def salvar(self, conta: ContaPagar) -> None: ...
     def listar(self) -> List[ContaPagar]: ...
+
+
+class RepositorioObrigacoes(Protocol):
+    """Spec 010. O conteúdo da evidência fica à parte e não vem com a obrigação, como o hash da senha."""
+
+    def obter(self, obrigacao_id: str) -> Optional[Obrigacao]: ...
+    def salvar(self, obrigacao: Obrigacao) -> None: ...
+    def listar(self) -> List[Obrigacao]: ...
+    def guardar_conteudo(self, evidencia_id: str, conteudo: bytes) -> None: ...
+    def conteudo_de(self, evidencia_id: str) -> Optional[bytes]: ...
 
 
 class RepositorioOrcamentos(Protocol):
@@ -123,16 +134,18 @@ class ConsultaClientes(Protocol):
 
 @dataclass(frozen=True)
 class Mensagem:
-    """O que o canal de notificação tentou entregar a um cliente (Spec 005, ADR-002): a caixa de saída."""
+    """O que o canal de notificação tentou entregar a um cliente (Spec 005, ADR-002) ou a um usuário da empresa,
+    como os alertas de obrigação (Spec 010): a caixa de saída. Um dos dois destinatários está preenchido."""
 
     id: str
-    cliente_id: str
+    cliente_id: Optional[str]
     contato: str
     assunto: str
     texto: str
     enviada_em: datetime
     resultado: str  # "enviada" ou "falhou"
-    origem: str  # "orcamento <id>"
+    origem: str  # "orcamento <id>" ou "obrigacao <id>"
+    usuario_id: Optional[str] = None
 
 
 class CanalNotificacao(Protocol):
@@ -156,6 +169,7 @@ class UnidadeDeTrabalho(Protocol):
     clientes: RepositorioClientes
     fornecedores: RepositorioFornecedores
     contas_pagar: RepositorioContasPagar
+    obrigacoes: RepositorioObrigacoes
     orcamentos: RepositorioOrcamentos
     empresa: RepositorioEmpresa
     auditoria: RepositorioAuditoria

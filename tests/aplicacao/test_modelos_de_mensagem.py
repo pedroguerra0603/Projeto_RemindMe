@@ -72,5 +72,57 @@ class ModeloDoOrcamento(unittest.TestCase):
         self.assertEqual(assunto, "Orçamento nº ABCDEF12 — Menezes Serviços Ltda")
 
 
+class ModelosDosAlertasDeObrigacao(unittest.TestCase):
+    """Spec 010: o texto do aviso e do escalonamento sai só destes modelos (RB-27, INV-6)."""
+
+    def setUp(self):
+        from datetime import datetime
+
+        from remindme.dominio.obrigacao import Obrigacao
+        from remindme.dominio.usuario import Perfil, Usuario
+
+        self.operador = Usuario("operador", "Diego Ramos", Perfil.OPERADOR_FINANCEIRO, "diego@demo.example")
+        self.dona = Usuario("dono", "Carla Menezes", Perfil.DONO, "carla@demo.example")
+        agora = datetime(2026, 11, 20, 9, 0)
+
+        def nova(prazo, exige):
+            return Obrigacao.cadastrar("o1", "DAS", "Fiscal", "Mensal", prazo, self.operador, exige, date(2026, 11, 1), "operador", agora)
+
+        self.nova = nova
+
+    def test_RB_27_aviso_de_obrigacao_tem_o_texto_do_modelo(self):
+        from remindme.aplicacao.modelos_de_mensagem import mensagem_de_aviso_de_obrigacao
+
+        hoje = date(2026, 11, 20)
+        assunto, texto = mensagem_de_aviso_de_obrigacao(empresa(), self.operador, self.nova(date(2026, 11, 25), True), hoje)
+        self.assertEqual(assunto, "Obrigação a vencer: DAS em 25/11/2026")
+        self.assertEqual(
+            texto,
+            "Olá, Diego Ramos.\n\nA obrigação DAS (Fiscal) vence em 25/11/2026, daqui a 5 dias.\n"
+            "Ao registrar o cumprimento, anexe a evidência.\n\nMenezes · RemindMe",
+        )
+        for prazo, quando in ((date(2026, 11, 20), "hoje"), (date(2026, 11, 21), "amanhã")):
+            with self.subTest(quando=quando):
+                _, texto = mensagem_de_aviso_de_obrigacao(None, self.operador, self.nova(prazo, False), hoje)
+                self.assertEqual(
+                    texto,
+                    f"Olá, Diego Ramos.\n\nA obrigação DAS (Fiscal) vence em {prazo:%d/%m/%Y}, {quando}.\n\nNossa empresa · RemindMe",
+                )
+
+    def test_RB_27_escalonamento_tem_o_texto_do_modelo(self):
+        from remindme.aplicacao.modelos_de_mensagem import mensagem_de_escalonamento
+
+        o = self.nova(date(2026, 11, 19), False)
+        assunto, texto = mensagem_de_escalonamento(empresa(), self.dona, o, self.operador, date(2026, 11, 20))
+        self.assertEqual(assunto, "Obrigação atrasada: DAS")
+        self.assertEqual(
+            texto,
+            "Olá, Carla Menezes.\n\nA obrigação DAS (Fiscal) venceu em 19/11/2026 e está Atrasada há 1 dia.\n"
+            "Responsável: Diego Ramos.\n\nMenezes · RemindMe",
+        )
+        _, texto = mensagem_de_escalonamento(None, self.dona, o, None, date(2026, 11, 22))
+        self.assertIn("está Atrasada há 3 dias.\nResponsável: não definido.", texto)
+
+
 if __name__ == "__main__":
     unittest.main()

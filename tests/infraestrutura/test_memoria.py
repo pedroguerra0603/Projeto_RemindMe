@@ -136,5 +136,50 @@ class Mensagens(unittest.TestCase):
         self.assertEqual(uow.mensagens.listar(), [])
 
 
+class Obrigacoes(unittest.TestCase):
+    """Spec 010: obrigações e o conteúdo das evidências participam da transação (RNF-09)."""
+
+    def obrigacao(self, id="o1"):
+        from remindme.dominio.obrigacao import Obrigacao
+        from remindme.dominio.usuario import Perfil, Usuario
+
+        operador = Usuario("operador", "Diego Ramos", Perfil.OPERADOR_FINANCEIRO, "d@demo.example")
+        agora = datetime(2026, 11, 20, 9, 0)
+        return Obrigacao.cadastrar(id, "DAS", "Fiscal", "Mensal", date(2026, 12, 20), operador, False, agora.date(), "operador", agora)
+
+    def test_mensagem_aceita_usuario_como_destinatario(self):
+        from remindme.aplicacao.portas import Mensagem
+
+        uow = UnidadeDeTrabalhoEmMemoria()
+        with uow:
+            uow.mensagens.registrar(
+                Mensagem("m1", None, "d@demo.example", "A", "T", datetime(2026, 11, 20, 9, 0), "enviada", "obrigacao o1", "u1")
+            )
+        self.assertEqual([(m.cliente_id, m.usuario_id) for m in uow.mensagens.listar()], [(None, "u1")])
+
+    def test_obrigacao_e_conteudo_gravados_e_devolvidos_como_copias(self):
+        uow = UnidadeDeTrabalhoEmMemoria()
+        with uow:
+            uow.obrigacoes.salvar(self.obrigacao())
+            uow.obrigacoes.guardar_conteudo("e1", b"%PDF-1.4")
+        lida = uow.obrigacoes.obter("o1")
+        lida.nome = "outro"
+        self.assertEqual(uow.obrigacoes.obter("o1").nome, "DAS")
+        self.assertEqual([o.id for o in uow.obrigacoes.listar()], ["o1"])
+        self.assertEqual(uow.obrigacoes.conteudo_de("e1"), b"%PDF-1.4")
+        self.assertIsNone(uow.obrigacoes.conteudo_de("e2"))
+        self.assertIsNone(uow.obrigacoes.obter("o2"))
+
+    def test_RNF_09_obrigacoes_em_memoria_desfazem_com_a_transacao(self):
+        uow = UnidadeDeTrabalhoEmMemoria()
+        with self.assertRaises(RuntimeError):
+            with uow:
+                uow.obrigacoes.salvar(self.obrigacao())
+                uow.obrigacoes.guardar_conteudo("e1", b"%PDF-1.4")
+                raise RuntimeError("falha depois de gravar")
+        self.assertEqual(uow.obrigacoes.listar(), [])
+        self.assertIsNone(uow.obrigacoes.conteudo_de("e1"))
+
+
 if __name__ == "__main__":
     unittest.main()
