@@ -8,8 +8,8 @@
 | **Nome** | Calendário de obrigações |
 | **Objetivo** | Reunir num calendário único as obrigações fiscais, trabalhistas e contratuais da empresa, avisar o responsável antes do prazo, exigir a evidência de cumprimento quando for o caso, marcar o atraso e escalar o alerta ao Dono. |
 | **Valor entregue** | A Dona deixa de anotar obrigações na agenda do celular e de pagar multa por prazo perdido ([personas](../../docs/personas.md)). O Operador Financeiro sabe o que vence e o que falta comprovar. Nenhuma obrigação estoura em silêncio: toda obrigação Atrasada chega ao Dono ([visão](../../docs/visao.md)). |
-| **Situação** | Proposta |
-| **Aprovada por** | *(nome e data)* |
+| **Situação** | **Aprovada** — em 2026-11-20; a implementar pelo [plano](../plans/010-plano.md). |
+| **Aprovada por** | Renan Gandolpho, em 2026-11-20 |
 
 ## 2. Rastreabilidade
 
