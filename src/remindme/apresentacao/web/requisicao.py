@@ -12,6 +12,7 @@ from urllib.parse import parse_qs, urlencode
 
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web.html import Html
+from remindme.apresentacao.web.multipart import ArquivoEnviado, ler_multipart
 from remindme.dominio.erros import OperacaoRecusada
 from remindme.dominio.usuario import Perfil
 
@@ -19,6 +20,8 @@ from remindme.dominio.usuario import Perfil
 COOKIE_SESSAO = "remindme_sessao"
 COOKIE_ENTRADA = "remindme_entrada"
 LIMITE_DO_CORPO = 64 * 1024
+# Spec 010 (foco de revisão 3): multipart só nas rotas de upload da evidência, até 6 MB (5 MB de arquivo e folga).
+LIMITE_DO_UPLOAD = 6 * 1024 * 1024
 ESTATICO = Path(__file__).resolve().parent.joinpath("estatico")
 ARQUIVOS_ESTATICOS = {
     "estilo.css": "text/css; charset=utf-8",
@@ -28,6 +31,7 @@ ARQUIVOS_ESTATICOS = {
     "plex-sans-600.woff2": "font/woff2",
 }
 ID = "[0-9a-f]{32}"
+ROTAS_COM_UPLOAD = re.compile(rf"/obrigacoes/{ID}/(cumprimento|evidencias)")
 
 POLITICA_DE_CONTEUDO = (
     "default-src 'none'; style-src 'self'; img-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; "
@@ -72,6 +76,11 @@ AVISOS = {
     "estorno-conta": ("sucesso", "Pagamento estornado."),
     "cancelamento-conta": ("sucesso", "Conta a pagar cancelada."),
     "ativacao": ("sucesso", "Usuário ativado. Ele já pode entrar."),
+    "obrigacao": ("sucesso", "Obrigação cadastrada. Ela aparece no calendário."),
+    "obrigacao-alterada": ("sucesso", "Obrigação alterada. A alteração está no histórico."),
+    "cumprimento": ("sucesso", "Cumprimento registrado."),
+    "cumprimento-sem-evidencia": ("info", "Cumprimento registrado. Falta anexar a evidência exigida."),
+    "evidencia": ("sucesso", "Evidência anexada."),
 }
 
 _CORRELACAO = re.compile(r"Identificador de correlação: ([0-9a-f]+)")
@@ -93,17 +102,22 @@ class Requisicao:
         except CookieError:
             self.cookies = {}
         self.formulario: Dict[str, str] = {}
+        self.arquivos: Dict[str, ArquivoEnviado] = {}
         if self.metodo == "POST":
             try:
                 tamanho = int(ambiente.get("CONTENT_LENGTH") or 0)
             except ValueError:
                 tamanho = 0
-            if tamanho > LIMITE_DO_CORPO:
+            tipo = ambiente.get("CONTENT_TYPE", "")
+            upload = tipo.startswith("multipart/form-data") and ROTAS_COM_UPLOAD.fullmatch(self.caminho) is not None
+            if tamanho > (LIMITE_DO_UPLOAD if upload else LIMITE_DO_CORPO):
                 raise CorpoGrandeDemais()
             corpo = ambiente["wsgi.input"].read(tamanho) if tamanho > 0 else b""
-            if ambiente.get("CONTENT_TYPE", "").startswith("application/x-www-form-urlencoded"):
+            if tipo.startswith("application/x-www-form-urlencoded"):
                 texto = corpo.decode("utf-8", errors="replace")
                 self.formulario = _primeiros(parse_qs(texto, keep_blank_values=True))
+            elif upload:
+                self.formulario, self.arquivos = ler_multipart(corpo, tipo)
 
     def campo(self, nome: str) -> str:
         return self.formulario.get(nome, "").strip()

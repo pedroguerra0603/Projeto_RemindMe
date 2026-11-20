@@ -7,6 +7,7 @@ from remindme.aplicacao.servico_titulos import FiltroTitulos
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
 from remindme.apresentacao.web import paginas_empresa as pem
+from remindme.apresentacao.web import paginas_obrigacoes as po
 from remindme.apresentacao.web import paginas_painel as ppa
 from remindme.apresentacao.web.requisicao import Requisicao, Resposta, _aviso, _erros, _valores
 from remindme.dominio.empresa import CAMPOS as CAMPOS_DA_EMPRESA
@@ -45,9 +46,14 @@ class RotasEmpresa:
             if self._s.contas_pagar and ctx.pode(Operacao.CONSULTAR_CONTAS_PAGAR)
             else None
         )
+        obrigacoes = (
+            self._s.obrigacoes.consultar_calendario(sessao)
+            if self._s.obrigacoes and ctx.pode(Operacao.GERENCIAR_OBRIGACOES)
+            else None
+        )
         pagina = ppa.pagina_painel(
             ctx, visoes, self._nomes_clientes(sessao, ctx), registros, usuarios, _aviso(req), pendentes, pagamentos, orcamentos,
-            contas,
+            contas, po.cartoes_do_painel(obrigacoes, ctx.hoje, ctx) if obrigacoes is not None else None,
         )
         return Resposta.pagina(pagina)
 

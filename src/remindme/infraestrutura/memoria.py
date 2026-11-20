@@ -10,6 +10,7 @@ from remindme.dominio.cliente import Cliente
 from remindme.dominio.conta_pagar import ContaPagar
 from remindme.dominio.empresa import Empresa
 from remindme.dominio.fornecedor import Fornecedor
+from remindme.dominio.obrigacao import Obrigacao
 from remindme.dominio.orcamento import Orcamento
 from remindme.dominio.permissoes import MatrizPermissoes
 from remindme.dominio.titulo import Titulo
@@ -56,6 +57,34 @@ class RepositorioContasPagarEmMemoria:
 
     def _restaurar(self, estado) -> None:
         self.dados = estado
+
+
+class RepositorioObrigacoesEmMemoria:
+    def __init__(self):
+        self.dados: Dict[str, Obrigacao] = {}
+        self.conteudos: Dict[str, bytes] = {}
+
+    def obter(self, obrigacao_id: str) -> Optional[Obrigacao]:
+        obrigacao = self.dados.get(obrigacao_id)
+        return copy.deepcopy(obrigacao) if obrigacao else None
+
+    def salvar(self, obrigacao: Obrigacao) -> None:
+        self.dados[obrigacao.id] = copy.deepcopy(obrigacao)
+
+    def listar(self) -> List[Obrigacao]:
+        return [copy.deepcopy(o) for o in self.dados.values()]
+
+    def guardar_conteudo(self, evidencia_id: str, conteudo: bytes) -> None:
+        self.conteudos[evidencia_id] = bytes(conteudo)
+
+    def conteudo_de(self, evidencia_id: str) -> Optional[bytes]:
+        return self.conteudos.get(evidencia_id)
+
+    def _estado(self):
+        return copy.deepcopy(self.dados), dict(self.conteudos)
+
+    def _restaurar(self, estado) -> None:
+        self.dados, self.conteudos = estado
 
 
 class RepositorioOrcamentosEmMemoria:
@@ -300,6 +329,7 @@ class UnidadeDeTrabalhoEmMemoria:
         self.empresa = RepositorioEmpresaEmMemoria()
         self.fornecedores = RepositorioFornecedoresEmMemoria()
         self.contas_pagar = RepositorioContasPagarEmMemoria()
+        self.obrigacoes = RepositorioObrigacoesEmMemoria()
         self.auditoria = auditoria if auditoria is not None else AuditoriaEmMemoria()
         self.usuarios = usuarios if usuarios is not None else RepositorioUsuariosEmMemoria()
         self.sessoes = sessoes if sessoes is not None else RepositorioSessoesEmMemoria()
@@ -310,7 +340,7 @@ class UnidadeDeTrabalhoEmMemoria:
 
     def _repositorios(self):
         return (
-            self.titulos, self.clientes, self.fornecedores, self.contas_pagar, self.orcamentos, self.empresa, self.auditoria, self.usuarios, self.sessoes,
+            self.titulos, self.clientes, self.fornecedores, self.contas_pagar, self.obrigacoes, self.orcamentos, self.empresa, self.auditoria, self.usuarios, self.sessoes,
             self.permissoes, self.mensagens,
         )
 

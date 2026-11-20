@@ -110,7 +110,8 @@ class RotasOrcamentos:
 
     def _mensagens(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
         mensagens = self._s.mensagens.consultar(sessao)
-        return Resposta.pagina(pm.pagina_mensagens(ctx, mensagens, self._nomes_clientes(sessao, ctx)))
+        usuarios = self._nomes_para_obrigacoes(sessao, ctx)  # Spec 010: destinatário dos alertas
+        return Resposta.pagina(pm.pagina_mensagens(ctx, mensagens, self._nomes_clientes(sessao, ctx), usuarios))
 
     def _item_novo(self, req: Requisicao, sessao: str, ctx: p.Contexto, orcamento_id: str) -> Resposta:
         valores = _valores(req, "descricao", "quantidade", "valor_unitario")

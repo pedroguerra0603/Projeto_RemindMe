@@ -35,6 +35,8 @@ def _descrever(registro: str) -> Tuple[str, Optional[str]]:
         return ("Pagamento da conta " if len(partes) > 1 else "Conta a pagar ") + chave[:8], f"/contas-a-pagar/{chave}"
     if tipo == "usuario":
         return "Usuário " + chave[:8], f"/usuarios/{chave}"
+    if tipo == "obrigacao":
+        return ("Evidência da obrigação " if len(partes) > 1 else "Obrigação ") + chave[:8], f"/obrigacoes/{chave}"
     return registro, "/permissoes" if registro == "permissões" else None
 
 

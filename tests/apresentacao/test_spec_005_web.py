@@ -133,7 +133,7 @@ class DemonstracaoDaSpec005(unittest.TestCase):
             preparar_demonstracao(sistema, SENHA)
             with sistema.uow as uow:
                 orcamentos = uow.orcamentos.listar()
-                mensagens = uow.mensagens.listar()
+                mensagens = [m for m in uow.mensagens.listar() if m.origem.startswith("orcamento ")]  # Spec 010: há também alertas
                 gerados = [t for t in uow.titulos.listar() if t.orcamento_id]
         estados = {o.estado for o in orcamentos}
         for estado in (EstadoOrcamento.ENVIADO, EstadoOrcamento.CONVERTIDO, EstadoOrcamento.REJEITADO):

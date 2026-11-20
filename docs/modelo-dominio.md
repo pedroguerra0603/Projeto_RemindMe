@@ -24,8 +24,8 @@ Este texto é a fonte. O diagrama é uma vista dele e deve ser regerado quando o
 | `Empresa` | Identifica a empresa que usa o sistema. Há um único registro, mantido pelo Dono (OPEN-54). | — |
 | `Fornecedor` | Identifica de quem a empresa compra, com documento único. | — |
 | `ContaPagar` | Representa um valor a pagar a um fornecedor. Controla saldo, vencimento e estado (Spec 018). | RB-31, RB-32, RB-33 |
-| `Obrigacao` | Representa um compromisso fiscal ou contratual com prazo e responsável. Controla seu estado e gera a próxima ocorrência. | RB-07, RB-13, RB-16, RB-29 |
-| `Evidencia` | Comprova o cumprimento de uma obrigação. | RB-29 |
+| `Obrigacao` | Representa uma ocorrência de um compromisso fiscal, trabalhista ou contratual, com prazo e responsável. Controla seu estado, guarda o histórico e gera a próxima ocorrência da série (Spec 010). | RB-07, RB-13, RB-16, RB-29 |
+| `Evidencia` | Comprova o cumprimento de uma obrigação: arquivo PDF, PNG ou JPG de até 5 MB, com descrição (OPEN-68). | RB-29 |
 | `LancamentoFinanceiro` | Registra uma receita ou despesa para a apuração do resultado. | RB-06, RB-12 |
 | `CategoriaFinanceira` | Representa uma conta do plano de contas, de receita ou de despesa. | RB-08 |
 | `SugestaoClassificacao` | Guarda a categoria sugerida pela IA, a confiança e se foi aceita. | RB-08, RB-09, RB-14 |
@@ -80,8 +80,12 @@ Este texto é a fonte. O diagrama é uma vista dele e deve ser regerado quando o
 | `ContaPagar` | `marcarVencida()` | Só se aplica a conta Aberta com vencimento passado (RF-90). |
 | `ContaPagar` | `estornarPagamento()` | Exige motivo; Paga volta a Aberta ou Vencida conforme o vencimento (RF-92). Quem pode estornar (RB-33) é verificado na aplicação (DT-06). |
 | `ContaPagar` | `cancelar()` | Exige motivo; só Aberta ou Vencida (RF-93, RB-31). |
-| `Obrigacao` | `registrarCumprimento()` | Exige evidência quando a obrigação a exige (RB-29). |
-| `Obrigacao` | `gerarProximaOcorrencia()` | Calcula o novo prazo pela periodicidade. |
+| `Obrigacao` | `registrarCumprimento()` | Exige evidência quando a obrigação a exige (RB-29); sem ela, Pendente passa a Aguardando Evidência e Atrasada continua Atrasada até o anexo. Qualquer usuário autorizado registra (OPEN-69). |
+| `Obrigacao` | `anexarEvidencia()` | Com o cumprimento já registrado, leva a Cumprida (RB-29). |
+| `Obrigacao` | `alterarPrazo()` | Só em Pendente ou Aguardando Evidência, e nunca para antes de hoje; não muda o prazo de referência (RF-41, OPEN-70). |
+| `Obrigacao` | `alterarResponsavel()` | Usuário ativo, Dono ou Operador Financeiro; não em Cumprida (RF-41, OPEN-69). |
+| `Obrigacao` | `marcarAtrasada()` | Pendente ou Aguardando Evidência com prazo anterior a hoje (RF-48). |
+| `Obrigacao` | `gerarProximaOcorrencia()` | Prazo de referência avançado pela periodicidade, no dia-base ou no último dia do mês (RF-42, OPEN-70). |
 
 ## 4. Ciclos de vida
 
@@ -174,16 +178,28 @@ classDiagram
         resultado
     }
     class Obrigacao {
+        nome
         tipo
         periodicidade
         prazo
+        prazoReferencia
+        diaBase
+        serie
         exigeEvidencia
+        cumprimentoEm
         estado
         registrarCumprimento()
+        anexarEvidencia()
+        alterarPrazo()
+        alterarResponsavel()
+        marcarAtrasada()
         gerarProximaOcorrencia()
     }
     class Evidencia {
         descricao
+        nomeArquivo
+        tipoArquivo
+        tamanho
         dataAnexo
     }
     class LancamentoFinanceiro {
@@ -287,3 +303,4 @@ classDiagram
 | v2 | Corrigida a multiplicidade entre `Usuario` e `Perfil`. Incluídos `Renegociacao`, `Evidencia`, `AprovacaoDesconto`, `SugestaoClassificacao` e `RegistroAuditoria`. `Titulo` passou a se ligar diretamente a `Cliente`. `HistoricoCobranca` virou `TentativaCobranca` e `SequenciaCobranca` virou `ReguaCobranca`. Removidos identificadores técnicos dos atributos. |
 | v3 | Incluídos `Fornecedor` e `ContaPagar` (Spec 018) e `Empresa` (OPEN-54). `ContaPagar` também recebe `Pagamento`. O estorno passou a ser operação do `Titulo` (`estornarPagamento()`), e não do `Pagamento`, com a permissão verificada na aplicação (DV-07, DT-06). O arquivo do diagrama manteve o nome `dominio-v2.mmd`. |
 | v4 | `Orcamento` ganha o prazo para pagamento, as datas de envio e de decisão do cliente, o motivo da rejeição e `converter()`; `Titulo` ganha `gerarDeOrcamento()` (Spec 005, OPEN-61). |
+| v5 | `Obrigacao` ganha nome, prazo de referência, dia-base, série, data do cumprimento e as operações de alteração, anexo e atraso; `Evidencia` ganha nome, tipo e tamanho do arquivo (Spec 010, OPEN-68 a OPEN-71). |

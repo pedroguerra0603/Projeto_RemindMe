@@ -38,6 +38,7 @@ MENU = (
     ("mensagens", "/mensagens", "Mensagens enviadas", "✉", Operacao.CONSULTAR_MENSAGENS),
     ("clientes", "/clientes", "Clientes", "◉", Operacao.CONSULTAR_CLIENTES),
     ("contas", "/contas-a-pagar", "Contas a pagar", "▥", Operacao.CONSULTAR_CONTAS_PAGAR),
+    ("obrigacoes", "/obrigacoes", "Obrigações", "◷", Operacao.GERENCIAR_OBRIGACOES),
     ("fornecedores", "/fornecedores", "Fornecedores", "◍", Operacao.CONSULTAR_FORNECEDORES),
     ("auditoria", "/auditoria", "Auditoria", "⌕", Operacao.CONSULTAR_AUDITORIA),
     ("usuarios", "/usuarios", "Usuários", "◎", Operacao.ADMINISTRAR_USUARIOS),

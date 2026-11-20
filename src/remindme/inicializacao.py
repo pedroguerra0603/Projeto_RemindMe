@@ -29,6 +29,7 @@ from remindme.aplicacao.servico_contas_pagar import ServicoContasPagar
 from remindme.aplicacao.servico_empresa import ServicoEmpresa
 from remindme.aplicacao.servico_fornecedores import ServicoFornecedores
 from remindme.aplicacao.servico_mensagens import ServicoMensagens
+from remindme.aplicacao.servico_obrigacoes import ServicoObrigacoes
 from remindme.aplicacao.servico_orcamentos import ServicoOrcamentos
 from remindme.aplicacao.servico_titulos import ServicoTitulos
 from remindme.apresentacao.web.aplicacao_web import AplicacaoWeb, Servicos
@@ -69,18 +70,22 @@ def montar(
     relogio = relogio or RelogioDoSistema()
     erros = erros or RegistroErrosNoLog()
     autorizacao = Autorizacao(relogio)
+    canal = canal or CanalSimulado()
     servicos = Servicos(
         acesso=ServicoAcesso(uow, relogio, erros, cifrador, autorizacao),
         clientes=ServicoClientes(uow, relogio, erros, autorizacao),
         titulos=ServicoTitulos(uow, uow.clientes, relogio, erros, autorizacao),
         auditoria=ServicoAuditoria(uow, relogio, erros, autorizacao),
-        orcamentos=ServicoOrcamentos(uow, relogio, erros, autorizacao, canal or CanalSimulado()),
+        orcamentos=ServicoOrcamentos(uow, relogio, erros, autorizacao, canal),
         empresa=ServicoEmpresa(uow, relogio, erros, autorizacao),
         fornecedores=ServicoFornecedores(uow, relogio, erros, autorizacao),
         contas_pagar=ServicoContasPagar(uow, relogio, erros, autorizacao),
         mensagens=ServicoMensagens(uow, relogio, erros, autorizacao),
+        obrigacoes=ServicoObrigacoes(uow, relogio, erros, autorizacao, canal),
     )
-    agendador = AgendadorDeVencimentos(servicos.titulos, relogio, contas=servicos.contas_pagar)
+    agendador = AgendadorDeVencimentos(
+        servicos.titulos, relogio, contas=servicos.contas_pagar, obrigacoes=servicos.obrigacoes
+    )
     return Sistema(servicos, AplicacaoWeb(servicos, relogio, erros), agendador, uow, relogio)
 
 

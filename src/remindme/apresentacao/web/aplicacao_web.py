@@ -20,6 +20,7 @@ from remindme.aplicacao.servico_contas_pagar import ServicoContasPagar
 from remindme.aplicacao.servico_empresa import ServicoEmpresa
 from remindme.aplicacao.servico_fornecedores import ServicoFornecedores
 from remindme.aplicacao.servico_mensagens import ServicoMensagens
+from remindme.aplicacao.servico_obrigacoes import ServicoObrigacoes
 from remindme.aplicacao.servico_orcamentos import ServicoOrcamentos
 from remindme.aplicacao.servico_titulos import ServicoTitulos
 from remindme.aplicacao.tempo import data_local
@@ -42,6 +43,7 @@ from remindme.apresentacao.web.rotas_acesso import RotasAcesso
 from remindme.apresentacao.web.rotas_auditoria import RotasAuditoria
 from remindme.apresentacao.web.rotas_clientes import RotasClientes
 from remindme.apresentacao.web.rotas_empresa import RotasEmpresa
+from remindme.apresentacao.web.rotas_obrigacoes import RotasObrigacoes
 from remindme.apresentacao.web.rotas_orcamentos import RotasOrcamentos
 from remindme.apresentacao.web.rotas_pagar import RotasPagar
 from remindme.apresentacao.web.rotas_titulos import RotasTitulos
@@ -60,9 +62,12 @@ class Servicos:
     fornecedores: Optional[ServicoFornecedores] = None
     contas_pagar: Optional[ServicoContasPagar] = None
     mensagens: Optional[ServicoMensagens] = None
+    obrigacoes: Optional[ServicoObrigacoes] = None
 
 
-class AplicacaoWeb(RotasAcesso, RotasAuditoria, RotasClientes, RotasEmpresa, RotasOrcamentos, RotasPagar, RotasTitulos):
+class AplicacaoWeb(
+    RotasAcesso, RotasAuditoria, RotasClientes, RotasEmpresa, RotasObrigacoes, RotasOrcamentos, RotasPagar, RotasTitulos
+):
     """Aplicação WSGI: tabela de rotas, despacho, sessão, cabeçalhos e erros. Os manipuladores de cada módulo ficam nas
     classes `Rotas<Módulo>` (`rotas_<módulo>.py`); a tabela de rotas fica aqui, num só lugar, na ordem em que é testada."""
 
@@ -132,6 +137,15 @@ class AplicacaoWeb(RotasAcesso, RotasAuditoria, RotasClientes, RotasEmpresa, Rot
         r.append(("POST", conta_estorno, self._conta_estorno, protegida))
         r.append(("GET", f"/contas-a-pagar/(?P<conta_id>{ID})/cancelamento", self._conta_cancelamento_pagina, protegida))
         r.append(("POST", f"/contas-a-pagar/(?P<conta_id>{ID})/cancelamento", self._conta_cancelamento, protegida))
+        r.append(("GET", "/obrigacoes", self._obrigacoes, protegida))
+        r.append(("GET", "/obrigacoes/nova", self._obrigacao_nova_pagina, protegida))
+        r.append(("POST", "/obrigacoes/nova", self._obrigacao_nova, protegida))
+        r.append(("GET", f"/obrigacoes/(?P<obrigacao_id>{ID})", self._obrigacao, protegida))
+        r.append(("POST", f"/obrigacoes/(?P<obrigacao_id>{ID})/prazo", self._obrigacao_prazo, protegida))
+        r.append(("POST", f"/obrigacoes/(?P<obrigacao_id>{ID})/responsavel", self._obrigacao_responsavel, protegida))
+        r.append(("POST", f"/obrigacoes/(?P<obrigacao_id>{ID})/cumprimento", self._obrigacao_cumprimento, protegida))
+        r.append(("POST", f"/obrigacoes/(?P<obrigacao_id>{ID})/evidencias", self._obrigacao_evidencia, protegida))
+        r.append(("GET", f"/obrigacoes/(?P<obrigacao_id>{ID})/evidencias/(?P<evidencia_id>{ID})", self._evidencia, protegida))
         r.append(("GET", "/empresa", self._empresa, protegida))
         r.append(("POST", "/empresa", self._empresa_salvar, protegida))
         r.append(("GET", "/auditoria", self._auditoria, protegida))

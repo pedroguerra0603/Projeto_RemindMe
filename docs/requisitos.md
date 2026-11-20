@@ -126,8 +126,8 @@ A data de referência do sistema ("hoje") é a de America/Sao_Paulo, e os horár
 | RF-42 | WHEN uma obrigação recorrente for Cumprida, THE SYSTEM SHALL gerar a próxima ocorrência com o prazo calculado pela periodicidade. | UC-09 | |
 | RF-43 | WHEN o Dono ou o Operador Financeiro acessar o calendário, THE SYSTEM SHALL apresentar as obrigações ordenadas por prazo. | UC-09 | RB-04 |
 | RF-44 | WHEN faltar para o prazo de uma obrigação a antecedência de aviso configurada, THE SYSTEM SHALL enviar um alerta ao responsável. | UC-09 | RB-07 |
-| RF-45 | WHEN o responsável registrar o cumprimento de uma obrigação que não exige evidência, THE SYSTEM SHALL mudar o estado para Cumprida. | UC-09 | |
-| RF-46 | WHERE a obrigação exigir evidência, WHEN o responsável registrar o cumprimento, THE SYSTEM SHALL exigir o anexo da evidência antes de mudar o estado para Cumprida. | UC-09 | RB-29 |
+| RF-45 | WHEN um usuário autorizado registrar o cumprimento de uma obrigação que não exige evidência, THE SYSTEM SHALL mudar o estado para Cumprida. | UC-09 | |
+| RF-46 | WHERE a obrigação exigir evidência, WHEN um usuário autorizado registrar o cumprimento, THE SYSTEM SHALL exigir o anexo da evidência antes de mudar o estado para Cumprida. | UC-09 | RB-29 |
 | RF-47 | WHEN uma obrigação for Cumprida, THE SYSTEM SHALL registrar a data, o usuário e a evidência, quando houver. | UC-09 | RB-01 |
 | RF-48 | IF o prazo de uma obrigação passar sem que ela esteja Cumprida, THEN THE SYSTEM SHALL mudar o estado para Atrasada. | UC-09 | |
 | RF-49 | IF uma obrigação permanecer Atrasada pelo período de tolerância configurado, THEN THE SYSTEM SHALL enviar um alerta escalonado ao Dono. | UC-09 | RB-16 |
@@ -261,7 +261,7 @@ Regras de negócio são verdades do domínio que existiriam mesmo sem o sistema.
 | RB-04 | O calendário de obrigações é único para a empresa e visível ao Dono e ao Operador Financeiro. | RF-43 |
 | RB-05 | Orçamento aprovado pelo cliente vira título a receber, e somente orçamento aprovado vira título. | RF-11, RF-12, RF-19 |
 | RB-06 | O resultado financeiro reflete todo pagamento registrado ou estornado, sem etapa manual de fechamento. | RF-51, RF-55 |
-| RB-07 | Toda obrigação é avisada ao responsável antes do prazo. A antecedência padrão é de 7 dias e pode ser configurada por tipo de obrigação. | RF-44 |
+| RB-07 | Toda obrigação é avisada ao responsável antes do prazo. A antecedência padrão é de 7 dias e pode ser configurada por tipo de obrigação (valores até a Spec 014: OPEN-71). | RF-44 |
 | RB-08 | Uma sugestão de classificação da IA só vale se apontar uma categoria existente no plano de contas e tiver confiança igual ou superior ao limiar configurado. | RF-78, RF-79 |
 | RB-09 | Toda correção humana de uma sugestão da IA fica registrada como divergência. | RF-81 |
 | RB-10 | Título Vencido é cobrado pela régua até ser Baixado, Cancelado ou entrar em renegociação. | RF-34, RF-37 |
@@ -270,7 +270,7 @@ Regras de negócio são verdades do domínio que existiriam mesmo sem o sistema.
 | RB-13 | Obrigação Aguardando Evidência permanece como pendência visível do Operador Financeiro. | RF-77 |
 | RB-14 | Sugestão da IA que não atende à RB-08 é decidida por uma pessoa. | RF-80 |
 | RB-15 | Cada perfil tem um percentual máximo de desconto (alçada). Desconto acima da alçada de quem informa o desconto depende de aprovação do Dono ou do Administrador (OPEN-50, OPEN-53). O Dono não tem limite. | RF-14, RF-15, RF-16, RF-17 |
-| RB-16 | Obrigação Atrasada é escalada ao Dono. A tolerância padrão é de 0 dias e pode ser configurada. | RF-49 |
+| RB-16 | Obrigação Atrasada é escalada ao Dono. A tolerância padrão é de 0 dias e pode ser configurada (valores até a Spec 014: OPEN-71). | RF-49 |
 | RB-17 | Mensagem de cliente da qual não se extrai intenção válida é tratada por uma pessoa. | RF-74 |
 | RB-18 | O canal de notificação é substituível. O canal padrão é o simulado. | RF-08 |
 | RB-19 | A troca de dados com planilhas ocorre somente em CSV, e uma importação é aceita inteira ou recusada inteira. | RF-83, RF-84, RF-85 |

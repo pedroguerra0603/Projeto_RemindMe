@@ -10,6 +10,7 @@ from typing import List, Tuple
 
 from remindme.aplicacao.tempo import data_local
 from remindme.dominio.cliente import tipo_do_documento
+from remindme.dominio.obrigacao import ArquivoDeEvidencia
 from remindme.dominio.usuario import Perfil
 
 USUARIOS = (
@@ -146,6 +147,23 @@ def preparar_demonstracao(sistema, senha: str) -> List[Tuple[str, str, str]]:
     cancelada = conta(pecas, "Elevador hidráulico", "7800.00", 20, "Boleto, 3 parcelas")
     contas.cancelar_conta(dona, cancelada.id, "Pedido cancelado com o fornecedor")
     contas.verificar_vencimentos_automaticamente(hoje)
+
+    # Calendário de obrigações (Spec 010): todos os estados, com o aviso e o escalonamento na caixa de saída.
+    obrigacoes = servicos.obrigacoes
+    diego = next(u.id for u in obrigacoes.responsaveis_possiveis(operador) if u.email == "diego@demo.example")
+
+    def obrigacao(nome: str, tipo: str, periodicidade: str, dias: int, exige: bool = False):
+        return obrigacoes.cadastrar_obrigacao(operador, nome, tipo, periodicidade, hoje + timedelta(days=dias), diego, exige)
+
+    obrigacao("DAS", "Fiscal", "Mensal", 5, exige=True)
+    obrigacao("FGTS", "Trabalhista", "Mensal", -3)
+    aluguel = obrigacao("Aluguel da loja", "Contratual", "Mensal", 8, exige=True)
+    obrigacoes.registrar_cumprimento(operador, aluguel.id, hoje)
+    defis = obrigacao("DEFIS", "Fiscal", "Anual", 2, exige=True)
+    recibo = ArquivoDeEvidencia("recibo-defis.pdf", b"%PDF-1.4\n% Recibo de entrega da DEFIS (demonstracao)\n%%EOF\n")
+    obrigacoes.registrar_cumprimento(operador, defis.id, hoje, recibo, "Recibo de entrega da DEFIS")
+    obrigacao("Licença de funcionamento", "Outra", "Única", 40)
+    obrigacoes.verificar_obrigacoes_automaticamente(hoje)
 
     for sessao in (admin, dona, operador):
         acesso.sair(sessao)

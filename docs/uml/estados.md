@@ -110,6 +110,9 @@ Cláusulas de estado derivadas:
 
 - WHILE a obrigação estiver Aguardando Evidência, o alerta permanece no painel do Operador Financeiro (RF-77).
 - IF a obrigação permanecer Atrasada pela tolerância configurada, THEN o sistema escala ao Dono (RF-49).
+- IF a obrigação Atrasada tiver o cumprimento registrado sem a evidência exigida, THEN ela continua Atrasada até o anexo, que a leva a Cumprida (Spec 010, A4 e A5); ela continua no alerta do painel do Operador Financeiro.
+- IF for solicitada a alteração do prazo de obrigação Atrasada ou Cumprida, THEN o sistema recusa: um prazo estourado não se apaga (Spec 010, A3).
+- A alteração do prazo vale só para a ocorrência; a próxima ocorrência conta do prazo de referência (OPEN-70).
 
 ## Conta a pagar
 

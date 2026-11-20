@@ -1,15 +1,18 @@
-"""Textos que chegam ao cliente pelo canal de notificação (Spec 005).
+"""Textos que o canal de notificação entrega: ao cliente (Spec 005) e os alertas de obrigação aos usuários (Spec 010).
 
-É o único ponto que monta texto para o cliente (RB-27, INV-4): nada de texto livre além dos dados do
-orçamento, do cliente e da empresa. Os valores são formatados aqui, porque a aplicação não usa a apresentação.
+É o único ponto que monta texto enviado (RB-27, INV-4; Spec 010, INV-6): nada de texto livre além dos dados do
+orçamento, da obrigação, do destinatário e da empresa. Os valores são formatados aqui, porque a aplicação não usa a apresentação.
 """
 
+from datetime import date
 from decimal import Decimal
 from typing import Optional, Tuple
 
 from remindme.dominio.cliente import Cliente
 from remindme.dominio.empresa import Empresa
+from remindme.dominio.obrigacao import Obrigacao
 from remindme.dominio.orcamento import Orcamento
+from remindme.dominio.usuario import Usuario
 
 SEM_EMPRESA = "Nossa empresa"
 
@@ -37,6 +40,41 @@ def mensagem_de_orcamento(empresa: Optional[Empresa], cliente: Cliente, orcament
         linhas.append(f"Condição de pagamento: {orcamento.condicao_pagamento}")
     linhas += ["", "Para aprovar ou recusar, responda a esta mensagem."]
     return f"Orçamento nº {numero} — {nome}", "\n".join(linhas)
+
+
+def mensagem_de_aviso_de_obrigacao(
+    empresa: Optional[Empresa], usuario: Usuario, obrigacao: Obrigacao, hoje: date
+) -> Tuple[str, str]:
+    """Aviso ao responsável antes do prazo (RF-44, RB-07)."""
+    prazo = _data(obrigacao.prazo)
+    dias = (obrigacao.prazo - hoje).days
+    quando = "hoje" if dias == 0 else "amanhã" if dias == 1 else f"daqui a {dias} dias"
+    linhas = [f"Olá, {usuario.nome}.", "", f"A obrigação {obrigacao.nome} ({obrigacao.tipo.value}) vence em {prazo}, {quando}."]
+    if obrigacao.exige_evidencia:
+        linhas.append("Ao registrar o cumprimento, anexe a evidência.")
+    linhas += ["", f"{_nome_da_empresa(empresa)} · RemindMe"]
+    return f"Obrigação a vencer: {obrigacao.nome} em {prazo}", "\n".join(linhas)
+
+
+def mensagem_de_escalonamento(
+    empresa: Optional[Empresa], usuario: Usuario, obrigacao: Obrigacao, responsavel: Optional[Usuario], hoje: date
+) -> Tuple[str, str]:
+    """Alerta escalonado ao Dono (RF-49, RB-16)."""
+    dias = (hoje - obrigacao.prazo).days
+    linhas = [
+        f"Olá, {usuario.nome}.",
+        "",
+        f"A obrigação {obrigacao.nome} ({obrigacao.tipo.value}) venceu em {_data(obrigacao.prazo)} "
+        f"e está Atrasada há {dias} {'dia' if dias == 1 else 'dias'}.",
+        f"Responsável: {responsavel.nome if responsavel else 'não definido'}.",
+        "",
+        f"{_nome_da_empresa(empresa)} · RemindMe",
+    ]
+    return f"Obrigação atrasada: {obrigacao.nome}", "\n".join(linhas)
+
+
+def _data(data: date) -> str:
+    return data.strftime("%d/%m/%Y")
 
 
 def _nome_da_empresa(empresa: Optional[Empresa]) -> str:
