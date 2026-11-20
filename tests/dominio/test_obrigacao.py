@@ -307,6 +307,14 @@ class EvidenciaConferida(unittest.TestCase):
                 evidencia(descricao=descricao)
             self.assertEqual(ctx.exception.campos, {"descricao": motivo})
 
+    def test_foco_1_nome_longo_preserva_a_extensao(self):
+        e = evidencia(nome="comprovante-" + "x" * 130 + ".pdf")
+        self.assertEqual((len(e.nome_arquivo), e.nome_arquivo[-4:], e.tipo_arquivo), (120, ".pdf", "application/pdf"))
+
+    def test_foco_1_caracteres_de_formatacao_unicode_sao_descartados(self):
+        self.assertEqual(evidencia(nome="recibo\u202efdp.pdf").nome_arquivo, "recibofdp.pdf")
+        self.assertEqual(evidencia(nome="a\u200bb\u2066.pdf").nome_arquivo, "ab.pdf")
+
     def test_foco_1_nome_do_arquivo_fica_so_com_o_nome_base(self):
         self.assertEqual(evidencia(nome="C:\\fakepath\\DAS março.pdf").nome_arquivo, "DAS março.pdf")
         self.assertEqual(evidencia(nome='../../a"b.pdf').nome_arquivo, "ab.pdf")

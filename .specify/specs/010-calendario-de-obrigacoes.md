@@ -249,6 +249,13 @@ Também verificado:
 - No navegador (Chromium), com a demonstração, em 1280 px e 360 px, para a Dona e o Operador: painel, calendário, todas as obrigações, detalhe de cada uma e Mensagens enviadas, sem rolagem horizontal da página. O download da evidência sai como anexo `application/pdf`.
 - Pirâmide de testes recontada: a unidade foi de 36,1% para 38,7% ([`docs/testes.md`](../../docs/testes.md)).
 
+Revisão final da branch, por um revisor independente: nenhum problema crítico. Três achados foram corrigidos, cada um com um teste que falhou antes da correção:
+- nome de arquivo com mais de 120 caracteres perdia a extensão e o PDF era recusado: o corte agora preserva a extensão (`test_foco_1_nome_longo_preserva_a_extensao`);
+- caracteres de formatação Unicode, como o que inverte o texto (U+202E), passavam para o nome mostrado: agora são descartados (`test_foco_1_caracteres_de_formatacao_unicode_sao_descartados`);
+- descrição preenchida sem arquivo era descartada em silêncio: agora é recusada no campo arquivo (`test_descricao_sem_arquivo_e_recusada_no_campo_arquivo`).
+
+Suíte depois das correções: 638 testes, todos passando, com 9 pulados.
+
 Dois testes de outras specs mudaram, sem mudar o que verificam. O teste da migração 5 passou a esperar a última versão do banco. O teste da demonstração da Spec 005 passou a contar só as mensagens de orçamento, porque a caixa de saída agora tem também os alertas de obrigação.
 
 ### Onde está cada parte

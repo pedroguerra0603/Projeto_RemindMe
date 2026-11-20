@@ -209,6 +209,14 @@ class Cumprimento(Base):
         gravada = self.obter(o)
         self.assertEqual((gravada.estado, gravada.evidencias, gravada.cumprimento_em), (EstadoObrigacao.PENDENTE, [], None))
 
+    def test_descricao_sem_arquivo_e_recusada_no_campo_arquivo(self):
+        for exige in (True, False):
+            o = self.cadastrar(exige=exige)
+            with self.subTest(exige=exige), self.assertRaises(OperacaoRecusada) as ctx:
+                self.cumprir(o, descricao="Guia paga")
+            self.assertEqual(ctx.exception.campos, {"arquivo": "Escolha o arquivo da evidência ou deixe a descrição em branco."})
+            self.assertEqual((self.obter(o).estado, self.obter(o).cumprimento_em), (EstadoObrigacao.PENDENTE, None))
+
     def test_CA_19_E4_data_de_amanha_e_recusada(self):
         o = self.cadastrar()
         with self.assertRaises(OperacaoRecusada) as ctx:

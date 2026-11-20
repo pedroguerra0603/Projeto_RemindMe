@@ -121,6 +121,9 @@ class ServicoObrigacoes:
             obrigacao = _obter(op, obrigacao_id)
             agora = self._relogio.agora()
             anterior = obrigacao.estado
+            if arquivo is None and isinstance(descricao, str) and descricao.strip():
+                mensagem = "Escolha o arquivo da evidência ou deixe a descrição em branco."
+                raise OperacaoRecusada(mensagem, {"arquivo": mensagem})
             evidencia = (
                 Evidencia.conferir(_novo_id(), arquivo, descricao, agora, op.usuario.id) if arquivo is not None else None
             )

@@ -5,6 +5,7 @@ Cada ocorrência é uma `Obrigacao`; as ocorrências geradas a partir do mesmo c
 """
 
 import calendar
+import unicodedata
 from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 from enum import Enum
@@ -372,11 +373,16 @@ def avancar_meses(data: date, meses: int, dia_base: int) -> date:
 
 
 def nome_base(nome: object) -> str:
-    """Foco de revisão 1: só o nome do arquivo, sem caminho, aspas ou caracteres de controle."""
+    """Foco de revisão 1: só o nome do arquivo, sem caminho, aspas, caracteres de controle nem de formatação
+    (como U+202E, que inverte o texto mostrado). Nome longo é cortado no radical, preservando a extensão."""
     texto = nome if isinstance(nome, str) else ""
     texto = texto.replace("\\", "/").rsplit("/", 1)[-1]
-    texto = "".join(c for c in texto if c != '"' and ord(c) >= 32 and ord(c) != 127)
-    return texto.strip()[:TAMANHO_DO_NOME]
+    texto = "".join(c for c in texto if c != '"' and unicodedata.category(c) not in ("Cc", "Cf")).strip()
+    extensao = _extensao(texto)
+    if len(texto) > TAMANHO_DO_NOME:
+        radical = texto[: len(texto) - len(extensao)]
+        texto = radical[: TAMANHO_DO_NOME - len(extensao)] + extensao
+    return texto
 
 
 def _extensao(nome: str) -> str:
