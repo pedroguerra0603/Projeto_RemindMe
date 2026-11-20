@@ -8,7 +8,7 @@
 | **Nome** | Calendário de obrigações |
 | **Objetivo** | Reunir num calendário único as obrigações fiscais, trabalhistas e contratuais da empresa, avisar o responsável antes do prazo, exigir a evidência de cumprimento quando for o caso, marcar o atraso e escalar o alerta ao Dono. |
 | **Valor entregue** | A Dona deixa de anotar obrigações na agenda do celular e de pagar multa por prazo perdido ([personas](../../docs/personas.md)). O Operador Financeiro sabe o que vence e o que falta comprovar. Nenhuma obrigação estoura em silêncio: toda obrigação Atrasada chega ao Dono ([visão](../../docs/visao.md)). |
-| **Situação** | **Aprovada** — em 2026-11-20; a implementar pelo [plano](../plans/010-plano.md). |
+| **Situação** | **Verificada** — implementada e verificada em 2026-11-20; todos os critérios de aceite passaram (seção 8). |
 | **Aprovada por** | Renan Gandolpho, em 2026-11-20 |
 
 ## 2. Rastreabilidade
@@ -204,4 +204,59 @@ Nenhuma bloqueia a implementação.
 
 ## 8. Verificação
 
-*(preenchida depois da implementação)*
+Implementada e verificada em 2026-11-20, pelo [plano](../plans/010-plano.md). Suíte completa: 635 testes, todos passando, com 9 pulados (4 de navegador sem o Playwright, opcional, e 5 marcadores de outras specs).
+
+| Critério | Teste (`tests/aplicacao/test_spec_010_aceite.py`, salvo indicação) | Resultado |
+|---|---|---|
+| CA-01 | `test_CA_01_RF_40_cadastro_pendente_com_historico_e_auditoria` | Passou |
+| CA-02 | `test_CA_02_E1_dados_invalidos_sao_recusados_no_campo` | Passou |
+| CA-03 | `test_CA_03_RF_43_RB_04_calendario_ordenado_por_prazo` | Passou |
+| CA-04 | `test_CA_04_RF_44_RB_07_aviso_unico_com_o_texto_do_modelo` | Passou |
+| CA-05 | `test_CA_05_RB_07_fora_da_janela_nao_avisa` | Passou |
+| CA-06 | `test_CA_06_RF_45_RF_47_cumprimento_sem_exigencia` | Passou |
+| CA-07 | `test_CA_07_RF_46_RB_29_cumprimento_com_pdf` | Passou |
+| CA-08 | `test_CA_08_A2_RF_77_aguardando_evidencia_ate_o_anexo`; no painel, `test_CA_08_RF_77_quadro_aguardando_evidencia_no_painel` (web) | Passou |
+| CA-09 | `test_CA_09_E2_evidencia_invalida_e_recusada_no_campo` | Passou |
+| CA-10 | `test_CA_10_RF_42_mensal_no_fim_do_mes` | Passou |
+| CA-11 | `test_CA_11_RF_42_prazo_conta_do_anterior_e_unica_nao_gera` | Passou |
+| CA-12 | `test_CA_12_RF_48_atrasada_no_dia_seguinte_ao_prazo` | Passou |
+| CA-13 | `test_CA_13_A5_aguardando_evidencia_que_estoura` | Passou |
+| CA-14 | `test_CA_14_RF_49_RB_16_escalonamento_unico_aos_donos_ativos` | Passou |
+| CA-15 | `test_CA_15_A6_responsavel_inativo_avisa_os_donos` | Passou |
+| CA-16 | `test_CA_16_RF_41_alteracao_de_prazo_e_responsavel_no_historico` | Passou |
+| CA-17 | `test_CA_17_E3_alteracoes_fora_do_estado_sao_recusadas` | Passou |
+| CA-18 | `test_CA_18_RF_50_historico_e_ocorrencias_da_serie` | Passou |
+| CA-19 | `test_CA_19_E4_data_de_amanha_e_recusada` | Passou |
+| CA-20 | `test_CA_20_E5_RNF_09_falha_na_auditoria_desfaz_o_cumprimento`; também no SQLite, `test_CA_20_RNF_09_falha_na_auditoria_do_cumprimento_nao_deixa_nada_no_banco` | Passou |
+| CA-21 | `test_CA_21_E6_RB_03_RB_04_contador_nao_acessa_obrigacoes`; pela tela, `test_CA_21_contador_nao_ve_o_menu_nem_abre_as_rotas` (web) | Passou |
+| CA-22 | `test_CA_22_RNF_15_painel_destaca_atrasadas` (`tests/apresentacao/test_spec_010_web.py`) | Passou |
+| CA-23 | `test_CA_23_ADR_002_canal_que_falha_e_tentado_de_novo` | Passou |
+| CA-24 | `test_CA_24_A3_alteracao_de_prazo_vale_so_para_a_ocorrencia` | Passou |
+
+Também verificado:
+
+- Regras do domínio, sem banco: `tests/dominio/test_obrigacao.py`, com 44 testes nomeados por RF, RB, OPEN, INV, A e E. Cobrem estados, cumprimento com e sem evidência, conferência do arquivo pelo conteúdo, recorrência no fim do mês, aviso e escalonamento uma vez por prazo e por destinatário.
+- Modelos dos alertas (RB-27, INV-6): `tests/aplicacao/test_modelos_de_mensagem.py` (`ModelosDosAlertasDeObrigacao`), com o texto exato.
+- Leitura do formulário com arquivo, sem o módulo `cgi`: `tests/apresentacao/test_multipart.py`.
+- SQLite (`tests/infraestrutura/test_sqlite.py`, `Spec010NoSQLite`): ida e volta da obrigação com histórico e evidências, conteúdo da evidência à parte, mensagens a usuários junto das mensagens a clientes, e migração de um banco da versão 5 sem perda de dados.
+- Interface web (`tests/apresentacao/test_spec_010_web.py`): cadastro, cumprimento com PDF, próxima ocorrência, erros por campo, escape de HTML, alteração de prazo e responsável, caixa de saída com o alerta, auditoria ligada à obrigação e demonstração com obrigações nos quatro estados.
+- Foco de revisão do plano:
+  - nome de arquivo com caminho ou aspas: `test_foco_1_*`, no domínio e na web;
+  - campo de arquivo vazio vale como sem anexo: `test_foco_2_*`;
+  - multipart fora da rota ou grande demais: `test_foco_3_*`;
+  - Dono que também é o responsável não recebe alerta duplicado: `test_foco_4_*`;
+  - dia-base 29, 30 ou 31: `test_foco_5_*`.
+- No navegador (Chromium), com a demonstração, em 1280 px e 360 px, para a Dona e o Operador: painel, calendário, todas as obrigações, detalhe de cada uma e Mensagens enviadas, sem rolagem horizontal da página. O download da evidência sai como anexo `application/pdf`.
+- Pirâmide de testes recontada: a unidade foi de 36,1% para 38,7% ([`docs/testes.md`](../../docs/testes.md)).
+
+Dois testes de outras specs mudaram, sem mudar o que verificam. O teste da migração 5 passou a esperar a última versão do banco. O teste da demonstração da Spec 005 passou a contar só as mensagens de orçamento, porque a caixa de saída agora tem também os alertas de obrigação.
+
+### Onde está cada parte
+
+| Parte | Arquivo |
+|---|---|
+| Regras, estados, recorrência e alertas | `src/remindme/dominio/obrigacao.py` |
+| Texto dos alertas (RB-27) | `src/remindme/aplicacao/modelos_de_mensagem.py` |
+| Casos de uso, autorização, auditoria e verificação automática | `src/remindme/aplicacao/servico_obrigacoes.py`; `src/remindme/entradas/agendador.py` |
+| Persistência | `src/remindme/infraestrutura/sqlite.py` (migração 6) e `memoria.py` |
+| Telas e upload | `src/remindme/apresentacao/web/paginas_obrigacoes.py`, `multipart.py`, `aplicacao_web.py` e `paginas.py` (painel e menu) |

@@ -18,14 +18,14 @@
 1. O usuário cadastra a obrigação com tipo, periodicidade, prazo, responsável e se exige evidência.
 2. O sistema apresenta a obrigação no calendário, no estado Pendente.
 3. Na antecedência configurada, o sistema alerta o responsável (RB-07).
-4. O responsável registra o cumprimento e anexa a evidência.
+4. O responsável, ou outro usuário autorizado, registra o cumprimento e anexa a evidência (OPEN-64).
 5. O sistema muda o estado para Cumprida e registra data, usuário e evidência.
 6. Se a obrigação é recorrente, o sistema gera a próxima ocorrência com o novo prazo.
 
 ## Fluxos alternativos
 
-- **A1 — Obrigação sem exigência de evidência.** No passo 4, o responsável registra o cumprimento sem anexo. O fluxo segue no passo 5.
-- **A2 — Cumprimento sem a evidência exigida.** No passo 4, o responsável registra o cumprimento sem anexar a evidência exigida. O sistema muda o estado para Aguardando Evidência e mantém o alerta no painel do Operador Financeiro até o anexo (RB-13, RB-29).
+- **A1 — Obrigação sem exigência de evidência.** No passo 4, o usuário registra o cumprimento sem anexo. O fluxo segue no passo 5.
+- **A2 — Cumprimento sem a evidência exigida.** No passo 4, o usuário registra o cumprimento sem anexar a evidência exigida. O sistema muda o estado para Aguardando Evidência e mantém o alerta no painel do Operador Financeiro até o anexo (RB-13, RB-29).
 - **A3 — Alteração de prazo ou responsável.** Um usuário autorizado altera o prazo ou o responsável. O sistema registra a alteração no histórico da obrigação (RF-41).
 
 ## Exceções

@@ -80,16 +80,28 @@ classDiagram
         resultado
     }
     class Obrigacao {
+        nome
         tipo
         periodicidade
         prazo
+        prazoReferencia
+        diaBase
+        serie
         exigeEvidencia
+        cumprimentoEm
         estado
         registrarCumprimento()
+        anexarEvidencia()
+        alterarPrazo()
+        alterarResponsavel()
+        marcarAtrasada()
         gerarProximaOcorrencia()
     }
     class Evidencia {
         descricao
+        nomeArquivo
+        tipoArquivo
+        tamanho
         dataAnexo
     }
     class LancamentoFinanceiro {
