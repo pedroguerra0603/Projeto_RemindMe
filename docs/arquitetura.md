@@ -147,7 +147,7 @@ As estruturas que respondem aos drivers são as decisões DT-01 a DT-09 da seç�
 
 | Camada | Pasta |
 |---|---|
-| Apresentação | `src/remindme/apresentacao/web/` (Spec 017) |
+| Apresentação | `src/remindme/apresentacao/web/` (Spec 017): `aplicacao_web.py` (tabela de rotas, sessão e erros), `requisicao.py`, e um par por módulo, `rotas_<módulo>.py` (manipuladores) e `paginas_<módulo>.py` (páginas), sobre a base `paginas.py` (OPEN-65) |
 | Entradas automáticas | `src/remindme/entradas/` (agendador, Spec 017) |
 | Aplicação | `src/remindme/aplicacao/` |
 | Domínio | `src/remindme/dominio/` |

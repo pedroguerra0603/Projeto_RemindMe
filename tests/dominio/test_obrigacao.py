@@ -88,7 +88,7 @@ class Cadastro(unittest.TestCase):
         )
         self.assertEqual(ctx.exception.campos["prazo"], "Informe o prazo.")
         self.assertEqual(
-            ctx.exception.campos["responsavel"], "Escolha um usuário ativo, Dono ou Operador Financeiro (OPEN-64)."
+            ctx.exception.campos["responsavel"], "Escolha um usuário ativo, Dono ou Operador Financeiro (OPEN-69)."
         )
 
     def test_E1_responsavel_inativo_ausente_e_nome_longo_sao_recusados(self):
@@ -284,10 +284,10 @@ class EvidenciaConferida(unittest.TestCase):
         for nome, conteudo, motivo in (
             ("das.pdf", b"", "O arquivo está vazio."),
             ("das.pdf", grande, "O arquivo tem no máximo 5 MB."),
-            ("das.txt", b"texto", "Anexe um PDF, PNG ou JPG (OPEN-63)."),
-            ("das.pdf", b"isto e texto", "Anexe um PDF, PNG ou JPG (OPEN-63)."),
-            ("das.pdf", PNG, "Anexe um PDF, PNG ou JPG (OPEN-63)."),
-            ("das", PDF, "Anexe um PDF, PNG ou JPG (OPEN-63)."),
+            ("das.txt", b"texto", "Anexe um PDF, PNG ou JPG (OPEN-68)."),
+            ("das.pdf", b"isto e texto", "Anexe um PDF, PNG ou JPG (OPEN-68)."),
+            ("das.pdf", PNG, "Anexe um PDF, PNG ou JPG (OPEN-68)."),
+            ("das", PDF, "Anexe um PDF, PNG ou JPG (OPEN-68)."),
         ):
             with self.subTest(nome=nome, inicio=conteudo[:8]), self.assertRaises(OperacaoRecusada) as ctx:
                 evidencia(nome, conteudo)

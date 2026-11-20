@@ -22,7 +22,7 @@ class OrcamentosPelaInterface(Base):
                 self.assertEqual(navegador.get(caminho).destino, "/entrar")
         self.assertEqual(navegador.post("/orcamentos/novo", {"cliente": self.cliente.id}).destino, "/entrar")
 
-    def test_fluxo_completo_operador_pede_desconto_e_a_dona_decide(self):
+    def test_RF_16_fluxo_completo_operador_pede_desconto_e_a_dona_decide(self):
         diego = self.navegador("diego@exemplo.com")
         pagina = self.criar_pela_interface(diego)
         resposta = diego.enviar(pagina, f"{pagina}/itens", {"descricao": "Instalação", "quantidade": "1,5", "valor_unitario": "1.200,00"})
@@ -71,7 +71,7 @@ class OrcamentosPelaInterface(Base):
         self.assertNotIn("Orçamentos", menu)
         self.assertEqual(helena.get("/orcamentos").status, 403)
 
-    def test_texto_do_item_e_escapado(self):
+    def test_ADR_006_texto_do_item_e_escapado(self):
         diego = self.navegador("diego@exemplo.com")
         pagina = self.criar_pela_interface(diego)
         diego.enviar(pagina, f"{pagina}/itens", {"descricao": "<script>alert(1)</script>", "quantidade": "1", "valor_unitario": "10"})
@@ -79,7 +79,7 @@ class OrcamentosPelaInterface(Base):
         self.assertNotIn("<script>alert(1)</script>", texto)
         self.assertIn("&lt;script&gt;", texto)
 
-    def test_alterar_remover_item_e_cancelar(self):
+    def test_RF_07_RF_13_alterar_remover_item_e_cancelar(self):
         diego = self.navegador("diego@exemplo.com")
         pagina = self.criar_pela_interface(diego)
         diego.enviar(pagina, f"{pagina}/itens", {"descricao": "Serviço", "quantidade": "1", "valor_unitario": "100"})
@@ -94,7 +94,7 @@ class OrcamentosPelaInterface(Base):
         self.assertEqual(diego.enviar(cancelamento, cancelamento, {"motivo": "Cliente desistiu"}).status, 303)
         self.assertIn("Cliente desistiu", diego.get(pagina).texto)
 
-    def test_lista_filtra_por_estado(self):
+    def test_RF_10_lista_filtra_por_estado(self):
         diego = self.navegador("diego@exemplo.com")
         pagina = self.criar_pela_interface(diego)
         self.assertIn(pagina, diego.get("/orcamentos?estado=RASCUNHO").texto)

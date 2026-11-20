@@ -1,4 +1,4 @@
-"""Leitura do formulário `multipart/form-data`, para o upload da evidência (Spec 010, OPEN-63).
+"""Leitura do formulário `multipart/form-data`, para o upload da evidência (Spec 010, OPEN-68).
 
 O módulo `cgi` saiu da biblioteca padrão no Python 3.13; os cabeçalhos de cada parte são lidos pelo módulo `email`.
 Qualquer corpo mal formado é tratado como formulário vazio, sem exceção: a recusa fica com quem chama.

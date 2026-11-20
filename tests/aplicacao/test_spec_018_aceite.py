@@ -65,7 +65,7 @@ class Fornecedores(Base):
         self.assertEqual(set(ctx.exception.campos), {"nome", "documento", "contato"})
         self.assertIn("fornecedor", ctx.exception.campos["nome"])
 
-    def test_fornecedor_pode_ter_o_documento_de_um_cliente(self):
+    def test_RF_87_fornecedor_pode_ter_o_documento_de_um_cliente(self):
         ServicoClientes(self.uow, self.relogio).cadastrar_cliente(self.operador, "Padaria", CNPJ, "p@padaria.example")
         self.assertEqual(self.fornecedor().documento, "11222333000181")
 

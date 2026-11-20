@@ -17,15 +17,15 @@ from remindme.dominio.valores import recusar
 
 TAMANHO_DO_NOME = 120
 TAMANHO_DA_DESCRICAO = 200
-TAMANHO_MAXIMO_DA_EVIDENCIA = 5 * 1024 * 1024  # OPEN-63
+TAMANHO_MAXIMO_DA_EVIDENCIA = 5 * 1024 * 1024  # OPEN-68
 
-# RB-07 e RB-16, com os valores padrão de OPEN-66, até a Spec 014 torná-los configuráveis (INV-9).
+# RB-07 e RB-16, com os valores padrão de OPEN-71, até a Spec 014 torná-los configuráveis (INV-9).
 ANTECEDENCIA_DO_AVISO_DIAS = 7
 TOLERANCIA_DO_ESCALONAMENTO_DIAS = 0
 
-PERFIS_RESPONSAVEIS = (Perfil.DONO, Perfil.OPERADOR_FINANCEIRO)  # OPEN-64
+PERFIS_RESPONSAVEIS = (Perfil.DONO, Perfil.OPERADOR_FINANCEIRO)  # OPEN-69
 
-# OPEN-63: a extensão escolhe o tipo, e o conteúdo tem de começar pela assinatura desse tipo.
+# OPEN-68: a extensão escolhe o tipo, e o conteúdo tem de começar pela assinatura desse tipo.
 _TIPOS_DE_ARQUIVO: Dict[str, Tuple[str, bytes]] = {
     ".pdf": ("application/pdf", b"%PDF-"),
     ".png": ("image/png", b"\x89PNG\r\n\x1a\n"),
@@ -35,7 +35,7 @@ _TIPOS_DE_ARQUIVO: Dict[str, Tuple[str, bytes]] = {
 
 
 class TipoObrigacao(Enum):
-    """OPEN-66: lista fixa, para a Spec 014 configurar a antecedência por tipo (RB-07)."""
+    """OPEN-71: lista fixa, para a Spec 014 configurar a antecedência por tipo (RB-07)."""
 
     FISCAL = "Fiscal"
     TRABALHISTA = "Trabalhista"
@@ -44,7 +44,7 @@ class TipoObrigacao(Enum):
 
 
 class Periodicidade(Enum):
-    """OPEN-65."""
+    """OPEN-70."""
 
     UNICA = "Única"
     MENSAL = "Mensal"
@@ -116,7 +116,7 @@ class Evidencia:
     def conferir(
         cls, id: str, arquivo: ArquivoDeEvidencia, descricao: object, anexada_em: datetime, usuario_id: str
     ) -> "Evidencia":
-        """OPEN-63: PDF, PNG ou JPG de 1 byte a 5 MB, conferido pelo conteúdo; descrição obrigatória."""
+        """OPEN-68: PDF, PNG ou JPG de 1 byte a 5 MB, conferido pelo conteúdo; descrição obrigatória."""
         campos: Dict[str, str] = {}
         conteudo = arquivo.conteudo if isinstance(arquivo.conteudo, bytes) else b""
         nome = nome_base(arquivo.nome)
@@ -126,7 +126,7 @@ class Evidencia:
         elif len(conteudo) > TAMANHO_MAXIMO_DA_EVIDENCIA:
             campos["arquivo"] = "O arquivo tem no máximo 5 MB."
         elif tipo is None or not conteudo.startswith(tipo[1]):
-            campos["arquivo"] = "Anexe um PDF, PNG ou JPG (OPEN-63)."
+            campos["arquivo"] = "Anexe um PDF, PNG ou JPG (OPEN-68)."
         texto = _texto(descricao)
         if not texto:
             campos["descricao"] = "Descreva a evidência."
@@ -147,7 +147,7 @@ class EventoObrigacao:
 
 
 def responsavel_valido(usuario: Optional[Usuario]) -> bool:
-    """OPEN-64: usuário ativo, Dono ou Operador Financeiro."""
+    """OPEN-69: usuário ativo, Dono ou Operador Financeiro."""
     return usuario is not None and usuario.ativo and usuario.perfil in PERFIS_RESPONSAVEIS
 
 
@@ -200,7 +200,7 @@ class Obrigacao:
         if not isinstance(prazo, date):
             campos["prazo"] = "Informe o prazo."
         if not responsavel_valido(responsavel):
-            campos["responsavel"] = "Escolha um usuário ativo, Dono ou Operador Financeiro (OPEN-64)."
+            campos["responsavel"] = "Escolha um usuário ativo, Dono ou Operador Financeiro (OPEN-69)."
         recusar_campos(campos)
         obrigacao = cls(
             id=id,
@@ -226,7 +226,7 @@ class Obrigacao:
 
     def alterar_prazo(self, prazo: object, hoje: date, usuario_id: str, quando: datetime) -> date:
         """RF-41, A3: só em Pendente ou Aguardando Evidência, e nunca para antes de hoje. O prazo de referência e o
-        dia-base não mudam: a alteração vale só para esta ocorrência (OPEN-65)."""
+        dia-base não mudam: a alteração vale só para esta ocorrência (OPEN-70)."""
         if self.estado not in (EstadoObrigacao.PENDENTE, EstadoObrigacao.AGUARDANDO_EVIDENCIA):
             self._recusar_no_estado("alteração de prazo")
         if not isinstance(prazo, date):
@@ -243,7 +243,7 @@ class Obrigacao:
         if self.estado is EstadoObrigacao.CUMPRIDA:
             self._recusar_no_estado("alteração de responsável")
         if not responsavel_valido(responsavel):
-            recusar("responsavel", "Escolha um usuário ativo, Dono ou Operador Financeiro (OPEN-64).")
+            recusar("responsavel", "Escolha um usuário ativo, Dono ou Operador Financeiro (OPEN-69).")
         anterior = self.responsavel_id
         self.responsavel_id = responsavel.id
         self._registrar(quando, TipoEvento.RESPONSAVEL_ALTERADO, usuario_id, f"{anterior} → {responsavel.id}")
@@ -258,7 +258,7 @@ class Obrigacao:
         evidencia: Optional[Evidencia] = None,
     ) -> None:
         """RF-45 a RF-47. Sem a evidência exigida, Pendente passa a Aguardando Evidência (A2) e Atrasada continua
-        Atrasada (A4) até o anexo. Qualquer usuário autorizado registra (OPEN-64)."""
+        Atrasada (A4) até o anexo. Qualquer usuário autorizado registra (OPEN-69)."""
         if self.estado is EstadoObrigacao.CUMPRIDA:
             self._recusar_no_estado("cumprimento")
         if self.cumprimento_em is not None:
@@ -292,7 +292,7 @@ class Obrigacao:
         return False
 
     def gerar_proxima_ocorrencia(self, novo_id: str, hoje: date, quando: datetime) -> Optional["Obrigacao"]:
-        """RF-42, OPEN-65: a próxima nasce do prazo de referência, avançado pela periodicidade no dia-base, e não
+        """RF-42, OPEN-70: a próxima nasce do prazo de referência, avançado pela periodicidade no dia-base, e não
         da data do cumprimento nem do prazo alterado. INV-4: cada ocorrência gera no máximo uma próxima."""
         if self.estado is not EstadoObrigacao.CUMPRIDA:
             raise OperacaoRecusada("Só obrigação Cumprida gera a próxima ocorrência (RF-42).")
@@ -319,7 +319,7 @@ class Obrigacao:
 
     def destinatarios_do_aviso(self, hoje: date, responsavel: Optional[Usuario], donos_ativos: List[str]) -> List[str]:
         """RF-44, RB-07: Pendente com prazo entre hoje e hoje + 7 dias avisa o responsável, uma vez por prazo e por
-        destinatário. Responsável inativo: avisa os Donos ativos (A6, OPEN-64)."""
+        destinatário. Responsável inativo: avisa os Donos ativos (A6, OPEN-69)."""
         if self.estado is not EstadoObrigacao.PENDENTE:
             return []
         if not hoje <= self.prazo <= hoje + timedelta(days=ANTECEDENCIA_DO_AVISO_DIAS):
@@ -365,7 +365,7 @@ class Obrigacao:
 
 
 def avancar_meses(data: date, meses: int, dia_base: int) -> date:
-    """OPEN-65: o mesmo dia-base, ou o último dia do mês quando ele não existe (31/01 → 28/02 → 31/03)."""
+    """OPEN-70: o mesmo dia-base, ou o último dia do mês quando ele não existe (31/01 → 28/02 → 31/03)."""
     total = data.year * 12 + (data.month - 1) + meses
     ano, mes = divmod(total, 12)
     mes += 1

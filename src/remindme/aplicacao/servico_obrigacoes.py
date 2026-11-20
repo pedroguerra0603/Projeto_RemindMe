@@ -89,7 +89,7 @@ class ServicoObrigacoes:
         return obrigacao
 
     def alterar_prazo(self, sessao: Optional[str], obrigacao_id: str, prazo: Optional[date]) -> Obrigacao:
-        """RF-41, A3: vale só para esta ocorrência (OPEN-65)."""
+        """RF-41, A3: vale só para esta ocorrência (OPEN-70)."""
         with self._execucao.operacao("alterar prazo da obrigação", sessao, _GERENCIAR) as op:
             obrigacao = _obter(op, obrigacao_id)
             agora = self._relogio.agora()
@@ -115,7 +115,7 @@ class ServicoObrigacoes:
         arquivo: Optional[ArquivoDeEvidencia] = None,
         descricao: object = None,
     ) -> Obrigacao:
-        """RF-45 a RF-47, RB-29. Qualquer usuário autorizado registra (OPEN-64). Cumprida e recorrente: a próxima
+        """RF-45 a RF-47, RB-29. Qualquer usuário autorizado registra (OPEN-69). Cumprida e recorrente: a próxima
         ocorrência nasce na mesma operação (RF-42). Tudo ou nada (RNF-09)."""
         with self._execucao.operacao("registrar cumprimento de obrigação", sessao, _GERENCIAR) as op:
             obrigacao = _obter(op, obrigacao_id)
@@ -191,7 +191,7 @@ class ServicoObrigacoes:
         return evidencia, conteudo
 
     def responsaveis_possiveis(self, sessao: Optional[str]) -> List[Usuario]:
-        """OPEN-64: usuários ativos, Dono ou Operador Financeiro, por nome."""
+        """OPEN-69: usuários ativos, Dono ou Operador Financeiro, por nome."""
         with self._execucao.operacao("consultar obrigações", sessao, _GERENCIAR) as op:
             usuarios = op.uow.usuarios.listar()
         return sorted((u for u in usuarios if responsavel_valido(u)), key=lambda u: (u.nome, u.id))

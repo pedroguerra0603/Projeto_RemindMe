@@ -79,7 +79,7 @@ Detalhes em [`docs/seguranca.md`](docs/seguranca.md).
 | `docs/` | Baseline de modelagem e arquitetura |
 | `.specify/specs/` | Mapa de specs e specs |
 | `.specify/plans/` | Plano técnico de cada spec aprovada |
-| `.specify/tasks/` | Tarefas derivadas de cada plano |
+| `.specify/tasks/` | Tarefas das Specs 001, 002, 003, 013 e 017 (histórico); desde a Spec 018, as tarefas ficam no plano |
 | `.specify/open.md` | Questões em aberto |
 | `src/remindme/` | Código, em camadas: `dominio`, `aplicacao`, `infraestrutura`, `apresentacao`, `entradas` |
 | `tests/` | Testes `unittest`: `python3 -m unittest discover -s tests -t .` |

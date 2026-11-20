@@ -158,7 +158,7 @@ Verificada em 2026-10-23, com `python3 -m unittest discover -s tests -t .`: 331 
 | CA-15 | `test_CA_15`; `test_OPEN_48_*` (agendador em segundo plano) | Passou |
 | CA-16 | `test_CA_16_OPEN_38_*`, `test_CA_16_RNF_05_com_https_*` e `test_CA_16_RNF_05_servidor_com_certificado_*` (servidor HTTPS real, com certificado gerado pelo `openssl`) | Passou |
 | CA-17 | `test_CA_17` | Passou |
-| CA-18 | `test_CA_18`; `test_usuario_inativado_pela_tela_*` | Passou |
+| CA-18 | `test_CA_18`; `test_RNF_01_usuario_inativado_pela_tela_*` | Passou |
 | CA-19 | `test_CA_19` | Passou |
 | CA-20 | `test_CA_20` | Passou |
 | CA-21 | `test_CA_21` | Passou |

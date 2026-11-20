@@ -1,11 +1,11 @@
 # Estratégia de Testes e Qualidade — RemindMe
 
-> Os testes usam `unittest`, da biblioteca padrão do Python, pela decisão de OPEN-01 (2026-10-03). A suíte está em [`tests/`](../tests/README.md), e a avaliação de qualidade, em [`qualidade/`](qualidade/README.md). Desde a Spec 017 (2026-10-23), há interface web: os testes de API chamam a aplicação WSGI no próprio processo (`tests/apresentacao/`), e o fluxo crítico roda no navegador com Playwright, opcional (`tests/ponta_a_ponta/`), conforme OPEN-29. A suíte de 2026-11-20, depois da Spec 010, tem 635 testes, contados na pirâmide abaixo. Como executar: [`execucao.md`](execucao.md).
+> Os testes usam `unittest`, da biblioteca padrão do Python, pela decisão de OPEN-01 (2026-10-03). A suíte está em [`tests/`](../tests/README.md), e a avaliação de qualidade, em [`qualidade/`](qualidade/README.md). Desde a Spec 017 (2026-10-23), há interface web: os testes de API chamam a aplicação WSGI no próprio processo (`tests/apresentacao/`), e o fluxo crítico roda no navegador com Playwright, opcional (`tests/ponta_a_ponta/`), conforme OPEN-29. A suíte de 2026-11-20, depois da Spec 010, tem 645 testes, contados na pirâmide abaixo. Como executar: [`execucao.md`](execucao.md).
 
 ## Princípios
 
 1. **Cada cláusula obrigatória vira ao menos um teste.** Todo RF com SHALL e toda RB têm teste.
-2. **O teste leva o identificador no nome.** Exemplo: `RB-23_recusa_pagamento_maior_que_o_saldo`.
+2. **O teste leva o identificador no nome.** Exemplo: `RB-23_recusa_pagamento_maior_que_o_saldo`. Exceção (DV-14, aceita em 2026-11-20 por Renan Gandolpho): o teste que não verifica regra, requisito nem critério de aceite, como os de infraestrutura, de contrato do repositório, de objetos auxiliares e de desenho da interface, pode ficar sem identificador. Teste de regra continua com o identificador; a revisão do PR confere.
 3. **Regra de domínio é testada sem banco e sem interface.**
 4. **A suíte roda sem credencial externa**, com canal de notificação e serviço de IA simulados (RNF-23).
 5. **O critério de aceite é binário.** Cada critério de uma spec, no formato Dado, Quando, Então, corresponde a um teste que passa ou não passa.
@@ -18,6 +18,7 @@
 | Aplicação | Casos de uso: permissão, transação, auditoria | Repositórios em memória; canal e IA simulados |
 | Integração | Persistência, atomicidade, unicidade | Banco de dados de teste |
 | Aceite | Critérios Dado, Quando, Então de cada spec | Sistema completo com simuladores |
+| Documentação | Links relativos dos `.md` e identificadores citados (RF, RNF, RB, UC, OPEN, ADR, DA, DT, spec) existentes na baseline (OPEN-66) | Só os arquivos do repositório |
 
 ## Pirâmide de testes
 
@@ -33,30 +34,30 @@ Aplicação da Pirâmide de Testes (Martin Fowler; Ham Vocke, *The Practical Tes
 | Aceite | `tests/aplicacao/test_spec_*_aceite.py` | 10% a 15% | Um teste por critério Dado, Quando, Então de cada spec. O número é dado pela spec, e não escolhido |
 | Interface e API | `tests/apresentacao/`, `tests/ponta_a_ponta/` | no máximo 5% | Lentos e frágeis. Só os fluxos críticos |
 
-Os testes de arquitetura (`tests/arquitetura/`) e de desempenho (`tests/desempenho/`) são transversais: guardam a regra de dependência (ADR-001) e o limite de RNF-11. Ficam fora da proporção.
+Os testes de arquitetura (`tests/arquitetura/`), de desempenho (`tests/desempenho/`) e da documentação (`tests/documentacao/`, OPEN-66) são transversais: guardam a regra de dependência (ADR-001), o limite de RNF-11 e os links e identificadores dos documentos. Ficam fora da proporção.
 
 ### Contagem atual
 
-Suíte de 2026-11-20, depois da Spec 010: 635 testes, todos passando, com 9 pulados (4 de navegador sem o Playwright, opcional, e 5 marcadores de testes ainda não escritos), contados. Comando: carregar a suíte com `unittest.defaultTestLoader.discover` e contar por pasta; o aceite são os arquivos `tests/aplicacao/test_spec_*_aceite.py`.
+Suíte de 2026-11-20, depois da Spec 010: 645 testes, todos passando, com 7 pulados (4 de navegador sem o Playwright, opcional, e 3 marcadores de testes ainda não escritos), contados. Comando: carregar a suíte com `unittest.defaultTestLoader.discover` e contar por pasta; o aceite são os arquivos `tests/aplicacao/test_spec_*_aceite.py`.
 
 | Nível | Pasta | Testes | Participação | Alvo | Situação |
 |---|---|---|---|---|---|
-| Unidade de domínio | `tests/dominio/` | 193 | 30,7% | — | — |
-| Unidade de infraestrutura | `tests/infraestrutura/` | 50 | 8,0% | — | — |
-| **Unidade, total** | | **243** | **38,7%** | 50% a 60% | Abaixo do alvo |
-| Aplicação (sem o aceite) | `tests/aplicacao/` | 68 | 10,8% | 20% a 30% | Abaixo do alvo |
-| Integração | `tests/integracao/` | 11 | 1,8% | 5% a 10% | Abaixo do alvo |
-| Aceite (Specs 001 a 006, 010, 013, 018 e 019) | `tests/aplicacao/test_spec_*_aceite.py` | 194 | 30,9% | 10% a 15% | Muito acima do alvo |
-| Interface e API | `tests/apresentacao/` (108), `tests/ponta_a_ponta/` (4) | 112 | 17,8% | até 5% | Muito acima do alvo |
-| Transversais (arquitetura e desempenho) | `tests/arquitetura/`, `tests/desempenho/` | 7 | — | fora da proporção | — |
+| Unidade de domínio | `tests/dominio/` | 195 | 30,9% | — | — |
+| Unidade de infraestrutura | `tests/infraestrutura/` | 50 | 7,9% | — | — |
+| **Unidade, total** | | **245** | **38,8%** | 50% a 60% | Abaixo do alvo |
+| Aplicação (sem o aceite) | `tests/aplicacao/` | 67 | 10,6% | 20% a 30% | Abaixo do alvo |
+| Integração | `tests/integracao/` | 12 | 1,9% | 5% a 10% | Abaixo do alvo |
+| Aceite (Specs 001 a 006, 010, 013, 018 e 019) | `tests/aplicacao/test_spec_*_aceite.py` | 195 | 30,9% | 10% a 15% | Muito acima do alvo |
+| Interface e API | `tests/apresentacao/` (109), `tests/ponta_a_ponta/` (4) | 113 | 17,9% | até 5% | Muito acima do alvo |
+| Transversais (arquitetura, desempenho e documentação) | `tests/arquitetura/`, `tests/desempenho/`, `tests/documentacao/` | 13 | — | fora da proporção | — |
 
-Percentuais sobre os 628 testes dos cinco níveis (635 menos os 7 transversais). A contagem de 2026-10-16 tinha 199 testes, com a unidade em 50,3% e nenhum teste de interface. Depois da Spec 005 (2026-11-07), eram 530 testes, com a unidade em 36,1%. A Spec 010 seguiu a proposta da lacuna 1: 54 testes novos de unidade (44 de domínio e 10 de infraestrutura) contra 27 de aceite e 22 de interface, e a unidade subiu para 38,7%.
+Percentuais sobre os 632 testes dos cinco níveis (645 menos os 13 transversais). A contagem de 2026-10-16 tinha 199 testes, com a unidade em 50,3% e nenhum teste de interface. Depois da Spec 005 (2026-11-07), eram 530 testes, com a unidade em 36,1%. A Spec 010 seguiu a proposta da lacuna 1: 54 testes novos de unidade (44 de domínio e 10 de infraestrutura) contra 27 de aceite e 22 de interface, e a unidade subiu para 38,8%, contada já com os testes trazidos da `main` no mesmo dia (identificadores da DV-14, concorrência no SQLite e verificação da documentação).
 
 ### Lacunas
 
-1. **A pirâmide se inverteu.** O risco registrado em 2026-10-16 se confirmou: cada spec nova trouxe seus testes de aceite e de interface, e quase nenhum de unidade. Aceite e interface somam 48,7% da suíte, contra um alvo de até 20%; a unidade caiu de 50,3% para 36,1% e voltou a 38,7% com a Spec 010. Proposta: nas próximas specs, testar cada regra nova no domínio primeiro, deixar no aceite só um teste por critério e, na interface, só o que depende da tela (sessão, formulário, erro por campo, escape de HTML).
+1. **A pirâmide se inverteu.** O risco registrado em 2026-10-16 se confirmou: cada spec nova trouxe seus testes de aceite e de interface, e quase nenhum de unidade. Aceite e interface somam 48,7% da suíte, contra um alvo de até 20%; a unidade caiu de 50,3% para 36,1% e voltou a 38,8% com a Spec 010. Proposta: nas próximas specs, testar cada regra nova no domínio primeiro, deixar no aceite só um teste por critério e, na interface, só o que depende da tela (sessão, formulário, erro por campo, escape de HTML).
 2. **Não há cone de sorvete na prática, ainda.** Os testes de aceite usam repositórios em memória, e os de interface chamam a aplicação WSGI no próprio processo, sem servidor nem navegador; a suíte inteira roda em cerca de 16 s. Só os 4 testes de `tests/ponta_a_ponta/` abrem o navegador, e são pulados sem o Playwright. O custo da inversão hoje é de manutenção (mudar uma tela quebra muitos testes), e não de tempo.
-3. **Integração abaixo do alvo.** O banco existe desde a Spec 017 (SQLite, ADR-007), mas a maior parte dos testes que o usam está em `tests/infraestrutura/`, contada como unidade. A atomicidade com duas transações simultâneas continua como marcador pulado (`test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo`). Proposta: escrever esse teste contra o SQLite e rever se os testes do SQLite são unidade ou integração.
+3. **Integração abaixo do alvo.** O banco existe desde a Spec 017 (SQLite, ADR-007), mas a maior parte dos testes que o usam está em `tests/infraestrutura/`, contada como unidade. A atomicidade com duas transações simultâneas é testada contra o SQLite desde 2026-11-20, em `tests/integracao/test_concorrencia_sqlite.py` (`test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo`). Proposta: rever se os testes do SQLite são unidade ou integração.
 4. **Sem medição de cobertura.** A pirâmide mede quantidade de testes, e não o que eles exercitam. Por OPEN-27, coverage.py é opcional, só no desenvolvimento.
 
 Seção aprovada por Renan Gandolpho em 2026-11-07.
@@ -85,7 +86,7 @@ Fora do ponta a ponta de propósito: régua de cobrança (UC-08), por depender d
 | Cada operação sensível recusa o perfil sem permissão, chamada direto na API | RNF-02, RNF-03 |
 | Cliente não lê título de outro cliente pela API | RNF-25 |
 | Entrada inválida devolve o campo e o motivo | RNF-14 |
-| Requisição sem TLS é recusada ou redirecionada | RNF-05 |
+| Sem certificado, o servidor recusa atender pela rede; com certificado, só fala HTTPS (OPEN-38) | RNF-05 |
 | Resposta de consulta e cadastro em menos de 2 s no P95 | RNF-11 |
 
 ### Ferramentas candidatas
@@ -154,7 +155,7 @@ Uma issue de implementação está pronta quando:
 
 1. o código implementa a spec aprovada, sem comportamento além dela;
 2. todos os critérios de aceite da spec têm teste passando;
-3. a suíte inteira passa;
+3. a suíte inteira passa, inclusive a verificação da documentação (OPEN-66);
 4. spec e código foram alterados no mesmo PR, quando o comportamento mudou;
 5. o PR foi revisado por um colega e fecha a issue com `Closes #N`.
 

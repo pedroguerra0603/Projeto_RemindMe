@@ -28,7 +28,7 @@ def orcamento(prazo=30, desconto="10", condicao="Boleto"):
 
 
 class ModeloDoOrcamento(unittest.TestCase):
-    def test_numero_do_orcamento_sao_os_8_primeiros_caracteres_em_maiusculas(self):
+    def test_RF_08_numero_do_orcamento_sao_os_8_primeiros_caracteres_em_maiusculas(self):
         self.assertEqual(numero_do_orcamento("abcdef1234567890"), "ABCDEF12")
 
     def test_RB_27_texto_tem_empresa_numero_itens_valores_e_prazo(self):
@@ -54,7 +54,7 @@ class ModeloDoOrcamento(unittest.TestCase):
         self.assertNotIn("Desconto:", texto)
         self.assertNotIn("Condição de pagamento:", texto)
 
-    def test_quantidade_fracionada_usa_virgula(self):
+    def test_RF_08_quantidade_fracionada_usa_virgula(self):
         o = Orcamento.criar("o2", "c1", "operador", date(2026, 11, 7))
         o.incluir_item("i1", "Horas", Decimal("1.50"), Decimal("100.00"))
         o.alterar_prazo(1)
@@ -67,7 +67,7 @@ class ModeloDoOrcamento(unittest.TestCase):
         self.assertEqual(assunto, "Orçamento nº ABCDEF12 — Nossa empresa")
         self.assertIn("Nossa empresa envia o orçamento nº ABCDEF12:", texto.splitlines())
 
-    def test_nome_fantasia_vazio_usa_razao_social(self):
+    def test_OPEN_54_nome_fantasia_vazio_usa_razao_social(self):
         assunto, _ = mensagem_de_orcamento(empresa(nome_fantasia=""), CLIENTE, orcamento())
         self.assertEqual(assunto, "Orçamento nº ABCDEF12 — Menezes Serviços Ltda")
 

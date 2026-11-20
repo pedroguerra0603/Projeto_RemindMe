@@ -176,7 +176,7 @@ class GeradoDeOrcamento(unittest.TestCase):
             Titulo.gerar_de_orcamento("t9", self.orcamento(aprovar=False))
         self.assertEqual(ctx.exception.motivo, "Só orçamento Aprovado vira título; este está Enviado (RF-12).")
 
-    def test_titulo_manual_nao_tem_orcamento(self):
+    def test_RF_21_titulo_manual_nao_tem_orcamento(self):
         self.assertIsNone(titulo().orcamento_id)
 
 

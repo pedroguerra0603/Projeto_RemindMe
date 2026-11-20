@@ -86,7 +86,7 @@ class Vencimento(unittest.TestCase):
         self.assertEqual((ontem.estado, de_hoje.estado), (EstadoContaPagar.VENCIDA, EstadoContaPagar.ABERTA))
         self.assertFalse(ontem.marcar_vencida(HOJE))  # idempotente
 
-    def test_vencida_paga_integralmente_vira_paga(self):
+    def test_RB_31_vencida_paga_integralmente_vira_paga(self):
         c = conta("50.00", HOJE - timedelta(days=3))
         c.marcar_vencida(HOJE)
         c.registrar_pagamento("p1", Decimal("50.00"), HOJE, hoje=HOJE)

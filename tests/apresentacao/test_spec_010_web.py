@@ -184,7 +184,7 @@ class ObrigacoesPelaInterface(Base):
         self.assertIn(f'href="/obrigacoes/{o.id}"', pagina)
 
     def test_auditoria_descreve_e_liga_a_obrigacao_e_a_evidencia(self):
-        from remindme.apresentacao.web.paginas import _descrever
+        from remindme.apresentacao.web.paginas_auditoria import _descrever
 
         self.assertEqual(_descrever("obrigacao " + "a" * 32), ("Obrigação aaaaaaaa", "/obrigacoes/" + "a" * 32))
         self.assertEqual(

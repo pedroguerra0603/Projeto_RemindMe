@@ -13,11 +13,11 @@
 ## Restrições globais
 
 - Termos do glossário em código e telas: Obrigação, Evidência, Pendente, Aguardando Evidência, Atrasada, Cumprida, Responsável, Periodicidade, Ocorrência, Escalonamento, Caixa de saída.
-- Tipo: `Fiscal`, `Trabalhista`, `Contratual`, `Outra`. Periodicidade: `Única`, `Mensal`, `Trimestral`, `Semestral`, `Anual` (1, 3, 6 e 12 meses). OPEN-65, OPEN-66.
+- Tipo: `Fiscal`, `Trabalhista`, `Contratual`, `Outra`. Periodicidade: `Única`, `Mensal`, `Trimestral`, `Semestral`, `Anual` (1, 3, 6 e 12 meses). OPEN-70, OPEN-71.
 - `ANTECEDENCIA_DO_AVISO_DIAS = 7` e `TOLERANCIA_DO_ESCALONAMENTO_DIAS = 0`, só em `dominio/obrigacao.py` (INV-9).
 - Atrasada quando `prazo < hoje`. Aviso quando Pendente e `hoje <= prazo <= hoje + 7`. Escalonamento quando Atrasada e `hoje >= prazo + 1 + tolerância`.
 - Evidência: 1 byte a `5 * 1024 * 1024` bytes. Extensão `.pdf`, `.png`, `.jpg` ou `.jpeg`, com conteúdo que começa com `%PDF-`, `\x89PNG\r\n\x1a\n` ou `\xff\xd8\xff`, coerente com a extensão. Descrição obrigatória, até 200 caracteres. Nome da obrigação: até 120 caracteres.
-- O responsável é um usuário ativo Dono ou Operador Financeiro. Qualquer perfil com `Operacao.GERENCIAR_OBRIGACOES` registra o cumprimento (OPEN-64). A operação já está na matriz (Dono e Operador; o Administrador pela OPEN-53), então não há linha nova de permissão.
+- O responsável é um usuário ativo Dono ou Operador Financeiro. Qualquer perfil com `Operacao.GERENCIAR_OBRIGACOES` registra o cumprimento (OPEN-69). A operação já está na matriz (Dono e Operador; o Administrador pela OPEN-53), então não há linha nova de permissão.
 - Auditoria: as referências são `obrigacao <id>` e `obrigacao <id>, evidencia <id>`. A mudança de estado usa `operacao="mudar estado"`. A rotina automática se chama `"verificação de obrigações"`.
 - O texto dos alertas sai só de `modelos_de_mensagem.py` (RB-27, INV-6). O domínio não importa o canal (INV-7). `test_ADR_001_cada_camada_importa_somente_as_camadas_permitidas` continua passando.
 - Testes nomeados pelo critério ou pela regra: `test_CA_nn_...`, `test_RB_nn_...`, `test_OPEN_6n_...`, `test_foco_n_...`.
@@ -63,8 +63,8 @@
   - campo `tipo`: "Escolha o tipo: Fiscal, Trabalhista, Contratual ou Outra.";
   - campo `periodicidade`: "Escolha a periodicidade: Única, Mensal, Trimestral, Semestral ou Anual.";
   - campo `prazo`: "Informe o prazo." ou, na alteração, "O novo prazo não pode ser anterior a hoje.";
-  - campo `responsavel`: "Escolha um usuário ativo, Dono ou Operador Financeiro (OPEN-64).";
-  - campo `arquivo`: "O arquivo está vazio.", "O arquivo tem no máximo 5 MB." ou "Anexe um PDF, PNG ou JPG (OPEN-63).";
+  - campo `responsavel`: "Escolha um usuário ativo, Dono ou Operador Financeiro (OPEN-69).";
+  - campo `arquivo`: "O arquivo está vazio.", "O arquivo tem no máximo 5 MB." ou "Anexe um PDF, PNG ou JPG (OPEN-68).";
   - campo `descricao`: "Descreva a evidência." ou "A descrição tem no máximo 200 caracteres.";
   - campo `data`: "Informe a data do cumprimento." ou "A data do cumprimento não pode ser posterior a hoje.";
   - fora do estado: `f"Obrigação {estado.value} não aceita {acao}."`, com `acao` igual a "cumprimento", "evidência", "alteração de prazo" ou "alteração de responsável".
@@ -332,8 +332,8 @@
   - `docs/modelo-dominio.md`, `docs/uml/dominio-v2.mmd` e o `.png`: `Obrigacao` ganha `nome`, `diaBase`, `prazoReferencia`, `serie`, `cumprimentoEm`, `alterarPrazo()`, `alterarResponsavel()`, `anexarEvidencia()` e `marcarAtrasada()`; `Evidencia` ganha `nomeArquivo`, `tipoArquivo` e `tamanho`; linha nova no histórico do modelo.
   - `docs/glossario.md`: "Tipo de obrigação", "Periodicidade", "Ocorrência", "Aviso de obrigação" e "Responsável".
   - `docs/uml/estados.md`: as cláusulas de A4, A5 e do prazo que não muda em Atrasada; as transições não mudam.
-  - `docs/casos-de-uso/UC-09-gerenciar-obrigacoes.md`: o passo 4 e o A2 deixam de exigir que seja o responsável (OPEN-64).
-  - `docs/requisitos.md`: RF-45 e RF-46 passam a "um usuário autorizado registrar"; RB-07 e RB-16 citam OPEN-66.
+  - `docs/casos-de-uso/UC-09-gerenciar-obrigacoes.md`: o passo 4 e o A2 deixam de exigir que seja o responsável (OPEN-69).
+  - `docs/requisitos.md`: RF-45 e RF-46 passam a "um usuário autorizado registrar"; RB-07 e RB-16 citam OPEN-71.
   - A seção 8 da spec e a situação **Verificada** no mapa.
   - `docs/rastreabilidade.md`, pelo método da sua seção 1.
   - `docs/documentacao-final.md`, `README.md` e `SPECS.md`, com a 010 na situação atual.

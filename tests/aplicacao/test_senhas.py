@@ -13,13 +13,13 @@ class MotivoDaSenha(unittest.TestCase):
         self.assertEqual(motivo_da_senha("a" * 256), "")
         self.assertEqual(motivo_da_senha("a" * 257), "A senha deve ter no máximo 256 caracteres.")
 
-    def test_senha_ausente_usa_a_mensagem_pedida(self):
+    def test_RNF_14_senha_ausente_usa_a_mensagem_pedida(self):
         self.assertEqual(motivo_da_senha("", ausente="Informe a nova senha."), "Informe a nova senha.")
         self.assertEqual(motivo_da_senha(None), "Informe a senha provisória.")
 
 
 class Cifrador(unittest.TestCase):
-    def test_CifradorScrypt_gera_salt_novo_e_confere(self):
+    def test_RNF_04_CifradorScrypt_gera_salt_novo_e_confere(self):
         primeiro, segundo = CIFRADOR_DE_TESTE.gerar("x" * 8), CIFRADOR_DE_TESTE.gerar("x" * 8)
         self.assertNotEqual(primeiro, segundo)
         self.assertTrue(CIFRADOR_DE_TESTE.conferir("x" * 8, primeiro))

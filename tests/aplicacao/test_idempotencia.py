@@ -1,8 +1,9 @@
 """Operações repetidas não duplicam efeito financeiro. Issue #76.
 
 Risco: registrar duas vezes o mesmo pagamento, baixar o título duas vezes ou repetir uma etapa da régua
-(Americanas 2023, ViaQuatro 2022). Aqui as repetições são em sequência, no mesmo processo. A concorrência
-real, com duas transações ao mesmo tempo, depende do banco (OPEN-02). Catálogo em
+(Americanas 2023, ViaQuatro 2022). As repetições são em sequência, no mesmo processo, com a unidade de trabalho em
+memória; a concorrência real, com duas transações ao mesmo tempo, é testada no SQLite em
+tests/integracao/test_concorrencia_sqlite.py (ADR-007). Catálogo em
 docs/qualidade/concorrencia-e-idempotencia.md.
 """
 
@@ -170,11 +171,6 @@ class Pendentes(unittest.TestCase):
     def test_DA_08_execucao_repetida_da_regua_nao_repete_etapa(self):
         pass
 
-    @unittest.skip("Pendente de OPEN-02 (banco de dados): duas transações simultâneas sobre o mesmo título. "
-                   "A unidade de trabalho em memória não é segura para threads; a garantia real vem da "
-                   "transação e da restrição do banco.")
-    def test_RNF_09_duas_transacoes_simultaneas_no_mesmo_titulo_nao_estouram_o_saldo(self):
-        pass
 
 
 if __name__ == "__main__":
