@@ -45,7 +45,7 @@ class Valores(unittest.TestCase):
         self.assertEqual(set(ctx.exception.campos), {"descricao", "quantidade", "valor_unitario"})
         self.assertEqual(o.itens, [])
 
-    def test_valor_que_nao_e_decimal_e_recusado(self):
+    def test_RF_07_valor_que_nao_e_decimal_e_recusado(self):
         for invalido in (1.5, "10", None, Decimal("NaN"), Decimal("Infinity")):
             with self.subTest(valor=invalido):
                 with self.assertRaises(OperacaoRecusada):
@@ -57,7 +57,7 @@ class Valores(unittest.TestCase):
             o.incluir_item("x", "Mais um", Decimal("1"), Decimal("1.00"))
         self.assertEqual(len(o.itens), 1)
 
-    def test_alterar_item_que_estoura_o_limite_nao_altera_nada(self):
+    def test_OPEN_24_alterar_item_que_estoura_o_limite_nao_altera_nada(self):
         o = orcamento(("1", "10.00"), ("1", "20.00"))
         with self.assertRaises(OperacaoRecusada):
             o.alterar_item("i0", "Item 0", Decimal("1"), Decimal("999999999999999.00"))
@@ -148,7 +148,7 @@ class DecisaoDoDono(unittest.TestCase):
             o.decidir_desconto(True, "dono", HOJE)
         self.assertIn("Cancelado", ctx.exception.motivo)
 
-    def test_desconto_ja_aprovado_nao_gera_nova_pendencia(self):
+    def test_RB_15_desconto_ja_aprovado_nao_gera_nova_pendencia(self):
         o = self.pendente()
         o.decidir_desconto(True, "dono", HOJE)
         self.assertFalse(o.informar_desconto(Decimal("20"), "operador", ALCADA))
