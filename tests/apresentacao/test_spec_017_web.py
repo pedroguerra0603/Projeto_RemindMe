@@ -208,7 +208,7 @@ class TitulosPelaInterface(Base):
         self.assertIn("motivo: Cheque devolvido", pagina.texto)
         self.assertIn("22/10/2026 12:00", pagina.texto)
 
-    def test_cancelamento_pela_tela_exige_motivo(self):
+    def test_RF_31_cancelamento_pela_tela_exige_motivo(self):
         dona = self.navegador("carla@exemplo.com")
         caminho = f"/titulos/{self.titulo.id}/cancelamento"
         sem_motivo = dona.enviar(caminho, caminho, {"motivo": " "})
@@ -217,7 +217,7 @@ class TitulosPelaInterface(Base):
         self.assertEqual(dona.enviar(caminho, caminho, {"motivo": "Desistência"}).status, 303)
         self.assertIs(self.titulo_salvo().estado, EstadoTitulo.CANCELADO)
 
-    def test_cadastro_de_titulo_pela_tela_com_valor_em_formato_brasileiro(self):
+    def test_RF_20_RNF_14_cadastro_de_titulo_pela_tela_com_valor_em_formato_brasileiro(self):
         navegador = self.navegador("diego@exemplo.com")
         resposta = navegador.enviar(
             "/titulos/novo", "/titulos/novo",
@@ -364,7 +364,7 @@ class AdministracaoPelaInterface(Base):
         antigo = ClienteWeb(self.sistema.web, cookies={"remindme_sessao": sessao_antiga})
         self.assertEqual(antigo.get("/painel").destino, "/entrar?aviso=sessao-encerrada&volta=%2Fpainel")
 
-    def test_usuario_inativado_pela_tela_perde_a_sessao_aberta(self):
+    def test_RNF_01_usuario_inativado_pela_tela_perde_a_sessao_aberta(self):
         diego = self.navegador("diego@exemplo.com")
         admin = self.navegador("admin@exemplo.com")
         with self.sistema.uow as uow:
@@ -373,7 +373,7 @@ class AdministracaoPelaInterface(Base):
         self.assertEqual(admin.enviar(caminho, f"{caminho}/inativacao", {}).status, 303)
         self.assertEqual(diego.get("/painel").destino, "/entrar?aviso=sessao-encerrada&volta=%2Fpainel")
 
-    def test_sessao_que_deixou_de_valer_avisa_na_entrada_e_volta_para_a_mesma_pagina(self):
+    def test_RNF_01_sessao_que_deixou_de_valer_avisa_na_entrada_e_volta_para_a_mesma_pagina(self):
         """Ao reiniciar a demonstração, o banco é novo e o cookie antigo não vale mais: o usuário é avisado
         e, ao entrar de novo, volta para a página que tinha pedido."""
         navegador = ClienteWeb(self.sistema.web, cookies={"remindme_sessao": "sessao-de-um-banco-antigo"})

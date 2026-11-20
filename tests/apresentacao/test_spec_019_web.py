@@ -59,14 +59,14 @@ class TrocaDeSenhaPelaInterface(Base):
         self.assertTrue(derrubado.destino.startswith("/entrar?aviso=sessao-encerrada"))
         self.assertEqual(self.entra(NOVA).destino, "/painel")
 
-    def test_senha_com_espacos_e_acentos_e_guardada_como_digitada(self):
+    def test_RF_95_senha_com_espacos_e_acentos_e_guardada_como_digitada(self):
         nova = "  pão de açúcar 🙂  "
         self.assertEqual(self.trocar(self.navegador(EMAIL), nova=nova).status, 303)
         resposta = self.entra(nova)
         self.assertEqual((resposta.status, resposta.destino), (303, "/painel"))
         self.assertEqual(self.entra(nova.strip()).status, 401)
 
-    def test_envio_repetido_nao_derruba_a_sessao(self):
+    def test_RF_96_envio_repetido_nao_derruba_a_sessao(self):
         carla = self.navegador(EMAIL)
         pagina = carla.get("/trocar-senha")
         dados = {"protecao": pagina.protecao, **self.dados()}
@@ -76,7 +76,7 @@ class TrocaDeSenhaPelaInterface(Base):
         self.assertIn('id="erro-senha_atual"', repetido.texto)
         self.assertEqual(carla.get("/painel").status, 200)
 
-    def test_auditoria_mostra_a_troca_sem_a_senha(self):
+    def test_RF_04_auditoria_mostra_a_troca_sem_a_senha(self):
         self.assertEqual(self.trocar(self.navegador(EMAIL)).status, 303)
         with self.sistema.uow as uow:
             registro = [r for r in uow.auditoria.listar() if r.campo == "senha"][-1]

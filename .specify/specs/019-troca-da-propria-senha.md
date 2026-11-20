@@ -166,7 +166,7 @@ Os testes de navegador rodaram com Playwright 1.63.0 e Chromium: `python3 -m uni
 
 | Invariante | Como foi verificada | Resultado |
 |---|---|---|
-| INV-1 | CA-10, CA-15 e `test_auditoria_mostra_a_troca_sem_a_senha` | Passou |
+| INV-1 | CA-10, CA-15 e `test_RF_04_auditoria_mostra_a_troca_sem_a_senha` | Passou |
 | INV-2 | CA-02 e CA-01 | Passou |
 | INV-3 | CA-07, CA-08 e CA-17 | Passou |
 | INV-4 | CA-11 e `test_RNF_09_INV_4_falha_na_auditoria_desfaz_no_banco` (SQLite) | Passou |

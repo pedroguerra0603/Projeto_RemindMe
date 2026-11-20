@@ -223,12 +223,12 @@ Para aprovar ou recusar, responda a esta mensagem.
 - Testes: `tests/apresentacao/test_spec_005_web.py`, no molde de `test_spec_004_web.py`.
 
 - [ ] **Passo 1: testes web.**
-  - `test_fluxo_operador_envia_e_registra_aprovacao`: prazo → envio → aprovação. A página do título mostra o link para o orçamento, e a do orçamento mostra o link para o título.
+  - `test_RF_08_RF_11_fluxo_operador_envia_e_registra_aprovacao`: prazo → envio → aprovação. A página do título mostra o link para o orçamento, e a do orçamento mostra o link para o título.
   - `test_botoes_conforme_o_estado`: "Enviar ao cliente" só em Rascunho pronto, e "Registrar decisão do cliente" só em Enviado.
-  - `test_erros_por_campo_em_prazo_e_data`: `id="erro-prazo"` e `id="erro-data"` com status 400.
-  - `test_texto_da_mensagem_e_escapado`: um item com `<script>` aparece escapado em `/mensagens` e na página do orçamento.
-  - `test_caixa_de_saida_exige_sessao_e_nega_o_contador`: sem sessão, redireciona para a entrada; o Contador recebe 403 e não vê o item de menu.
-  - `test_falha_do_canal_aparece_na_pagina`: com `montar(canal=CanalQueFalha())`, a resposta mostra a recusa, e a caixa de saída mostra "falhou".
+  - `test_RNF_14_erros_por_campo_em_prazo_e_data`: `id="erro-prazo"` e `id="erro-data"` com status 400.
+  - `test_ADR_006_texto_da_mensagem_e_escapado`: um item com `<script>` aparece escapado em `/mensagens` e na página do orçamento.
+  - `test_RNF_01_RNF_02_caixa_de_saida_exige_sessao_e_nega_o_contador`: sem sessão, redireciona para a entrada; o Contador recebe 403 e não vê o item de menu.
+  - `test_RF_08_falha_do_canal_aparece_na_pagina`: com `montar(canal=CanalQueFalha())`, a resposta mostra a recusa, e a caixa de saída mostra "falhou".
   - `test_foco_3_aprovacao_enviada_duas_vezes_gera_um_titulo`.
   - `test_demonstracao_tem_orcamentos_enviado_convertido_e_rejeitado`.
 - [ ] **Passo 2: rodar** `python3 -m unittest tests.apresentacao.test_spec_005_web -v`. Esperado: falha.

@@ -73,7 +73,7 @@ class FornecedoresEContasPelaInterface(Base):
         self.assertEqual(resposta.status, 400)
         self.assertIn('id="erro-valor"', resposta.texto)
 
-    def test_pagamento_de_conta_enviado_duas_vezes_registra_um(self):
+    def test_OPEN_25_pagamento_de_conta_enviado_duas_vezes_registra_um(self):
         diego = self.navegador("diego@exemplo.com")
         conta = self.conta("300.00")
         pagina = diego.get(f"/contas-a-pagar/{conta.id}")
@@ -105,7 +105,7 @@ class FornecedoresEContasPelaInterface(Base):
             with self.subTest(caminho=caminho):
                 self.assertEqual(helena.get(caminho).status, 403)
 
-    def test_operador_nao_ve_estorno_nem_cancelamento(self):
+    def test_RB_33_operador_nao_ve_estorno_nem_cancelamento(self):
         conta = self.sistema.servicos.contas_pagar.registrar_pagamento(self.operador, self.conta().id, Decimal("10.00"), HOJE)
         pagina = self.navegador("diego@exemplo.com").get(f"/contas-a-pagar/{conta.id}").texto
         self.assertNotIn("/estorno", pagina)
@@ -139,7 +139,7 @@ class FornecedoresEContasPelaInterface(Base):
                 self.assertIn('href="/contas-a-pagar"', painel)
                 self.assertIn('href="/fornecedores"', painel)
 
-    def test_auditoria_descreve_fornecedor_e_conta(self):
+    def test_RF_64_auditoria_descreve_fornecedor_e_conta(self):
         conta = self.conta()
         pagina = self.navegador("carla@exemplo.com").get("/auditoria").texto
         self.assertIn(f'href="/contas-a-pagar/{conta.id}"', pagina)
