@@ -25,7 +25,6 @@ from remindme.aplicacao.servico_orcamentos import ServicoOrcamentos
 from remindme.aplicacao.servico_titulos import ServicoTitulos
 from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import paginas as p
-from remindme.apresentacao.web import paginas_auditoria as pa
 from remindme.apresentacao.web import paginas_entrada as pe
 from remindme.apresentacao.web import paginas_usuarios as pu
 from remindme.apresentacao.web.requisicao import (
@@ -43,13 +42,13 @@ from remindme.apresentacao.web.requisicao import (
     _CORRELACAO,
     _aviso,
     _confere,
-    _data_do_filtro,
     _erros,
     _perfil,
     _sessao_encerrada,
     _valores,
     _volta,
 )
+from remindme.apresentacao.web.rotas_auditoria import RotasAuditoria
 from remindme.apresentacao.web.rotas_clientes import RotasClientes
 from remindme.apresentacao.web.rotas_empresa import RotasEmpresa
 from remindme.apresentacao.web.rotas_orcamentos import RotasOrcamentos
@@ -72,7 +71,7 @@ class Servicos:
     mensagens: Optional[ServicoMensagens] = None
 
 
-class AplicacaoWeb(RotasClientes, RotasEmpresa, RotasOrcamentos, RotasPagar, RotasTitulos):
+class AplicacaoWeb(RotasAuditoria, RotasClientes, RotasEmpresa, RotasOrcamentos, RotasPagar, RotasTitulos):
     def __init__(self, servicos: Servicos, relogio: Relogio, erros: RegistroErros):
         self._s = servicos
         self._relogio = relogio
@@ -303,29 +302,6 @@ class AplicacaoWeb(RotasClientes, RotasEmpresa, RotasOrcamentos, RotasPagar, Rot
         except OperacaoRecusada as recusa:
             return self._trocar_senha_pagina(req, sessao, ctx, _erros(recusa))
         return Resposta.redirecionar("/painel?aviso=senha")
-
-    # Auditoria (Spec 013)
-
-    def _auditoria(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
-        valores = {chave: req.consulta.get(chave, "").strip() for chave in ("usuario", "operacao", "de", "fim", "registro")}
-        erros: Dict[str, str] = {}
-        inicio = _data_do_filtro(valores, "de", erros)
-        fim = _data_do_filtro(valores, "fim", erros)
-        opcoes = self._s.auditoria.opcoes_de_filtro(sessao)
-        filtro = FiltroAuditoria(
-            usuario_id=valores["usuario"] or None,
-            inicio=inicio,
-            fim=fim,
-            operacao=valores["operacao"] or None,
-            registro=valores["registro"] or None,
-        )
-        try:
-            registros = self._s.auditoria.consultar(sessao, filtro)
-        except OperacaoNegada:
-            raise
-        except OperacaoRecusada as recusa:
-            registros, erros = [], {**erros, **_erros(recusa)}
-        return Resposta.pagina(pa.pagina_auditoria(ctx, registros, opcoes, valores, erros), 400 if erros else 200)
 
     # Usuários e permissões (Spec 002)
 
