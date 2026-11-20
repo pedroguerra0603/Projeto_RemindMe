@@ -2,7 +2,7 @@
 
 Issue #40. Este documento liga os requisitos aos drivers arquiteturais, às decisões técnicas, à implementação e aos testes. Ele mostra, para cada requisito, de onde ele vem e onde está a evidência de que foi atendido.
 
-- **Data:** 2026-11-07; atualizado em 2026-11-19 com a retirada de RNF-07 e RNF-08 e a reescrita de RNF-05 (OPEN-63).
+- **Data:** 2026-11-07; atualizado em 2026-11-19 com a retirada de RNF-07 e RNF-08 e a reescrita de RNF-05 (OPEN-63), e com os caminhos da apresentação depois da divisão por módulo (OPEN-65).
 - **Base:** branch `renan-rigan/elegant-archimedes-hgliic`, com a Spec 005 verificada em 2026-11-07. A suíte tem 530 testes, todos passando, com 9 pulados (4 de navegador sem o Playwright, opcional, e 5 marcadores de testes ainda não escritos).
 - **Fontes:** [requisitos](requisitos.md), [arquitetura](arquitetura.md), [ADRs](adr/README.md), [mapa de specs](../.specify/specs/mapa-de-specs.md), as [specs](../.specify/specs/) verificadas, [`src/`](../src/README.md), [`tests/`](../tests/README.md).
 - **Complementa:** a [matriz de critérios de aceite](qualidade/matriz-criterios-de-aceite.md), que parte de cada critério da Spec 006 e chega ao teste, e a seção 8 de cada spec, que registra o teste de cada critério. Este documento parte do requisito e passa pelo driver e pela decisão.
@@ -50,17 +50,17 @@ Requisitos com situação Implementado ou Parcial. "Specs" lista só as verifica
 | RF-03 | 002, 017 | `aplicacao/acesso.py`; `aplicacao/servico_acesso.py`; `dominio/permissoes.py` | `test_*RF_03*` (2); testes da Spec 002, Spec 017 | Parcial. Falta a parte da Spec 014 |
 | RF-04 | 001 | — | testes da Spec 001 | Implementado |
 | RF-05 | 001 | `aplicacao/auditoria.py`; `aplicacao/servico_acesso.py`; `aplicacao/servico_clientes.py` … | `test_*RF_05*` (2); testes da Spec 001 | Implementado |
-| RF-65 | 002, 017 | `aplicacao/servico_acesso.py`; `apresentacao/web/aplicacao_web.py`; `dominio/permissoes.py` | `test_*RF_65*` (2); testes da Spec 002, Spec 017 | Implementado |
-| RF-66 | 002, 017 | `aplicacao/servico_acesso.py`; `apresentacao/web/aplicacao_web.py` | `test_*RF_66*` (2); testes da Spec 002, Spec 017 | Implementado |
+| RF-65 | 002, 017 | `aplicacao/servico_acesso.py`; `apresentacao/web/rotas_acesso.py`; `dominio/permissoes.py` | `test_*RF_65*` (2); testes da Spec 002, Spec 017 | Implementado |
+| RF-66 | 002, 017 | `aplicacao/servico_acesso.py`; `apresentacao/web/rotas_acesso.py` | `test_*RF_66*` (2); testes da Spec 002, Spec 017 | Implementado |
 | RF-67 | 002, 017 | `aplicacao/servico_acesso.py`; `dominio/erros.py`; `dominio/permissoes.py` | `test_*RF_67*` (3); testes da Spec 002, Spec 017 | Implementado |
-| RF-95 | 019 | `aplicacao/servico_acesso.py`; `apresentacao/web/aplicacao_web.py`; `apresentacao/web/paginas.py` | testes da Spec 019 | Implementado |
+| RF-95 | 019 | `aplicacao/servico_acesso.py`; `apresentacao/web/paginas_usuarios.py`; `apresentacao/web/rotas_acesso.py` | testes da Spec 019 | Implementado |
 | RF-96 | 019 | `aplicacao/servico_acesso.py` | testes da Spec 019 | Implementado |
 | RF-06 | 004 | `aplicacao/servico_orcamentos.py`; `dominio/orcamento.py` | `test_*RF_06*` (2); testes da Spec 004 | Implementado |
 | RF-07 | 004 | `aplicacao/servico_orcamentos.py`; `dominio/orcamento.py` | `test_*RF_07*` (4); testes da Spec 004 | Implementado |
-| RF-08 | 005 | `aplicacao/modelos_de_mensagem.py`; `aplicacao/servico_orcamentos.py`; `apresentacao/web/aplicacao_web.py` … | `test_*RF_08*` (3); testes da Spec 005 | Implementado |
-| RF-09 | 005 | `aplicacao/servico_orcamentos.py`; `apresentacao/web/aplicacao_web.py`; `apresentacao/web/paginas.py` … | `test_*RF_09*` (1); testes da Spec 005 | Implementado |
+| RF-08 | 005 | `aplicacao/modelos_de_mensagem.py`; `aplicacao/servico_orcamentos.py`; `apresentacao/web/paginas_orcamentos.py` … | `test_*RF_08*` (3); testes da Spec 005 | Implementado |
+| RF-09 | 005 | `aplicacao/servico_orcamentos.py`; `apresentacao/web/paginas_orcamentos.py`; `apresentacao/web/rotas_orcamentos.py` … | `test_*RF_09*` (1); testes da Spec 005 | Implementado |
 | RF-10 | 004 | `aplicacao/servico_orcamentos.py` | `test_*RF_10*` (1); testes da Spec 004 | Implementado |
-| RF-11 | 005 | `aplicacao/servico_orcamentos.py`; `apresentacao/web/aplicacao_web.py`; `dominio/orcamento.py` … | `test_*RF_11*` (1); testes da Spec 005 | Implementado |
+| RF-11 | 005 | `aplicacao/servico_orcamentos.py`; `apresentacao/web/rotas_orcamentos.py`; `dominio/orcamento.py` … | `test_*RF_11*` (1); testes da Spec 005 | Implementado |
 | RF-12 | 005 | `dominio/orcamento.py` | `test_*RF_12*` (2); testes da Spec 005 | Implementado |
 | RF-13 | 004 | `aplicacao/servico_orcamentos.py`; `dominio/orcamento.py` | `test_*RF_13*` (3); testes da Spec 004 | Implementado |
 | RF-14 | 004 | `dominio/orcamento.py` | testes da Spec 004 | Parcial. Falta a parte da Spec 014 |
@@ -90,7 +90,7 @@ Requisitos com situação Implementado ou Parcial. "Specs" lista só as verifica
 | RF-91 | 018 | `aplicacao/servico_contas_pagar.py`; `dominio/conta_pagar.py` | testes da Spec 018 | Implementado |
 | RF-92 | 018 | `aplicacao/servico_contas_pagar.py`; `dominio/conta_pagar.py` | `test_*RF_92*` (1); testes da Spec 018 | Implementado |
 | RF-93 | 018 | `aplicacao/servico_contas_pagar.py`; `dominio/conta_pagar.py` | `test_*RF_93*` (1); testes da Spec 018 | Implementado |
-| RF-94 | 018 | `apresentacao/web/paginas.py` | testes da Spec 018 | Implementado |
+| RF-94 | 018 | `apresentacao/web/paginas_painel.py` | testes da Spec 018 | Implementado |
 | RNF-01 | 002, 017, 019 | `aplicacao/acesso.py`; `apresentacao/web/aplicacao_web.py` | `test_*RNF_01*` (3); testes da Spec 002, Spec 017, Spec 019 | Implementado |
 | RNF-02 | 002, 017, 018 | `aplicacao/acesso.py`; `dominio/erros.py`; `dominio/permissoes.py` | `test_*RNF_02*` (8); testes da Spec 002, Spec 017, Spec 018 | Implementado |
 | RNF-03 | 002, 004, 017 | — | `test_*RNF_03*` (4); testes da Spec 002, Spec 004, Spec 017 | Implementado |
@@ -100,7 +100,7 @@ Requisitos com situação Implementado ou Parcial. "Specs" lista só as verifica
 | RNF-25 | — | — | `test_*RNF_25*` (2) | Parcial. A recusa por perfil não revela dados do título; a resposta a mensagens de cliente é da Spec 009 |
 | RNF-09 | 001, 005, 006, 017, 018, 019 | `aplicacao/portas.py`; `aplicacao/servico_acesso.py`; `aplicacao/servico_orcamentos.py` … | `test_*RNF_09*` (15); testes da Spec 001, Spec 005, Spec 006, Spec 017, Spec 018, Spec 019 | Parcial. Falta a parte da Spec 015 |
 | RNF-11 | — | — | `test_*RNF_11*` (3) | Parcial. Medido para cadastro, consulta, pagamento e cancelamento; o mapa o atribui só à Spec 012 |
-| RNF-14 | 003, 017, 018, 019 | `apresentacao/web/aplicacao_web.py`; `dominio/cliente.py`; `dominio/empresa.py` … | `test_*RNF_14*` (10); testes da Spec 003, Spec 017, Spec 018, Spec 019 | Implementado |
+| RNF-14 | 003, 017, 018, 019 | `apresentacao/web/requisicao.py`; `dominio/cliente.py`; `dominio/empresa.py` … | `test_*RNF_14*` (10); testes da Spec 003, Spec 017, Spec 018, Spec 019 | Implementado |
 | RNF-15 | 018 | — | `test_*RNF_15*` (1); testes da Spec 018 | Parcial. Falta a parte das Specs 010, 016 |
 | RNF-16 | 017 | `aplicacao/servico_titulos.py` | testes da Spec 017 | Parcial. Falta a parte da Spec 016 |
 | RNF-19 | 001, 006 | `dominio/regras.py` | `test_*RNF_19*` (1); testes da Spec 001, Spec 006 | Implementado |
@@ -115,7 +115,7 @@ Requisitos com situação Implementado ou Parcial. "Specs" lista só as verifica
 | RB-21 | 006 | `dominio/titulo.py` | `test_*RB_21*` (11); testes da Spec 006 | Parcial. Sem o estado Em Renegociação (Spec 009) |
 | RB-22 | 006 | `dominio/titulo.py` | `test_*RB_22*` (5); testes da Spec 006 | Implementado |
 | RB-23 | 006 | `dominio/titulo.py` | `test_*RB_23*` (12); testes da Spec 006 | Implementado |
-| RB-24 | 004 | `apresentacao/web/paginas.py`; `dominio/orcamento.py` | `test_*RB_24*` (2); testes da Spec 004 | Implementado |
+| RB-24 | 004 | `apresentacao/web/paginas_orcamentos.py`; `dominio/orcamento.py` | `test_*RB_24*` (2); testes da Spec 004 | Implementado |
 | RB-30 | 001, 013 | `aplicacao/portas.py`; `aplicacao/servico_auditoria.py`; `dominio/auditoria.py` … | `test_*RB_30*` (6); testes da Spec 001, Spec 013 | Implementado |
 | RB-31 | 018 | `dominio/conta_pagar.py` | `test_*RB_31*` (3); testes da Spec 018 | Implementado |
 | RB-32 | 018 | `dominio/conta_pagar.py` | `test_*RB_32*` (1); testes da Spec 018 | Implementado |
