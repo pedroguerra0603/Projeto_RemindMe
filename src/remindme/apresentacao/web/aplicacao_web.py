@@ -28,7 +28,6 @@ from remindme.aplicacao.tempo import data_local
 from remindme.apresentacao.web import formatos as f
 from remindme.apresentacao.web import paginas as p
 from remindme.apresentacao.web import paginas_auditoria as pa
-from remindme.apresentacao.web import paginas_clientes as pc
 from remindme.apresentacao.web import paginas_empresa as pem
 from remindme.apresentacao.web import paginas_entrada as pe
 from remindme.apresentacao.web import paginas_mensagens as pm
@@ -61,6 +60,7 @@ from remindme.apresentacao.web.requisicao import (
     _valores,
     _volta,
 )
+from remindme.apresentacao.web.rotas_clientes import RotasClientes
 from remindme.dominio.conta_pagar import EstadoContaPagar
 from remindme.dominio.empresa import CAMPOS as CAMPOS_DA_EMPRESA
 from remindme.dominio.erros import OperacaoNegada, OperacaoRecusada
@@ -83,7 +83,7 @@ class Servicos:
     mensagens: Optional[ServicoMensagens] = None
 
 
-class AplicacaoWeb:
+class AplicacaoWeb(RotasClientes):
     def __init__(self, servicos: Servicos, relogio: Relogio, erros: RegistroErros):
         self._s = servicos
         self._relogio = relogio
@@ -334,13 +334,6 @@ class AplicacaoWeb:
         )
         return Resposta.pagina(pagina)
 
-    # Clientes (Spec 003)
-
-    def _clientes(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
-        termo = req.consulta.get("q", "").strip()
-        clientes = self._s.clientes.consultar_clientes(sessao, termo)
-        return Resposta.pagina(pc.pagina_clientes(ctx, clientes, termo, _aviso(req)))
-
     def _trocar_senha_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto, erros: Optional[Dict[str, str]] = None) -> Resposta:
         return Resposta.pagina(pu.pagina_trocar_senha(ctx, erros or {}), 400 if erros else 200)
 
@@ -354,46 +347,6 @@ class AplicacaoWeb:
         except OperacaoRecusada as recusa:
             return self._trocar_senha_pagina(req, sessao, ctx, _erros(recusa))
         return Resposta.redirecionar("/painel?aviso=senha")
-
-    def _cliente_novo_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
-        self._s.acesso.exigir(sessao, Operacao.MANTER_CLIENTES)
-        return Resposta.pagina(pc.pagina_cliente_formulario(ctx, {}, {}))
-
-    def _cliente_novo(self, req: Requisicao, sessao: str, ctx: p.Contexto) -> Resposta:
-        valores = _valores(req, "nome", "documento", "contato")
-        try:
-            cliente = self._s.clientes.cadastrar_cliente(sessao, valores["nome"], valores["documento"], valores["contato"])
-        except OperacaoNegada:
-            raise
-        except OperacaoRecusada as recusa:
-            return Resposta.pagina(pc.pagina_cliente_formulario(ctx, valores, _erros(recusa)), 400)
-        return Resposta.redirecionar(f"/clientes/{cliente.id}?aviso=cliente")
-
-    def _cliente(self, req: Requisicao, sessao: str, ctx: p.Contexto, cliente_id: str) -> Resposta:
-        cliente = self._s.clientes.obter_cliente(sessao, cliente_id)
-        visoes = (
-            self._s.titulos.consultar_titulos(sessao, FiltroTitulos(cliente_id=cliente.id), ctx.hoje)
-            if ctx.pode(Operacao.CONSULTAR_TITULOS)
-            else []
-        )
-        historico = self._historico(sessao, ctx, f"cliente {cliente.id}")
-        return Resposta.pagina(pc.pagina_cliente(ctx, cliente, visoes, historico, _aviso(req)))
-
-    def _cliente_editar_pagina(self, req: Requisicao, sessao: str, ctx: p.Contexto, cliente_id: str) -> Resposta:
-        self._s.acesso.exigir(sessao, Operacao.MANTER_CLIENTES)
-        cliente = self._s.clientes.obter_cliente(sessao, cliente_id)
-        valores = {"nome": cliente.nome, "documento": f.documento(cliente.documento), "contato": f.contato(cliente.contato)}
-        return Resposta.pagina(pc.pagina_cliente_formulario(ctx, valores, {}, cliente.id))
-
-    def _cliente_editar(self, req: Requisicao, sessao: str, ctx: p.Contexto, cliente_id: str) -> Resposta:
-        valores = _valores(req, "nome", "documento", "contato")
-        try:
-            self._s.clientes.alterar_cliente(sessao, cliente_id, valores["nome"], valores["documento"], valores["contato"])
-        except OperacaoNegada:
-            raise
-        except OperacaoRecusada as recusa:
-            return Resposta.pagina(pc.pagina_cliente_formulario(ctx, valores, _erros(recusa), cliente_id), 400)
-        return Resposta.redirecionar(f"/clientes/{cliente_id}?aviso=cliente-alterado")
 
     # Títulos (Spec 006)
 
