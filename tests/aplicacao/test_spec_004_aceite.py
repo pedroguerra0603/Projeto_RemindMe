@@ -182,7 +182,7 @@ class Spec004(Base):
             self.servico.informar_desconto(self.operador, o.id, Decimal("101"))
         self.assertEqual(self.fotografia(), antes)
 
-    def test_sem_sessao_nada_e_feito(self):
+    def test_RNF_01_sem_sessao_nada_e_feito(self):
         with self.assertRaises(OperacaoRecusada):
             self.servico.criar_orcamento(None, "c1")
         self.assertEqual(self.uow.orcamentos.dados, {})

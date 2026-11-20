@@ -123,7 +123,7 @@ Para aprovar ou recusar, responda a esta mensagem.
   - `test_RB_27_texto_tem_empresa_numero_itens_valores_e_prazo`: um orçamento de 2 × R$ 1.234,50 com 10% de desconto e prazo de 30 dias. As asserções conferem as linhas exatas: "- Revisão: 2 × R$ 1.234,50 = R$ 2.469,00", "Desconto: 10% (R$ 246,90)", "Valor líquido: R$ 2.222,10" e "Prazo para pagamento: 30 dias a partir da aprovação".
   - `test_RB_27_prazo_zero_e_sem_desconto_nem_condicao`: o texto tem "à vista, na aprovação" e não tem as linhas "Desconto" nem "Condição".
   - `test_foco_2_sem_empresa_cadastrada_usa_nossa_empresa`.
-  - `test_nome_fantasia_vazio_usa_razao_social`.
+  - `test_OPEN_54_nome_fantasia_vazio_usa_razao_social`.
 - [ ] **Passo 2: teste** em `test_memoria.py`: `test_mensagens_sao_desfeitas_com_a_transacao`. Uma mensagem registrada dentro de `with uow:` que lança exceção não aparece depois.
 - [ ] **Passo 3: rodar** os módulos novos. Esperado: falha com `ModuleNotFoundError`.
 - [ ] **Passo 4: implementar.**

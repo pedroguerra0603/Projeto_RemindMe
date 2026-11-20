@@ -22,7 +22,7 @@
 1. Banco antigo (versão 3) aberto pela versão nova: a migração 4 precisa criar as tabelas e dar as permissões novas a Dono e Operador, como na matriz inicial. Teste: `test_CA_17_banco_antigo_ganha_tabelas_e_permissoes`.
 2. Estorno de pagamento de conta Cancelada e cancelamento de conta Paga: recusados (como OPEN-18 e E6 da Spec 006). Teste: `test_E5_*`.
 3. Pedido de pagamento repetido pela tela (duplo clique): ignorado pelo `pedido_id` (OPEN-25). Teste web: `test_pagamento_de_conta_enviado_duas_vezes_registra_um`.
-4. Fornecedor e cliente com o mesmo CNPJ: permitido (são cadastros diferentes; a mesma empresa pode comprar e vender). Teste: `test_fornecedor_pode_ter_o_documento_de_um_cliente`.
+4. Fornecedor e cliente com o mesmo CNPJ: permitido (são cadastros diferentes; a mesma empresa pode comprar e vender). Teste: `test_RF_87_fornecedor_pode_ter_o_documento_de_um_cliente`.
 5. Contador abrindo os formulários de cadastro pela URL: negado com 403 (RB-03). Teste no CA-13.
 
 ---

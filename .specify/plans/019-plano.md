@@ -48,8 +48,8 @@
 
 - [ ] **Passo 1: testes de unidade de `motivo_da_senha`** em `tests/aplicacao/test_senhas.py`:
   - `test_OPEN_44_limites_de_tamanho`: 7 caracteres dão "A senha deve ter pelo menos 8 caracteres."; 8 e 256 dão `""`; 257 dão "A senha deve ter no máximo 256 caracteres.".
-  - `test_senha_ausente_usa_a_mensagem_pedida`: `motivo_da_senha("", ausente="Informe a nova senha.") == "Informe a nova senha."`; `motivo_da_senha(None) == "Informe a senha provisória."`.
-  - `test_CifradorScrypt_gera_salt_novo_e_confere`: dois `gerar("x" * 8)` diferem; `conferir` aceita a certa e recusa a errada.
+  - `test_RNF_14_senha_ausente_usa_a_mensagem_pedida`: `motivo_da_senha("", ausente="Informe a nova senha.") == "Informe a nova senha."`; `motivo_da_senha(None) == "Informe a senha provisória."`.
+  - `test_RNF_04_CifradorScrypt_gera_salt_novo_e_confere`: dois `gerar("x" * 8)` diferem; `conferir` aceita a certa e recusa a errada.
 - [ ] **Passo 2: testes de aceite** em `tests/aplicacao/test_spec_019_aceite.py`:
   - Base no molde de `test_spec_002_aceite.Base`: `UnidadeDeTrabalhoEmMemoria`, `RelogioFixo(datetime(2026, 11, 6, 10, 0))`, `CIFRADOR_DE_TESTE`, Administrador criado e um Operador `diego@exemplo.com` com a senha `"senha-antiga-1"`.
   - Um teste por critério, com os valores da spec:
