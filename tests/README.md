@@ -15,6 +15,7 @@ A estratégia está em [`docs/testes.md`](../docs/testes.md). Cada teste leva o 
 | `infraestrutura/` | Unidade das implementações em memória e do SQLite: repositórios, auditoria, unidade de trabalho, relógio |
 | `integracao/` | Serviço com unidade de trabalho, repositórios, auditoria, relógio e clientes; contrato do repositório de títulos, a reaplicar quando houver banco (OPEN-02) |
 | `arquitetura/` | Regra de dependência entre camadas (ADR-001) e uso só da biblioteca padrão |
+| `documentacao/` | Links relativos dos `.md` (arquivo e seção) e identificadores citados nos `.md`, em `src/` e em `tests/` que não existem na baseline (OPEN-66) |
 | `desempenho/` | Limite de tempo de RNF-11 e o script de métricas de `docs/qualidade/eficiencia.md` |
 | `apresentacao/` | Testes de API da interface web, chamando a aplicação WSGI no próprio processo (Spec 017, OPEN-29) |
 | `ponta_a_ponta/` | Fluxo crítico no navegador, com Playwright; opcional e pulado quando o Playwright não está instalado |

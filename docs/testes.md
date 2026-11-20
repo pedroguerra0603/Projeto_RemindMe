@@ -18,6 +18,7 @@
 | Aplicação | Casos de uso: permissão, transação, auditoria | Repositórios em memória; canal e IA simulados |
 | Integração | Persistência, atomicidade, unicidade | Banco de dados de teste |
 | Aceite | Critérios Dado, Quando, Então de cada spec | Sistema completo com simuladores |
+| Documentação | Links relativos dos `.md` e identificadores citados (RF, RNF, RB, UC, OPEN, ADR, DA, DT, spec) existentes na baseline (OPEN-66) | Só os arquivos do repositório |
 
 ## Pirâmide de testes
 
@@ -154,7 +155,7 @@ Uma issue de implementação está pronta quando:
 
 1. o código implementa a spec aprovada, sem comportamento além dela;
 2. todos os critérios de aceite da spec têm teste passando;
-3. a suíte inteira passa;
+3. a suíte inteira passa, inclusive a verificação da documentação (OPEN-66);
 4. spec e código foram alterados no mesmo PR, quando o comportamento mudou;
 5. o PR foi revisado por um colega e fecha a issue com `Closes #N`.
 

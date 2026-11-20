@@ -169,3 +169,4 @@ As divergências entre código, spec e baseline estão em [`qualidade/divergenci
 2. Spec aprovada e implementada: mover seus requisitos da seção 4 para a seção 3, com código e testes.
 3. Teste novo de regra: nomear pelo identificador (`test_RB_nn_...`, `test_CA_nn_...`), para que o elo apareça numa busca por texto.
 4. Para refazer as seções 3 e 4, aplicar o método da seção 1 sobre o mapa, `src/` e `tests/`, e revisar à mão as linhas com ajuste.
+5. A suíte falha quando um `.md` tem link relativo quebrado ou quando um `.md`, `src/` ou `tests/` cita identificador que não existe na baseline (OPEN-66, [`tests/documentacao/`](../tests/documentacao/test_documentacao.py)). Ela não verifica se o identificador citado é o certo: isso continua na revisão.
