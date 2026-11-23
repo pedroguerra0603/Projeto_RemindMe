@@ -281,7 +281,7 @@ classDiagram
 | Requisitos | Classes |
 |---|---|
 | RF-01 | `Cliente` |
-| RF-02, RF-03, RF-65 a RF-67, RF-95, RF-96 | `Usuario`, `Perfil` |
+| RF-02, RF-03, RF-65 a RF-67, RF-95 a RF-98 | `Usuario`, `Perfil` |
 | RF-06 a RF-13 | `Orcamento`, `ItemOrcamento` |
 | RF-14 a RF-18 | `AlcadaDesconto`, `AprovacaoDesconto`, `Orcamento` |
 | RF-19 a RF-27, RF-30, RF-31, RF-68 | `Titulo`, `Pagamento` |

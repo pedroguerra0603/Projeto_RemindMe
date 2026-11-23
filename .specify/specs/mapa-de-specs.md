@@ -38,6 +38,7 @@ Lista ordenada das unidades implementáveis do sistema. O mapa não é implement
 | [017](017-interface-web.md) | Interface web: acesso, clientes, títulos e auditoria | Telas de RF-01 a RF-03, RF-20 a RF-27, RF-30, RF-31, RF-64 a RF-67 | — | RNF-01, RNF-02, RNF-03, RNF-05, RNF-06, RNF-09, RNF-11, RNF-14, RNF-16, RNF-21, RNF-27 | UC-01, UC-02, UC-03, UC-06, UC-12 | — | DA-04, DA-05; ADR-006, ADR-007 | 002, 003, 006, 013; OPEN-12, OPEN-38 (decididas) | **Verificada** |
 | [018](018-contas-a-pagar-e-fornecedores.md) | Contas a pagar, fornecedores e retirada do perfil Cliente | RF-87 a RF-94; RF-69 retirado | RB-31, RB-32, RB-33; RB-26 retirada | RNF-02, RNF-09, RNF-14, RNF-15 | UC-15 | `Fornecedor`, `ContaPagar`, `Pagamento` | DA-01, DA-04; ADR-001, ADR-007 | 002, 003, 006, 017; OPEN-56, OPEN-57 (decididas) | **Verificada** |
 | [019](019-troca-da-propria-senha.md) | Troca da própria senha | RF-95, RF-96 | — | RNF-01, RNF-04, RNF-09, RNF-14 | UC-16 | `Usuario` | DA-02, DA-03, DA-04; ADR-004, ADR-006, ADR-007 | 001, 002, 017; OPEN-58 (decidida) | **Verificada** |
+| [020](020-redefinicao-e-troca-obrigatoria-de-senha.md) | Redefinição de senha pelo Administrador e troca obrigatória da senha provisória | RF-97, RF-98 | — | RNF-01, RNF-02, RNF-03, RNF-04, RNF-09, RNF-14 | UC-02, UC-16 | `Usuario` | DA-02, DA-03, DA-04; ADR-004, ADR-006, ADR-007 | 001, 002, 017, 019; OPEN-59, OPEN-60 (decididas) | **Aprovada** |
 
 RNF-07 (disponibilidade) e RNF-08 (backup) eram operacionais e não pertenciam a nenhuma spec de comportamento. Foram retirados em 2026-11-19 (OPEN-63): a execução é local (OPEN-12). A cópia manual do banco está em [`execucao.md`](../../docs/execucao.md).
 
@@ -52,6 +53,7 @@ RNF-07 (disponibilidade) e RNF-08 (backup) eram operacionais e não pertenciam a
 7. **011 e 012** dependem dos pagamentos de 006.
 8. **013 a 016** consomem o que as anteriores produzem.
 9. **017** traz a primeira interface, sobre o que 001, 002, 003, 006 e 013 já verificam. As specs seguintes trazem as próprias telas.
+10. **020** completa a troca de senha da 019 com a redefinição pelo Administrador e a troca obrigatória da senha provisória (OPEN-59, OPEN-60).
 
 ## Primeira spec para implementação
 
