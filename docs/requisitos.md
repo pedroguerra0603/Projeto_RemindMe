@@ -208,6 +208,7 @@ Incluídos em 2026-10-31 (OPEN-56). Spec 018.
 | RNF-06 | THE SYSTEM SHALL impedir a alteração e a exclusão de registros de auditoria por qualquer perfil. | Teste de tentativa de alteração |
 | RNF-22 | THE SYSTEM SHALL enviar ao serviço de IA apenas a descrição do lançamento ou o texto da mensagem, sem nome, documento ou contato do cliente. | Inspeção do payload enviado |
 | RNF-25 | THE SYSTEM SHALL não revelar, na resposta a uma mensagem de um cliente, dados de títulos de outro cliente. Reescrito em 2026-10-31: o cliente não tem perfil de acesso (OPEN-57). | Teste de acesso a título de outro cliente |
+| RNF-27 | THE SYSTEM SHALL, depois da entrada, levar o usuário somente a uma página do próprio sistema; endereço de outro site é ignorado e leva ao painel. Criado em 2026-11-23 (OPEN-67). | Teste com endereços de outro site no parâmetro de volta |
 
 ### 2.2 Confiabilidade
 

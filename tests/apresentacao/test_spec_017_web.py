@@ -389,7 +389,7 @@ class AdministracaoPelaInterface(Base):
         )
         self.assertEqual((dentro.status, dentro.destino), (303, "/titulos?situacao=vencido"))
 
-    def test_OPEN_67_volta_depois_da_entrada_so_aceita_endereco_do_proprio_site(self):
+    def test_RNF_27_volta_depois_da_entrada_so_aceita_endereco_do_proprio_site(self):
         for volta in ("https://golpe.example/", "//golpe.example/", "/\\golpe.example", "painel", "/sair"):
             with self.subTest(volta=volta):
                 navegador = ClienteWeb(self.sistema.web)

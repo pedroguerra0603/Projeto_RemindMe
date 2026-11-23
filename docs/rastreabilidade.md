@@ -2,7 +2,7 @@
 
 Issue #40. Este documento liga os requisitos aos drivers arquiteturais, às decisões técnicas, à implementação e aos testes. Ele mostra, para cada requisito, de onde ele vem e onde está a evidência de que foi atendido.
 
-- **Data:** 2026-11-07; atualizado em 2026-11-19 com a retirada de RNF-07 e RNF-08 e a reescrita de RNF-05 (OPEN-63), e com os caminhos da apresentação depois da divisão por módulo (OPEN-65); atualizado em 2026-11-20 com a Spec 010.
+- **Data:** 2026-11-07; atualizado em 2026-11-19 com a retirada de RNF-07 e RNF-08 e a reescrita de RNF-05 (OPEN-63), e com os caminhos da apresentação depois da divisão por módulo (OPEN-65); atualizado em 2026-11-20 com a Spec 010; atualizado em 2026-11-23 com o RNF-27 (OPEN-67).
 - **Base:** branch `renan-rigan/youthful-thompson-w7gxxh`, com a Spec 010 verificada em 2026-11-20. A suíte tem 645 testes, todos passando, com 7 pulados (4 de navegador sem o Playwright, opcional, e 3 marcadores de testes ainda não escritos).
 - **Fontes:** [requisitos](requisitos.md), [arquitetura](arquitetura.md), [ADRs](adr/README.md), [mapa de specs](../.specify/specs/mapa-de-specs.md), as [specs](../.specify/specs/) verificadas, [`src/`](../src/README.md), [`tests/`](../tests/README.md).
 - **Complementa:** a [matriz de critérios de aceite](qualidade/matriz-criterios-de-aceite.md), que parte de cada critério da Spec 006 e chega ao teste, e a seção 8 de cada spec, que registra o teste de cada critério. Este documento parte do requisito e passa pelo driver e pela decisão.
@@ -110,6 +110,7 @@ Requisitos com situação Implementado ou Parcial. "Specs" lista só as verifica
 | RNF-05 | 002, 017 | `inicializacao.py` | `test_*RNF_05*` (2); testes da Spec 002, Spec 017 | Implementado |
 | RNF-06 | 001, 013, 017 | `aplicacao/portas.py`; `infraestrutura/sqlite.py` | `test_*RNF_06*` (3); testes da Spec 001, Spec 013, Spec 017 | Implementado |
 | RNF-25 | 002 | — | `test_*RNF_25*` (2); testes da Spec 002 | Parcial. A recusa por perfil não revela dados do título; falta a parte da Spec 009 (resposta a mensagens de cliente) |
+| RNF-27 | 017 | `apresentacao/web/requisicao.py` | `test_*RNF_27*` (1); testes da Spec 017 | Implementado. Criado em 2026-11-23 (OPEN-67) para um comportamento que a Spec 017 já tinha |
 | RNF-09 | 001, 005, 006, 010, 017, 018, 019 | `aplicacao/portas.py`; `aplicacao/servico_acesso.py`; `aplicacao/servico_obrigacoes.py` … | `test_*RNF_09*` (19); testes da Spec 001, Spec 005, Spec 006, Spec 010, Spec 017, Spec 018, Spec 019 | Parcial. Falta a parte da Spec 015 |
 | RNF-11 | 006, 017 | — | `test_*RNF_11*` (3); testes da Spec 006, Spec 017 | Parcial. Medido para cadastro, consulta, pagamento e cancelamento; falta a parte da Spec 012 |
 | RNF-14 | 003, 017, 018, 019 | `apresentacao/web/requisicao.py`; `dominio/cliente.py`; `dominio/empresa.py` … | `test_*RNF_14*` (10); testes da Spec 003, Spec 017, Spec 018, Spec 019 | Implementado |
@@ -159,8 +160,8 @@ Todo requisito ativo aparece em ao menos uma spec do mapa. RNF-07 e RNF-08, que 
 |---|---|---|---|---|
 | RF | 92 | 54 | 4 | 34 |
 | RB | 31 | 13 | 6 | 12 |
-| RNF | 23 | 9 | 6 | 8 |
-| **Total** | **146** | **76** | **16** | **54** |
+| RNF | 24 | 10 | 6 | 8 |
+| **Total** | **147** | **77** | **16** | **54** |
 | Drivers | 10 | 4 (DA-02, DA-03, DA-04, DA-09) | 3 (DA-01, DA-05, DA-07) | 3 (DA-06, DA-08, DA-10) | — |
 
 DA-03 conta como implementado; o teste de concorrência real foi escrito em 2026-11-20 (lacuna 5).
