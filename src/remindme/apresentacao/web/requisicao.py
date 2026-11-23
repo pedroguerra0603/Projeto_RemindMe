@@ -170,7 +170,8 @@ def _sessao_encerrada(req: Requisicao) -> Resposta:
 
 
 def _volta(endereco: str) -> str:
-    """Só aceita voltar para uma página do próprio RemindMe, para a entrada não servir de redirecionamento a outro site."""
+    """RNF-27: só aceita voltar para uma página do próprio RemindMe, para a entrada não servir de redirecionamento a
+    outro site."""
     if not re.fullmatch(r"/[A-Za-z0-9][A-Za-z0-9/_.=&%?-]*", endereco or "") or endereco.startswith("/sair"):
         return ""
     return endereco

@@ -17,7 +17,7 @@
 |---|---|
 | RF | Telas de RF-01, RF-02, RF-03, RF-20 a RF-23, RF-25 a RF-27, RF-30, RF-31, RF-64, RF-65, RF-66, RF-67; disparo automático de RF-24 |
 | RB | Nenhuma regra nova: todas continuam no domínio (RB-01, RB-02, RB-03, RB-21, RB-22, RB-23, RB-30) |
-| RNF | RNF-01, RNF-02, RNF-03, RNF-05, RNF-06, RNF-09, RNF-11, RNF-14, RNF-15 e RNF-17 (parte dos títulos), RNF-16, RNF-21, RNF-23 |
+| RNF | RNF-01, RNF-02, RNF-03, RNF-05, RNF-06, RNF-09, RNF-11, RNF-14, RNF-15 e RNF-17 (parte dos títulos), RNF-16, RNF-21, RNF-23; RNF-27, criado em 2026-11-23 (OPEN-67) para o comportamento da volta depois da entrada, que esta spec já implementava |
 | UC | UC-01, UC-02, UC-03, UC-06, UC-12 |
 | Entidades | As das Specs 001, 002, 003 e 006 |
 | Drivers e ADRs | DA-02, DA-03, DA-04, DA-05, DA-07; DT-06, DT-07; ADR-001, ADR-004, ADR-005, ADR-006, ADR-007 |

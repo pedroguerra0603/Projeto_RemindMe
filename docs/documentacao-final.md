@@ -42,7 +42,7 @@ Fonte: [`requisitos.md`](requisitos.md). RF e RNF em EARS; RB em forma declarati
 | Tipo | Identificadores | Retirados | Ativos | Grupos |
 |---|---|---|---|---|
 | RF | RF-01 a RF-96 | RF-60, RF-63, RF-69, RF-71 | 92 | Acesso; orçamentos; descontos e alçadas; títulos e pagamentos; cobrança; renegociação; obrigações; lançamentos e IA; apuração; auditoria; importação e exportação; contas a pagar |
-| RNF | RNF-01 a RNF-26 | RNF-07, RNF-08, RNF-10 | 23 | Segurança e privacidade; confiabilidade; desempenho; usabilidade; manutenibilidade e evolução |
+| RNF | RNF-01 a RNF-27 | RNF-07, RNF-08, RNF-10 | 24 | Segurança e privacidade; confiabilidade; desempenho; usabilidade; manutenibilidade e evolução |
 | RB | RB-01 a RB-33 | RB-26 (RB-25 não foi usado) | 31 | Estados, valores, alçadas, auditoria, IA, régua, obrigações e contas a pagar |
 
 Os requisitos que mais pesam na arquitetura viraram drivers (seção 4). Os valores de RNF-07, RNF-08 e RNF-24 foram confirmados em 2026-10-23 (OPEN-09). Depois, RNF-07 e RNF-08 foram retirados e RNF-05 foi reescrito para a execução local (OPEN-63, 2026-11-19).
