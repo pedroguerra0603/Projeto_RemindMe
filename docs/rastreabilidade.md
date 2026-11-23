@@ -2,7 +2,7 @@
 
 Issue #40. Este documento liga os requisitos aos drivers arquiteturais, às decisões técnicas, à implementação e aos testes. Ele mostra, para cada requisito, de onde ele vem e onde está a evidência de que foi atendido.
 
-- **Data:** 2026-11-07; atualizado em 2026-11-19 com a retirada de RNF-07 e RNF-08 e a reescrita de RNF-05 (OPEN-63), e com os caminhos da apresentação depois da divisão por módulo (OPEN-65); atualizado em 2026-11-20 com a Spec 010; atualizado em 2026-11-23 com o RNF-27 (OPEN-67).
+- **Data:** 2026-11-07; atualizado em 2026-11-19 com a retirada de RNF-07 e RNF-08 e a reescrita de RNF-05 (OPEN-63), e com os caminhos da apresentação depois da divisão por módulo (OPEN-65); atualizado em 2026-11-20 com a Spec 010; atualizado em 2026-11-23 com o RNF-27 (OPEN-67) e com RF-97 e RF-98 (OPEN-59, OPEN-60, Spec 020 aprovada).
 - **Base:** branch `renan-rigan/youthful-thompson-w7gxxh`, com a Spec 010 verificada em 2026-11-20. A suíte tem 645 testes, todos passando, com 7 pulados (4 de navegador sem o Playwright, opcional, e 3 marcadores de testes ainda não escritos).
 - **Fontes:** [requisitos](requisitos.md), [arquitetura](arquitetura.md), [ADRs](adr/README.md), [mapa de specs](../.specify/specs/mapa-de-specs.md), as [specs](../.specify/specs/) verificadas, [`src/`](../src/README.md), [`tests/`](../tests/README.md).
 - **Complementa:** a [matriz de critérios de aceite](qualidade/matriz-criterios-de-aceite.md), que parte de cada critério da Spec 006 e chega ao teste, e a seção 8 de cada spec, que registra o teste de cada critério. Este documento parte do requisito e passa pelo driver e pela decisão.
@@ -153,15 +153,16 @@ Todo requisito ativo aparece em ao menos uma spec do mapa. RNF-07 e RNF-08, que 
 | 014 | RNF-18, RNF-20, RB-07 e RB-16 (configuração), RB-08, RB-28 | A escrever |
 | 015 | RF-83, RF-84, RF-85, RB-19 | A escrever |
 | 016 | RNF-17, RB-13 (parte do painel por perfil) | A escrever |
+| 020 | RF-97, RF-98 | Aprovada |
 
 ### Cobertura
 
 | Tipo | Ativos | Implementados | Parciais | Sem implementação |
 |---|---|---|---|---|
-| RF | 92 | 54 | 4 | 34 |
+| RF | 94 | 54 | 4 | 36 |
 | RB | 31 | 13 | 6 | 12 |
 | RNF | 24 | 10 | 6 | 8 |
-| **Total** | **147** | **77** | **16** | **54** |
+| **Total** | **149** | **77** | **16** | **56** |
 | Drivers | 10 | 4 (DA-02, DA-03, DA-04, DA-09) | 3 (DA-01, DA-05, DA-07) | 3 (DA-06, DA-08, DA-10) | — |
 
 DA-03 conta como implementado; o teste de concorrência real foi escrito em 2026-11-20 (lacuna 5).

@@ -48,6 +48,8 @@ A data de referência do sistema ("hoje") é a de America/Sao_Paulo, e os horár
 | RF-67 | IF um usuário solicitar uma operação que seu perfil não permite, THEN THE SYSTEM SHALL negar a operação e informar o motivo. | UC-01 | RB-03 |
 | RF-95 | WHEN um usuário autenticado submeter a troca da própria senha com a senha atual correta e uma nova senha válida, igual à confirmação e diferente da atual, THE SYSTEM SHALL substituir a senha guardada pela nova, manter a sessão em uso e encerrar as demais sessões desse usuário. | UC-16 | |
 | RF-96 | IF a senha atual informada na troca da própria senha estiver incorreta, THEN THE SYSTEM SHALL recusar a troca sem alterar a senha nem as sessões do usuário. | UC-16 | |
+| RF-97 | WHEN o Administrador redefinir a senha de outro usuário com uma senha provisória válida, THE SYSTEM SHALL substituir a senha guardada, marcá-la como provisória e encerrar todas as sessões desse usuário. Criado em 2026-11-23 (OPEN-59). | UC-02 | |
+| RF-98 | WHILE a senha de um usuário for provisória, THE SYSTEM SHALL recusar toda operação dele, exceto trocar a própria senha, sair e consultar a sessão, e levá-lo à troca da senha. Criado em 2026-11-23 (OPEN-60). | UC-16 | |
 
 ### 1.2 Orçamentos
 
