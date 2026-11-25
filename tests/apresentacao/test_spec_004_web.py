@@ -103,3 +103,21 @@ class OrcamentosPelaInterface(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HistoricoNoFormatoBrasileiro(unittest.TestCase):
+    def test_RF_05_historico_mostra_item_e_decisao_do_desconto_no_formato_brasileiro(self):
+        """A auditoria guarda o valor canônico; a tela o mostra como no Brasil, como já fazia com valor e desconto."""
+        from remindme.apresentacao.web.paginas_auditoria import _valor_exibido
+
+        self.assertEqual(_valor_exibido("item", "Revisão completa: 3 × 150.00"), "Revisão completa: 3 × R$ 150,00")
+        self.assertEqual(_valor_exibido("item", "Horas: 1.5 × 1000"), "Horas: 1,5 × R$ 1.000,00")
+        self.assertEqual(_valor_exibido("item", "Horas: 1.250 × 10.00"), "Horas: 1,25 × R$ 10,00")  # str(Decimal), não milhar
+        self.assertEqual(_valor_exibido("valor", "1800.00"), "R$ 1.800,00")
+        self.assertEqual(_valor_exibido("desconto", "7.50"), "7,5%")
+        self.assertEqual(
+            _valor_exibido("decisão do desconto", "aprovado 12.00% de 20.00% solicitados"), "aprovado 12% de 20% solicitados"
+        )
+        self.assertEqual(_valor_exibido("decisão do desconto", "aprovado 7.50% de 20.00% solicitados"), "aprovado 7,5% de 20% solicitados")
+        self.assertEqual(_valor_exibido("decisão do desconto", "rejeitado"), "rejeitado")
+        self.assertEqual(_valor_exibido("item", "texto sem o formato esperado"), "texto sem o formato esperado")

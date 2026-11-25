@@ -1,5 +1,7 @@
 """Consulta de auditoria e histórico de cada registro (Specs 013 e 017). Só monta o que os serviços devolvem (INV-1)."""
 
+import re
+from decimal import Decimal, InvalidOperation
 from typing import Optional, Tuple
 
 from remindme.apresentacao.web import formatos as f
@@ -17,6 +19,10 @@ from remindme.apresentacao.web.paginas import (
     tabela,
 )
 from remindme.dominio.operacoes import Operacao
+
+# Textos compostos que a auditoria guarda no formato canônico (servico_orcamentos): exibidos no formato brasileiro.
+_ITEM = re.compile(r"(.*): (\S+) × (\S+)")
+_DECISAO = re.compile(r"aprovado (\S+)% de (\S+)% solicitados")
 
 
 def _descrever(registro: str, administra: bool = False) -> Tuple[str, Optional[str]]:
@@ -42,15 +48,36 @@ def _descrever(registro: str, administra: bool = False) -> Tuple[str, Optional[s
     return registro, "/permissoes" if registro == "permissões" and administra else None
 
 
+def _canonico(texto: str) -> Optional[Decimal]:
+    """Lê o número como a auditoria o guarda (`str` de `Decimal`: "1800.00", "1.250"), e não como o usuário digita."""
+    try:
+        numero = Decimal(texto)
+    except InvalidOperation:
+        return None
+    return numero if numero.is_finite() else None
+
+
 def _valor_exibido(campo_: Optional[str], texto: Optional[str]) -> str:
     if texto is None:
         return "—"
     if campo_ == "valor":
-        lido = f.ler_valor(texto)
+        lido = _canonico(texto)
         return f.moeda(lido) if lido is not None else texto
     if campo_ in ("desconto", "desconto solicitado"):
-        lido = f.ler_valor(texto)
+        lido = _canonico(texto)
         return f.percentual(lido) if lido is not None else texto
+    if campo_ == "item":
+        item = _ITEM.fullmatch(texto)
+        quantidade, unitario = (_canonico(item.group(2)), _canonico(item.group(3))) if item else (None, None)
+        if quantidade is not None and unitario is not None:
+            return f"{item.group(1)}: {f.numero(quantidade)} × {f.moeda(unitario)}"
+        return texto
+    if campo_ == "decisão do desconto":
+        decisao = _DECISAO.fullmatch(texto)
+        aprovado, solicitado = (_canonico(decisao.group(1)), _canonico(decisao.group(2))) if decisao else (None, None)
+        if aprovado is not None and solicitado is not None:
+            return f"aprovado {f.percentual(aprovado)} de {f.percentual(solicitado)} solicitados"
+        return texto
     if campo_ == "documento":
         return f.documento(texto)
     if campo_ == "contato":
