@@ -124,7 +124,7 @@ Fonte: [mapa de specs](../.specify/specs/mapa-de-specs.md), aprovado em 2026-11-
 | Aprovada, a implementar | [020](../.specify/specs/020-redefinicao-e-troca-obrigatoria-de-senha.md) redefinição de senha pelo Administrador e troca obrigatória da senha provisória |
 | A escrever | 007 e 008 régua de cobrança; 009 renegociação; 011 lançamentos e IA; 012 apuração; 014 configuração de regras; 015 CSV; 016 painel por perfil |
 
-Tecnologia adotada (OPEN-01): Python 3.11 ou mais recente, somente a biblioteca padrão, com interface web sobre WSGI (ADR-006), banco SQLite (ADR-007) e testes com `unittest`. A suíte tem 648 testes, todos passando, com 7 pulados: 4 de navegador, que dependem do Playwright, opcional (OPEN-29), e 3 marcadores de testes ainda não escritos. Para ver a aplicação: `python3 iniciar.py demonstracao`. Como executar: [`execucao.md`](execucao.md). Estratégia de testes: [`testes.md`](testes.md). Avaliação de qualidade: [`qualidade/`](qualidade/README.md).
+Tecnologia adotada (OPEN-01): Python 3.11 ou mais recente, somente a biblioteca padrão, com interface web sobre WSGI (ADR-006), banco SQLite (ADR-007) e testes com `unittest`. A suíte tem 649 testes, todos passando, com 7 pulados: 4 de navegador, que dependem do Playwright, opcional (OPEN-29), e 3 marcadores de testes ainda não escritos. Para ver a aplicação: `python3 iniciar.py demonstracao`. Como executar: [`execucao.md`](execucao.md). Estratégia de testes: [`testes.md`](testes.md). Avaliação de qualidade: [`qualidade/`](qualidade/README.md).
 
 ## 6. Decisões em aberto
 

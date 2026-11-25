@@ -47,6 +47,15 @@ FORNECEDORES = (
 
 
 def preparar_demonstracao(sistema, senha: str) -> List[Tuple[str, str, str]]:
+    """Prepara tudo com um só instante, para a data não mudar no meio (por exemplo, na virada da meia-noite)."""
+    congelar = getattr(sistema.relogio, "congelado", None)
+    if congelar is None:
+        return _preparar(sistema, senha)
+    with congelar():
+        return _preparar(sistema, senha)
+
+
+def _preparar(sistema, senha: str) -> List[Tuple[str, str, str]]:
     servicos = sistema.servicos
     hoje = data_local(sistema.relogio.agora())
     acesso = servicos.acesso

@@ -37,7 +37,7 @@ from remindme.dominio.erros import OperacaoRecusada
 from remindme.dominio.usuario import Perfil
 from remindme.entradas.agendador import AgendadorDeVencimentos
 from remindme.infraestrutura.canal import CanalSimulado
-from remindme.infraestrutura.relogio import RelogioDoSistema
+from remindme.infraestrutura.relogio import RelogioCongelavel, RelogioDoSistema
 from remindme.infraestrutura.sqlite import UnidadeDeTrabalhoSQLite, preparar_banco
 
 BANCO_PADRAO = "remindme.db"
@@ -67,7 +67,7 @@ def montar(
 ) -> Sistema:
     preparar_banco(caminho_banco)
     uow = UnidadeDeTrabalhoSQLite(caminho_banco)
-    relogio = relogio or RelogioDoSistema()
+    relogio = RelogioCongelavel(relogio or RelogioDoSistema())
     erros = erros or RegistroErrosNoLog()
     autorizacao = Autorizacao(relogio)
     canal = canal or CanalSimulado()

@@ -440,6 +440,24 @@ class Demonstracao(unittest.TestCase):
             self.assertEqual(estados, {EstadoTitulo.ABERTO, EstadoTitulo.VENCIDO, EstadoTitulo.BAIXADO, EstadoTitulo.CANCELADO})
             self.assertEqual(ClienteWeb(sistema.web).entrar("carla@demo.example", SENHA).status, 303)
 
+    def test_CA_19_A8_demonstracao_preparada_na_virada_da_meia_noite_nao_falha(self):
+        """A preparação inteira usa um só instante: o relógio que anda durante ela não pode trocar o dia no meio."""
+
+        class RelogioQueAnda:
+            def __init__(self):
+                self.momento = datetime(2026, 11, 25, 2, 59, 58, tzinfo=timezone.utc)  # 23h59min58s em São Paulo
+
+            def agora(self):
+                self.momento += timedelta(milliseconds=500)
+                return self.momento
+
+        relogio = RelogioQueAnda()
+        with tempfile.TemporaryDirectory() as pasta:
+            sistema = montar(str(Path(pasta).joinpath("demo.db")), relogio, CIFRADOR_DE_TESTE, RegistroErrosEmMemoria())
+            preparar_demonstracao(sistema, SENHA)
+            self.assertLess(sistema.relogio.agora(), sistema.relogio.agora())  # depois da preparação, o relógio volta a andar
+            self.assertEqual(ClienteWeb(sistema.web).entrar("carla@demo.example", SENHA).status, 303)
+
 
 class ErrosDaInterface(Base):
     def test_CA_20_RNF_21_erro_inesperado_mostra_a_correlacao_e_fica_registrado(self):
