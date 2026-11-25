@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-03, RB-08, RB-09, RB-12, RB-14, RB-27 |
 | **Requisitos** | RF-51, RF-52, RF-58, RF-59, RF-78 a RF-81, RNF-22, RNF-24, RNF-26 |
 
+## Situação da implementação
+
+**Planejado.** Spec 011, ainda não escrita.
+
 ## Pré-condições
 
 - O plano de contas tem ao menos uma categoria de receita e uma de despesa.

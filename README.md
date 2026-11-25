@@ -31,7 +31,7 @@ As decisões que ainda dependem da equipe estão em [questões em aberto](.speci
 
 ## Documentação
 
-Toda a documentação está em [`/docs`](docs/README.md). O índice indica a ordem de leitura.
+Toda a documentação está em [`/docs`](docs/README.md). Para avaliar, comece pelo [roteiro de 20 minutos](docs/README.md#roteiro-para-avaliação-cerca-de-20-minutos).
 
 ## Como executar
 

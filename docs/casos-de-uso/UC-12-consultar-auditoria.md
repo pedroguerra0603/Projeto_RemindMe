@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-01, RB-30 |
 | **Requisitos** | RF-04, RF-05, RF-61, RF-62, RF-64, RNF-06 |
 
+## Situação da implementação
+
+**Implementado.** Specs 013 e 017. O histórico de um registro (A1) existe para orçamento, título, cliente, conta a pagar, obrigação e usuário; o de lançamento depende da Spec 011.
+
 ## Pré-condições
 
 - O usuário está autenticado com perfil Dono, Contador ou Administrador.
@@ -27,7 +31,7 @@
 ## Exceções
 
 - **E1 — Sem resultados.** No passo 2, o sistema informa que não há registros para os filtros.
-- **E2 — Perfil sem permissão.** O sistema nega a consulta ao Operador Financeiro e ao Cliente (RNF-02).
+- **E2 — Perfil sem permissão.** O sistema nega a consulta ao Operador Financeiro (RNF-02). O cliente da empresa não é usuário do sistema (OPEN-57).
 - **E3 — Tentativa de alterar registro de auditoria.** O sistema nega a operação para qualquer perfil (RB-30).
 
 ## Pós-condições

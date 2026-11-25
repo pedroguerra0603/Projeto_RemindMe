@@ -11,6 +11,10 @@
 
 Incluído em 2026-11-06 (OPEN-58). Spec 019.
 
+## Situação da implementação
+
+**Implementado, exceto A2.** Spec 019. A troca obrigatória da senha provisória (A2) é da Spec 020, aprovada e ainda não implementada.
+
 ## Pré-condições
 
 - O usuário está autenticado (UC-01) e ativo.

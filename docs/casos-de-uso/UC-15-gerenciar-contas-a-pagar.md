@@ -11,6 +11,10 @@
 
 Incluído em 2026-10-31 (OPEN-56). Spec 018.
 
+## Situação da implementação
+
+**Implementado.** Spec 018.
+
 ## Pré-condições
 
 - O usuário está autenticado com perfil que tem a permissão da operação (Spec 002).

@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-03, RB-06, RB-12 |
 | **Requisitos** | RF-53 a RF-57, RF-82, RNF-11 |
 
+## Situação da implementação
+
+**Planejado.** Spec 012, ainda não escrita.
+
 ## Pré-condições
 
 - O usuário está autenticado com perfil Dono, Operador Financeiro ou Contador.

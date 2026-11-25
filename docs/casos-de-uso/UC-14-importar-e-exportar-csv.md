@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-03, RB-19 |
 | **Requisitos** | RF-83, RF-84, RF-85, RNF-09 |
 
+## Situação da implementação
+
+**Planejado.** Spec 015, ainda não escrita.
+
 ## Pré-condições
 
 - O usuário está autenticado.

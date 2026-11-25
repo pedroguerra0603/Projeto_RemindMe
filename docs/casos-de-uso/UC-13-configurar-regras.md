@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-07, RB-08, RB-15, RB-16, RB-18, RB-28 |
 | **Requisitos** | RF-03, RF-14, RF-32, RF-36, RNF-18, RNF-19, RNF-20 |
 
+## Situação da implementação
+
+**Planejado.** Spec 014, ainda não escrita. Hoje as alçadas (RB-15) e a antecedência do aviso de obrigação são fixas no domínio; as permissões já são configuráveis pelo UC-02.
+
 ## Pré-condições
 
 - O Administrador está autenticado.

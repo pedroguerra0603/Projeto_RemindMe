@@ -13,16 +13,18 @@ stateDiagram-v2
     Aberto --> Vencido : vencimento passa
     Aberto --> Baixado : saldo zero
     Vencido --> Baixado : saldo zero
-    Vencido --> EmRenegociacao : promessa válida
-    EmRenegociacao --> Aberto : aprovada
-    EmRenegociacao --> Vencido : recusada
-    EmRenegociacao --> Baixado : saldo zero
+    Vencido --> EmRenegociacao : promessa válida «planejado»
+    EmRenegociacao --> Aberto : aprovada «planejado»
+    EmRenegociacao --> Vencido : recusada «planejado»
+    EmRenegociacao --> Baixado : saldo zero «planejado»
     Baixado --> Aberto : estorno, a vencer
     Baixado --> Vencido : estorno, já vencido
     Aberto --> Cancelado : cancelamento
     Vencido --> Cancelado : cancelamento
     Cancelado --> [*]
-    EmRenegociacao : Em Renegociação
+    EmRenegociacao : Em Renegociação «planejado»
+    classDef planejado fill:#f4f4f4,stroke:#8a8a8a,stroke-dasharray:6 4,color:#555
+    class EmRenegociacao planejado
 ```
 
 | De | Para | Gatilho | Requisito |
@@ -37,10 +39,12 @@ stateDiagram-v2
 | Baixado | Vencido | Estorno pelo Dono, com vencimento passado | RF-30 |
 | Aberto, Vencido | Cancelado | Cancelamento com motivo | RF-31 |
 
+O estado Em Renegociação e as quatro transições que entram nele ou saem dele são **planejados**: dependem da renegociação (Spec 009, UC-07) e ainda não estão implementados. No diagrama, aparecem tracejados e marcados com «planejado». As demais transições estão implementadas em `src/remindme/dominio/titulo.py` e verificadas pela Spec 006.
+
 Cláusulas de estado derivadas:
 
-- WHILE o título estiver Vencido, o sistema cobra pela régua (RF-34).
-- WHILE o título estiver Em Renegociação, o sistema suspende a régua (RF-70).
+- WHILE o título estiver Vencido, o sistema cobra pela régua (RF-34). Planejado: Specs 007 e 008.
+- WHILE o título estiver Em Renegociação, o sistema suspende a régua (RF-70). Planejado: Spec 009.
 - IF for solicitado pagamento em título Baixado ou Cancelado, THEN o sistema recusa (RB-21).
 
 ## Orçamento

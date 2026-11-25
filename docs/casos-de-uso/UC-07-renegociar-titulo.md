@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-11, RB-17, RB-20, RB-27, RB-28 |
 | **Requisitos** | RF-28, RF-29, RF-72 a RF-76, RNF-22, RNF-24 |
 
+## Situação da implementação
+
+**Planejado.** Spec 009, ainda não escrita. Depende da régua de cobrança (Specs 007 e 008) e do serviço de IA (ADR-003).
+
 ## Pré-condições
 
 - O título pertence ao cliente e está Vencido.

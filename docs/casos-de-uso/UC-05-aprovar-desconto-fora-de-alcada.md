@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-01, RB-15 |
 | **Requisitos** | RF-14 a RF-18, RNF-03 |
 
+## Situação da implementação
+
+**Implementado.** Spec 004. O Administrador também decide (OPEN-53).
+
 ## Pré-condições
 
 - O orçamento está Pendente de Alçada.
