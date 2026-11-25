@@ -96,8 +96,8 @@ Execução de 2026-10-09: `python3 -m unittest discover -s tests -t .` → `Ran 
 | Repetir confiabilidade, eficiência e integração com banco real | OPEN-02, Spec 001 |
 | Registrar erro não tratado com identificador de correlação (RNF-21) | Spec 001 |
 | Executar os cenários de usabilidade CU-01 a CU-08 | Primeira spec com interface (OPEN-01) |
-| Conferir o primeiro resultado da suíte em Windows e macOS no fluxo `testes.yml` | Execução do fluxo no GitHub (#82) |
-| Exigir a verificação `testes` para o merge na `main` | Configuração do repositório, por quem o administra (#82, OPEN-28) |
+| Conferir o primeiro resultado da suíte em Windows e macOS no fluxo `testes.yml` | **Feito**: as 9 combinações passam ([portabilidade](portabilidade.md), seção 6) |
+| Exigir a verificação `testes` para o merge na `main` | **Em andamento**: a `main` está protegida; conferir nas configurações do repositório que a regra exige as verificações `testes` (#82, OPEN-28) |
 | Decidir o limite de valor (D-06), a chave de idempotência e o fuso de referência | OPEN-24, OPEN-25, OPEN-26 |
 | Negar por padrão cadastro e pagamento a Contador e Cliente (G-01) | Spec 002 |
 | Decidir pytest e cobertura; ferramentas de API e de navegador | OPEN-27, OPEN-29 |

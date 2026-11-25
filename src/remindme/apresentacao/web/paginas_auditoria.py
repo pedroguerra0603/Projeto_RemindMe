@@ -16,9 +16,11 @@ from remindme.apresentacao.web.paginas import (
     selecao,
     tabela,
 )
+from remindme.dominio.operacoes import Operacao
 
 
-def _descrever(registro: str) -> Tuple[str, Optional[str]]:
+def _descrever(registro: str, administra: bool = False) -> Tuple[str, Optional[str]]:
+    """Descrição e link do registro afetado. Usuários e permissões só ganham link para quem pode abrir essas páginas (RF-65)."""
     partes = registro.split(", ")
     tipo, _, chave = partes[0].partition(" ")
     if tipo == "titulo":
@@ -34,10 +36,10 @@ def _descrever(registro: str) -> Tuple[str, Optional[str]]:
     if tipo == "conta_pagar":
         return ("Pagamento da conta " if len(partes) > 1 else "Conta a pagar ") + chave[:8], f"/contas-a-pagar/{chave}"
     if tipo == "usuario":
-        return "Usuário " + chave[:8], f"/usuarios/{chave}"
+        return "Usuário " + chave[:8], f"/usuarios/{chave}" if administra else None
     if tipo == "obrigacao":
         return ("Evidência da obrigação " if len(partes) > 1 else "Obrigação ") + chave[:8], f"/obrigacoes/{chave}"
-    return registro, "/permissoes" if registro == "permissões" else None
+    return registro, "/permissoes" if registro == "permissões" and administra else None
 
 
 def _valor_exibido(campo_: Optional[str], texto: Optional[str]) -> str:
@@ -96,8 +98,9 @@ def pagina_auditoria(ctx: Contexto, registros: list, opcoes, valores: Valores, e
         ate=campo("fim", "Até", valores, erros, tipo="date", obrigatorio=False),
     )
     linhas = []
+    administra = ctx.pode(Operacao.ADMINISTRAR_USUARIOS)
     for r in registros:
-        descricao, link = _descrever(r.registro_afetado)
+        descricao, link = _descrever(r.registro_afetado, administra)
         afetado = h('<a href="{l}">{d}</a>', l=link, d=descricao) if link else e(descricao)
         linhas.append(
             h(

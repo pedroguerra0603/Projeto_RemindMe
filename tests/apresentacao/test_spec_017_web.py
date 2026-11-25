@@ -106,6 +106,19 @@ class AcessoPelaInterface(Base):
                 for href in sem:
                     self.assertNotIn(f'href="{href}"', painel.texto)
 
+    def test_RF_65_auditoria_so_liga_usuario_e_permissoes_para_quem_pode_abrir_essas_paginas(self):
+        admin = self.sistema.servicos.acesso.entrar("admin@exemplo.com", SENHA).identificador
+        usuario = self.sistema.servicos.acesso.cadastrar_usuario(admin, "Bia Nova", "bia@exemplo.com", Perfil.CONTADOR, SENHA)
+        for email, ve_o_link in (("admin@exemplo.com", True), ("carla@exemplo.com", False), ("helena@exemplo.com", False)):
+            with self.subTest(email=email):
+                navegador = self.navegador(email)
+                auditoria = navegador.get("/auditoria")
+                self.assertEqual(auditoria.status, 200)
+                self.assertIn("Usuário " + usuario.id[:8], auditoria.texto)
+                for href in re.findall(r'href="(/(?:usuarios|permissoes)[^"]*)"', auditoria.texto):
+                    self.assertEqual(navegador.get(href).status, 200, href)
+                self.assertEqual(f'href="/usuarios/{usuario.id}"' in auditoria.texto, ve_o_link)
+
     def test_CA_03_RF_66_credenciais_invalidas_voltam_com_mensagem_generica_e_sem_sessao(self):
         for email, senha in (("ninguem@exemplo.com", SENHA), ("diego@exemplo.com", "senha-errada")):
             with self.subTest(email=email):
@@ -229,6 +242,21 @@ class TitulosPelaInterface(Base):
         invalido = navegador.enviar("/titulos/novo", "/titulos/novo", {"cliente": self.cliente.id, "valor": "abc", "vencimento": ""})
         self.assertEqual(invalido.status, 400)
         self.assertIn('id="erro-valor"', invalido.texto)
+
+    def test_RNF_14_valor_le_o_ponto_de_milhar_como_no_brasil_e_recusa_agrupamento_malformado(self):
+        from remindme.apresentacao.web.formatos import ler_valor
+
+        for texto, esperado in (
+            ("1.000", Decimal("1000")), ("1.000.000", Decimal("1000000")), ("R$ 1.234,56", Decimal("1234.56")),
+            ("1234,56", Decimal("1234.56")), ("1234.56", Decimal("1234.56")), ("12.5", Decimal("12.5")),
+            ("1,5", Decimal("1.5")), ("-5", Decimal("-5")), ("0,001", Decimal("0.001")), ("1000.00", Decimal("1000.00")),
+            ("0.250", Decimal("0.250")), ("1234.567", Decimal("1234.567")), ("1.234,5", Decimal("1234.5")),
+        ):
+            with self.subTest(texto=texto):
+                self.assertEqual(ler_valor(texto), esperado)
+        for texto in ("1.2.3,4", "1.234.56", "1,000.50", "1,2,3", "12.34,5.6", ",5", "1.", "1,", "-", "abc", "", "01.000,00", "1..000"):
+            with self.subTest(texto=texto):
+                self.assertIsNone(ler_valor(texto))
 
 
 class BancoEAgendador(Base):
@@ -410,6 +438,24 @@ class Demonstracao(unittest.TestCase):
                 estados = {t.estado for t in uow.titulos.listar()}
                 self.assertEqual(len(uow.clientes.listar()), 5)
             self.assertEqual(estados, {EstadoTitulo.ABERTO, EstadoTitulo.VENCIDO, EstadoTitulo.BAIXADO, EstadoTitulo.CANCELADO})
+            self.assertEqual(ClienteWeb(sistema.web).entrar("carla@demo.example", SENHA).status, 303)
+
+    def test_CA_19_A8_demonstracao_preparada_na_virada_da_meia_noite_nao_falha(self):
+        """A preparação inteira usa um só instante: o relógio que anda durante ela não pode trocar o dia no meio."""
+
+        class RelogioQueAnda:
+            def __init__(self):
+                self.momento = datetime(2026, 11, 25, 2, 59, 58, tzinfo=timezone.utc)  # 23h59min58s em São Paulo
+
+            def agora(self):
+                self.momento += timedelta(milliseconds=500)
+                return self.momento
+
+        relogio = RelogioQueAnda()
+        with tempfile.TemporaryDirectory() as pasta:
+            sistema = montar(str(Path(pasta).joinpath("demo.db")), relogio, CIFRADOR_DE_TESTE, RegistroErrosEmMemoria())
+            preparar_demonstracao(sistema, SENHA)
+            self.assertLess(sistema.relogio.agora(), sistema.relogio.agora())  # depois da preparação, o relógio volta a andar
             self.assertEqual(ClienteWeb(sistema.web).entrar("carla@demo.example", SENHA).status, 303)
 
 

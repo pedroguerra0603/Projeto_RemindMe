@@ -34,8 +34,9 @@ class Empresa:
             campos["cnpj"] = "Informe o CNPJ."
         elif tipo_do_documento(textos["cnpj"]) != "CNPJ":
             campos["cnpj"] = "Informe um CNPJ válido."
-        textos["telefone"] = re.sub(r"\D", "", textos["telefone"])
-        if textos["telefone"] and len(textos["telefone"]) not in (10, 11):
+        digitado = textos["telefone"]
+        textos["telefone"] = re.sub(r"\D", "", digitado)
+        if digitado and len(textos["telefone"]) not in (10, 11):
             campos["telefone"] = "Informe o telefone com DDD, por exemplo (11) 3456-7890."
         textos["email"] = textos["email"].lower()
         if textos["email"] and not EMAIL.match(textos["email"]):

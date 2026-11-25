@@ -2,12 +2,14 @@
 
 import re
 from datetime import date, datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Optional
 
 from remindme.aplicacao.tempo import horario_local
 
-_SO_VALOR = re.compile(r"^-?[0-9.,]+$")
+_VALOR = re.compile(r"(?P<sinal>-?)(?P<inteiro>[0-9][0-9.]*)(?:,(?P<decimais>[0-9]+))?")
+_MILHARES = re.compile(r"[1-9][0-9]{0,2}(?:\.[0-9]{3})+")
+_PONTO_DECIMAL = re.compile(r"[0-9]+(?:\.[0-9]+)?")
 
 
 def moeda(valor: Decimal) -> str:
@@ -51,18 +53,20 @@ def percentual(valor: Decimal) -> str:
 
 
 def ler_valor(texto: str) -> Optional[Decimal]:
-    """Lê "1.234,56", "1234,56" ou "1234.56". Devolve None quando o texto não é um valor."""
+    """Lê "1.234,56", "1234,56", "1.000" (mil) ou "1234.56". Devolve None quando o texto não é um valor.
+
+    O ponto é de milhar quando separa grupos de três algarismos, como no Brasil; agrupamento malformado é recusado.
+    """
     limpo = texto.replace("R$", "").replace(" ", "").strip()
-    if not limpo or not _SO_VALOR.match(limpo):
+    casamento = _VALOR.fullmatch(limpo)
+    if not casamento:
         return None
-    if "," in limpo:
-        limpo = limpo.replace(".", "").replace(",", ".")
-    elif limpo.count(".") > 1:
-        limpo = limpo.replace(".", "")
-    try:
-        return Decimal(limpo)
-    except InvalidOperation:
+    sinal, inteiro, decimais = casamento.group("sinal"), casamento.group("inteiro"), casamento.group("decimais")
+    if decimais is None and not _MILHARES.fullmatch(inteiro) and _PONTO_DECIMAL.fullmatch(inteiro):
+        return Decimal(sinal + inteiro)
+    if "." in inteiro and not _MILHARES.fullmatch(inteiro):
         return None
+    return Decimal(sinal + inteiro.replace(".", "") + ("." + decimais if decimais else ""))
 
 
 MESES = ("janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro")

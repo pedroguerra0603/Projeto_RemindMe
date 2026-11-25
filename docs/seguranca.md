@@ -57,9 +57,9 @@ Ferramentas possíveis: Cursor, Claude Code, VS Code com agente que possui hook,
 | 1. Instrução no repositório | Orienta o agente antes de propor uma ação | Ativa: [`SPECS.md`](../SPECS.md) |
 | 2. Hook de agente | Intercepta a ação e decide permitir, perguntar ou negar | Depende da ferramenta de cada integrante |
 | 3. Git hook local | Bloqueia antes do commit | Não configurado |
-| 4. CI e revisão | Bloqueia antes do merge | Revisão por PR em uso. CI não configurado, pois ainda não há código. |
+| 4. CI e revisão | Bloqueia antes do merge | Ativa: revisão por PR e a suíte de testes no GitHub Actions a cada PR e a cada push na `main`, em 9 combinações de sistema e Python ([`execucao.md`](execucao.md#integração-contínua)); a `main` está protegida |
 
-Para quem usa VS Code sem hook de ferramenta, as camadas 3 e 4 são obrigatórias. Elas devem ser configuradas antes do início da implementação.
+Para quem usa VS Code sem hook de ferramenta, as camadas 3 e 4 são obrigatórias. A camada 4 está ativa; a camada 3 continua a cargo de cada integrante.
 
 ### Política de ações do agente
 

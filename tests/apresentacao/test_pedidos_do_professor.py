@@ -55,6 +55,13 @@ class DadosDaEmpresa(Base):
         self.assertIn('id="erro-cnpj"', resposta.texto)
         self.assertIn('id="erro-email"', resposta.texto)
 
+    def test_OPEN_54_telefone_sem_nenhum_algarismo_e_recusado_e_nao_apagado_em_silencio(self):
+        carla = self.navegador("carla@exemplo.com")
+        resposta = carla.enviar("/empresa", "/empresa", self.dados(telefone="abc"))
+        self.assertEqual(resposta.status, 400)
+        self.assertIn('id="erro-telefone"', resposta.texto)
+        self.assertEqual(carla.enviar("/empresa", "/empresa", self.dados(telefone="")).status, 303)
+
     def test_OPEN_54_outros_perfis_veem_mas_nao_alteram(self):
         self.navegador("carla@exemplo.com").enviar("/empresa", "/empresa", self.dados())
         helena = self.navegador("helena@exemplo.com")

@@ -38,7 +38,7 @@ Executados em 2026-10-09, sobre a branch desta avaliação (64 testes no momento
 
 | Ambiente | Motivo | Risco |
 |---|---|---|
-| Windows e macOS | Indisponíveis no ambiente da avaliação | Baixo: o código não usa caminho de arquivo, processo nem recurso do sistema operacional. O teste de arquitetura lê arquivos com `pathlib` e `encoding="utf-8"` |
+| Windows e macOS | Indisponíveis no ambiente da avaliação. **Verificados depois**, pela integração contínua: ver a seção 6 | — |
 | Python 3.10 ou anterior | Fora do pré-requisito de `docs/execucao.md` | `sys.stdlib_module_names`, usado no teste de arquitetura, exige 3.10 |
 | Python 3.14 e PyPy | Não instalados; instalar interpretador exige aprovação (SPECS.md) | Baixo |
 | Contêiner | Docker indisponível na máquina | — |
@@ -49,10 +49,10 @@ Os integrantes podem completar a tabela rodando o mesmo comando em suas máquina
 
 | Aspecto | Avaliação |
 |---|---|
-| Troca da persistência | Preparada: o serviço depende das interfaces de `aplicacao/portas.py`, e a implementação em memória pode ser substituída pela de um banco sem alterar o domínio (OPEN-02) |
+| Troca da persistência | Preparada: o serviço depende das interfaces de `aplicacao/portas.py`, e a implementação em memória pode ser substituída pela de um banco sem alterar o domínio (OPEN-02). Confirmada pela Spec 017, que trouxe o SQLite (ADR-007) sem mudar o domínio |
 | Troca do relógio | Preparada: interface `Relogio`; datas de referência são parâmetros |
-| Canal de notificação e IA | Previstos por interface (ADR-002, ADR-003); ainda não implementados |
-| Interface web | Não existe; o domínio não depende de framework (verificado por `test_ADR_001_*`) |
+| Canal de notificação e IA | Previstos por interface (ADR-002, ADR-003); em 2026-10-09, ainda não implementados. O canal simulado existe desde a Spec 005; a IA depende das Specs 009 e 011 |
+| Interface web | Em 2026-10-09, não existia; existe desde a Spec 017, sobre WSGI da biblioteca padrão (ADR-006). O domínio não depende de framework (verificado por `test_ADR_001_*`) |
 
 ## 5. Recomendações
 
@@ -61,3 +61,13 @@ Os integrantes podem completar a tabela rodando o mesmo comando em suas máquina
 | Declarar a versão mínima em um arquivo do projeto (por exemplo, `.python-version` ou `pyproject.toml`) | Decisão da equipe; não exige dependência |
 | Rodar a suíte em Linux, Windows e macOS a cada PR | Issue de integração contínua |
 | Repetir P-01 a P-11 quando houver banco e interface, incluindo a instalação deles | Specs 001 e primeira spec com interface |
+
+## 6. Atualização de 2026-11-25: Windows e macOS
+
+Desde a issue #82, a suíte roda a cada PR e a cada push na `main` em Ubuntu, Windows e macOS, com Python 3.11, 3.12 e 3.13 ([`.github/workflows/testes.yml`](../../.github/workflows/testes.yml)). A execução de 2026-11-23 sobre a `main` (commit `c6f921b`, 645 testes) passou nas 9 combinações. No Windows sem o pacote `tzdata`, o fuso de referência cai para UTC−3 fixo (`aplicacao/tempo.py`, OPEN-26), sem mudar o resultado.
+
+| ID | Ambiente | Resultado |
+|---|---|---|
+| P-12 | `windows-latest`, Python 3.11, 3.12 e 3.13 | Passou |
+| P-13 | `macos-latest`, Python 3.11, 3.12 e 3.13 | Passou |
+| P-14 | `ubuntu-latest`, Python 3.11, 3.12 e 3.13 | Passou |
