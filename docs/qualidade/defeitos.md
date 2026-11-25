@@ -17,6 +17,12 @@ Issue #70. Problemas encontrados pelos testes desta rodada de qualidade, correç
 | D-05 | Motivo que não é texto (`123`, lista) gera `AttributeError` | Baixa | E4; RF-31 | Corrigido |
 | D-06 | Com mais de 28 dígitos significativos, o saldo é arredondado em silêncio: o título nasce com saldo diferente do valor e pagamentos de centavos não o alteram (issue #78) | Baixa | INV-1 (saldo = valor − pagamentos); RB-22 | Corrigido em 2026-10-23: valor com mais de 15 dígitos inteiros é recusado (OPEN-24). Teste `test_D_06_corrigido_*` |
 
+| D-07 | Na consulta de auditoria, o Dono e o Contador viam links para a página de cada usuário (`/usuarios/<id>`) que respondiam 403, porque só quem administra usuários abre essas páginas | Baixa | RF-65 (apresentar apenas as funcionalidades do perfil) | Corrigido em 2026-11-25. Teste `test_RF_65_auditoria_so_liga_usuario_e_permissoes_para_quem_pode_abrir_essas_paginas` |
+| D-08 | O campo de valor lia `1.000` como R$ 1,00, e não mil reais, e `1.234.56` como R$ 123.456,00; agrupamento malformado, como `1.2.3,4`, era aceito | Alta | RNF-14 (valor no formato brasileiro, como na ajuda do campo: "Por exemplo, 1.234,56") | Corrigido em 2026-11-25: o ponto é de milhar quando separa grupos de três algarismos, e agrupamento malformado é recusado. Teste `test_RNF_14_valor_le_o_ponto_de_milhar_como_no_brasil_e_recusa_agrupamento_malformado` |
+| D-09 | Nos dados da empresa, telefone sem nenhum algarismo (`abc`) era apagado em silêncio, e a tela confirmava a gravação | Baixa | RNF-14 (a recusa indica o campo); OPEN-54 | Corrigido em 2026-11-25. Teste `test_OPEN_54_telefone_sem_nenhum_algarismo_e_recusado_e_nao_apagado_em_silencio` |
+
+D-07 a D-09 foram encontrados na revisão de 2026-11-25, antes da apresentação: navegação por todas as páginas com os quatro perfis, em 1280 e 360 px de largura, e cerca de 3.000 envios de formulário com valores inválidos (texto, vazio, negativo, `NaN`, `1e999`, datas inexistentes, HTML, 5.000 caracteres). Nenhum envio gerou erro inesperado (500).
+
 Detalhes do D-06 em [acurácia monetária](acuracia-monetaria.md), seção 3. Foi corrigido depois da decisão do limite de valor (OPEN-24).
 
 Valor com mais de duas casas decimais era aceito por lacuna da baseline (**OPEN-20**). Desde a decisão de 2026-10-23, é recusado, sem arredondamento.

@@ -55,6 +55,7 @@ Para restaurar, com o servidor encerrado, ponha a cópia no lugar do arquivo ori
 ## Pré-requisitos
 
 - Python 3.11 ou mais recente.
+- No Windows, o comando `python3` costuma abrir a Microsoft Store em vez do Python. Use `py` ou `python` no lugar de `python3` em todos os comandos deste documento, por exemplo `py iniciar.py demonstracao`.
 - Nenhuma dependência externa para usar ou testar. O Playwright é opcional, só para o teste de navegador.
 
 ## Executar os testes
@@ -79,7 +80,9 @@ A suíte roda sozinha a cada PR e a cada push na `main`, pelo fluxo [`.github/wo
 
 **Um PR com teste falhando aparece como reprovado** (marca vermelha) e não deve ser mesclado.
 
-**Proteção da `main` (configuração do repositório, feita por quem o administra).** Para o merge exigir a suíte aprovada: *Settings → Branches → Branch protection rule* (ou *Rulesets*) para `main` → marcar *Require status checks to pass before merging* → selecionar as verificações `testes / suíte (...)`. Isso não pode ser feito por código do repositório; **está pendente** e é o último critério da issue #82. Os resultados das combinações de Windows e macOS são os primeiros para essa suíte (a portabilidade nesses sistemas ainda não foi verificada, em [`qualidade/portabilidade.md`](qualidade/portabilidade.md)): se alguma falhar na primeira execução, é um achado de portabilidade, e não um erro do fluxo.
+**Proteção da `main`.** A `main` está protegida no GitHub. Para conferir que o merge exige a suíte aprovada: *Settings → Branches* (ou *Rulesets*) → regra da `main` → *Require status checks to pass before merging*, com as verificações `testes / suíte (...)` selecionadas. Essa configuração é do repositório, feita por quem o administra, e não pode ser feita por código.
+
+**Portabilidade.** As 9 combinações passam, inclusive Windows e macOS (execução de 2026-11-23 sobre a `main`, commit `c6f921b`), registradas em [`qualidade/portabilidade.md`](qualidade/portabilidade.md).
 
 ## Teste de navegador (opcional)
 

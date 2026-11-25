@@ -41,7 +41,7 @@ Com Python 3.11 ou mais recente, sem instalar nada, na raiz do repositório:
 python3 iniciar.py demonstracao
 ```
 
-Abra **http://localhost:8000** e entre com `carla@demo.example` (Dono), `diego@demo.example` (Operador Financeiro), `helena@demo.example` (Contador) ou `admin@demo.example` (Administrador). A senha aparece no terminal.
+No Windows, use `py iniciar.py demonstracao` (o comando `python3` costuma abrir a Microsoft Store). Abra **http://localhost:8000** e entre com `carla@demo.example` (Dono), `diego@demo.example` (Operador Financeiro), `helena@demo.example` (Contador) ou `admin@demo.example` (Administrador). A senha aparece no terminal.
 
 Testes:
 
