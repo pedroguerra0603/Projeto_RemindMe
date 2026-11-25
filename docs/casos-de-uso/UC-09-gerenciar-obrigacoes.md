@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-01, RB-04, RB-07, RB-13, RB-16, RB-29 |
 | **Requisitos** | RF-40 a RF-50, RF-77, RNF-15 |
 
+## Situação da implementação
+
+**Implementado.** Spec 010. A antecedência do aviso é fixa em 7 dias (RB-07); torná-la configurável é do UC-13 (Spec 014), planejado.
+
 ## Pré-condições
 
 - O usuário está autenticado com perfil Operador Financeiro ou Dono.

@@ -1,0 +1,29 @@
+---
+title: "RemindMe — Diagrama de implantação: execução local, sem hospedagem externa (OPEN-12)"
+---
+flowchart LR
+    subgraph Maquina["«device» Computador de quem usa (Windows, macOS ou Linux)"]
+        direction LR
+        subgraph Navegador["«execution environment» Navegador"]
+            Telas["Telas HTML + estilo.css + tema.js<br/>sem JavaScript de terceiros"]
+        end
+        subgraph Python["«execution environment» Python 3.11+ (somente biblioteca padrão)"]
+            Servidor["«artifact» iniciar.py → remindme<br/>servidor WSGI (wsgiref), porta 8000"]
+            Agenda["«artifact» agendador<br/>thread no mesmo processo"]
+            Simulado["«artifact» CanalSimulado<br/>grava a mensagem na caixa de saída"]
+        end
+        Banco[("«artifact» remindme.db<br/>SQLite em modo WAL<br/>dados, sessões e auditoria")]
+    end
+
+    Real["«planejado» Canal real<br/>(WhatsApp, e-mail): fora do MVP"]
+
+    Telas -- "HTTP em 127.0.0.1:8000<br/>HTTPS com --certificado e --chave (RNF-05)" --> Servidor
+    Servidor -- "sqlite3" --> Banco
+    Agenda -- "sqlite3" --> Banco
+    Servidor --> Simulado
+    Agenda --> Simulado
+    Simulado -- "caixa de saída" --> Banco
+    Simulado -. "substituível (ADR-002)" .-> Real
+
+    classDef planejado fill:#f4f4f4,stroke:#8a8a8a,stroke-dasharray:6 4,color:#666
+    class Real planejado

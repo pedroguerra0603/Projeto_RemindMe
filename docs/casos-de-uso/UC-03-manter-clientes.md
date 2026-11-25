@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-01 |
 | **Requisitos** | RF-01, RF-04, RF-05, RNF-14 |
 
+## Situação da implementação
+
+**Implementado.** Specs 003 e 017. Na consulta (A2), a página do cliente mostra os títulos dele; os orçamentos ficam na tela Orçamentos.
+
 ## Pré-condições
 
 - O usuário está autenticado com perfil Operador Financeiro ou Dono.

@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-01, RB-03 |
 | **Requisitos** | RF-02, RF-03, RF-04, RF-05, RF-97, RNF-02 |
 
+## Situação da implementação
+
+**Implementado, exceto A3.** Specs 002 e 017: cadastro, perfil, inativação, ativação e matriz de permissões. A redefinição de senha (A3) é da Spec 020, aprovada e ainda não implementada.
+
 ## Pré-condições
 
 - O Administrador está autenticado.

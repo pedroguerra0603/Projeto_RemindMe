@@ -102,6 +102,17 @@ flowchart TB
     IIA -.-> IAreal
 ```
 
+### Componentes e implantação
+
+O diagrama acima mostra as camadas como foram decididas. Os dois abaixo mostram como estão no código e onde rodam.
+
+- **Componentes** ([`uml/componentes.png`](uml/componentes.png), fonte em [`uml/componentes.mmd`](uml/componentes.mmd)): os pacotes reais de `src/remindme`, as interfaces de `aplicacao/portas.py` e as implementações que as realizam. A recepção de mensagens e o serviço de IA aparecem como planejados.
+- **Implantação** ([`uml/implantacao.png`](uml/implantacao.png), fonte em [`uml/implantacao.mmd`](uml/implantacao.mmd)): um único processo Python na máquina de quem usa, com o servidor WSGI, o agendador numa thread e o canal simulado, e o arquivo SQLite ao lado (OPEN-12, ADR-006, ADR-007). O canal real é substituível e está fora do MVP (ADR-002).
+
+![Componentes](uml/componentes.png)
+
+![Implantação](uml/implantacao.png)
+
 ### Módulos
 
 Os agrupamentos naturais do modelo de domínio viram módulos do sistema.

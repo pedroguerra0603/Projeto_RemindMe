@@ -21,28 +21,28 @@ Fonte: [`../uml/casos-de-uso.mmd`](../uml/casos-de-uso.mmd). Imagem: [`../uml/ca
 
 ![Diagrama de casos de uso](../uml/casos-de-uso.png)
 
-O UC-05 estende o UC-04: só ocorre quando o desconto ultrapassa a alçada. O UC-01 é pré-condição de todos os casos de uso iniciados por pessoas, e o UC-16 vale para qualquer usuário autenticado; por isso os dois não têm linhas no diagrama. O Cliente não acessa o sistema (OPEN-57): ele aparece só no UC-07, que começa com a mensagem que ele envia pelo canal de notificação; no UC-04 e no UC-08, ele recebe pelo canal, e quem registra a decisão do orçamento é um usuário da empresa.
+O UC-05 estende o UC-04 (`«extend»`): só ocorre quando o desconto ultrapassa a alçada. O UC-01 e o UC-16 valem para qualquer pessoa que usa o sistema; por isso, o diagrama tem o ator abstrato **Usuário**, generalizado pelos quatro perfis (`«é um»`), e é ele quem se liga aos dois casos. A autenticação não foi modelada como `«include»` de cada caso: ela é pré-condição, e não um passo do fluxo de outro caso de uso. Os casos de uso tracejados estão planejados: fazem parte do escopo modelado, mas ainda não estão implementados (coluna Situação abaixo). O Cliente não acessa o sistema (OPEN-57): ele aparece só no UC-07, que começa com a mensagem que ele envia pelo canal de notificação; no UC-04 e no UC-08, ele recebe pelo canal, e quem registra a decisão do orçamento é um usuário da empresa.
 
 ## Lista
 
-| ID | Caso de uso | Ator principal | Atores de apoio |
-|---|---|---|---|
-| [UC-01](UC-01-autenticar-usuario.md) | Autenticar usuário | Usuário de qualquer perfil | — |
-| [UC-02](UC-02-administrar-usuarios-e-perfis.md) | Administrar usuários e perfis | Administrador | — |
-| [UC-03](UC-03-manter-clientes.md) | Manter clientes | Operador Financeiro | Dono |
-| [UC-04](UC-04-conduzir-orcamento-ate-o-titulo.md) | Conduzir orçamento até o título | Operador Financeiro | Cliente, Dono, Canal de notificação |
-| [UC-05](UC-05-aprovar-desconto-fora-de-alcada.md) | Aprovar desconto fora de alçada | Dono | Operador Financeiro |
-| [UC-06](UC-06-registrar-pagamento-e-baixar-titulo.md) | Registrar pagamento e baixar título | Operador Financeiro | Dono |
-| [UC-07](UC-07-renegociar-titulo.md) | Renegociar título | Cliente | Serviço de IA, Operador Financeiro, Dono |
-| [UC-08](UC-08-executar-regua-de-cobranca.md) | Executar régua de cobrança | Agendador | Canal de notificação, Operador Financeiro, Cliente |
-| [UC-09](UC-09-gerenciar-obrigacoes.md) | Gerenciar obrigações | Operador Financeiro | Dono, Agendador |
-| [UC-10](UC-10-classificar-lancamento.md) | Classificar lançamento | Operador Financeiro | Serviço de IA, Dono |
-| [UC-11](UC-11-apurar-resultado.md) | Apurar resultado | Dono | Contador, Operador Financeiro |
-| [UC-12](UC-12-consultar-auditoria.md) | Consultar auditoria | Dono | Contador, Administrador |
-| [UC-13](UC-13-configurar-regras.md) | Configurar regras | Administrador | Dono |
-| [UC-14](UC-14-importar-e-exportar-csv.md) | Importar e exportar CSV | Operador Financeiro | Contador, Administrador |
-| [UC-15](UC-15-gerenciar-contas-a-pagar.md) | Gerenciar contas a pagar | Operador Financeiro | Dono, Agendador |
-| [UC-16](UC-16-trocar-a-propria-senha.md) | Trocar a própria senha | Usuário de qualquer perfil | — |
+| ID | Caso de uso | Ator principal | Atores de apoio | Situação |
+|---|---|---|---|---|
+| [UC-01](UC-01-autenticar-usuario.md) | Autenticar usuário | Usuário de qualquer perfil | — | Implementado |
+| [UC-02](UC-02-administrar-usuarios-e-perfis.md) | Administrar usuários e perfis | Administrador | — | Implementado, exceto A3 (Spec 020) |
+| [UC-03](UC-03-manter-clientes.md) | Manter clientes | Operador Financeiro | Dono | Implementado |
+| [UC-04](UC-04-conduzir-orcamento-ate-o-titulo.md) | Conduzir orçamento até o título | Operador Financeiro | Cliente, Dono, Canal de notificação | Implementado |
+| [UC-05](UC-05-aprovar-desconto-fora-de-alcada.md) | Aprovar desconto fora de alçada | Dono | Operador Financeiro | Implementado |
+| [UC-06](UC-06-registrar-pagamento-e-baixar-titulo.md) | Registrar pagamento e baixar título | Operador Financeiro | Dono | Implementado, exceto os passos 6 e 7 |
+| [UC-07](UC-07-renegociar-titulo.md) | Renegociar título | Cliente | Serviço de IA, Operador Financeiro, Dono | Planejado (Spec 009) |
+| [UC-08](UC-08-executar-regua-de-cobranca.md) | Executar régua de cobrança | Agendador | Canal de notificação, Operador Financeiro, Cliente | Planejado (Specs 007 e 008) |
+| [UC-09](UC-09-gerenciar-obrigacoes.md) | Gerenciar obrigações | Operador Financeiro | Dono, Agendador | Implementado |
+| [UC-10](UC-10-classificar-lancamento.md) | Classificar lançamento | Operador Financeiro | Serviço de IA, Dono | Planejado (Spec 011) |
+| [UC-11](UC-11-apurar-resultado.md) | Apurar resultado | Dono | Contador, Operador Financeiro | Planejado (Spec 012) |
+| [UC-12](UC-12-consultar-auditoria.md) | Consultar auditoria | Dono | Contador, Administrador | Implementado |
+| [UC-13](UC-13-configurar-regras.md) | Configurar regras | Administrador | Dono | Planejado (Spec 014) |
+| [UC-14](UC-14-importar-e-exportar-csv.md) | Importar e exportar CSV | Operador Financeiro | Contador, Administrador | Planejado (Spec 015) |
+| [UC-15](UC-15-gerenciar-contas-a-pagar.md) | Gerenciar contas a pagar | Operador Financeiro | Dono, Agendador | Implementado |
+| [UC-16](UC-16-trocar-a-propria-senha.md) | Trocar a própria senha | Usuário de qualquer perfil | — | Implementado, exceto A2 (Spec 020) |
 
 O **fluxo principal do sistema** é a sequência UC-04 → UC-08 → UC-06: o orçamento vira título, o título é cobrado e o pagamento o baixa. Os diagramas de sequência cobrem o UC-04 e o UC-06.
 

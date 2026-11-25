@@ -23,7 +23,9 @@ Issue #70. Problemas encontrados pelos testes desta rodada de qualidade, correç
 
 | D-10 | A preparação da demonstração falhava quando atravessava a meia-noite de São Paulo: o dia de referência era lido uma vez no início, mas o envio do orçamento gravava a data do relógio no momento do envio, e a decisão do cliente ficava anterior ao envio. Apareceu no CI (macOS, Python 3.11) à 00h00 de 2026-11-25 | Média | CA-19 da Spec 017 (A8); a suíte precisa ser confiável (RNF-19) | Corrigido em 2026-11-25: a preparação inteira usa um só instante (`RelogioCongelavel`, em `infraestrutura/relogio.py`). Teste `test_CA_19_A8_demonstracao_preparada_na_virada_da_meia_noite_nao_falha` |
 
-D-07 a D-09 foram encontrados na revisão de 2026-11-25, e D-10 no CI do PR dessa revisão, antes da apresentação: navegação por todas as páginas com os quatro perfis, em 1280 e 360 px de largura, e cerca de 3.000 envios de formulário com valores inválidos (texto, vazio, negativo, `NaN`, `1e999`, datas inexistentes, HTML, 5.000 caracteres). Nenhum envio gerou erro inesperado (500).
+| D-11 | No histórico e na auditoria, o item do orçamento e a decisão do desconto apareciam no formato canônico, como `2 × 1000` e `aprovado 12.00% de 20.00% solicitados`, e não no brasileiro | Baixa | RNF-14; RF-05 | Corrigido em 2026-11-25, só na exibição: a auditoria continua guardando o valor canônico. Teste `test_RF_05_historico_mostra_item_e_decisao_do_desconto_no_formato_brasileiro` |
+
+D-07 a D-09 foram encontrados na revisão de 2026-11-25, D-10 no CI do PR dessa revisão e D-11 ao ensaiar o roteiro da apresentação no navegador, antes da apresentação: navegação por todas as páginas com os quatro perfis, em 1280 e 360 px de largura, e cerca de 3.000 envios de formulário com valores inválidos (texto, vazio, negativo, `NaN`, `1e999`, datas inexistentes, HTML, 5.000 caracteres). Nenhum envio gerou erro inesperado (500).
 
 Detalhes do D-06 em [acurácia monetária](acuracia-monetaria.md), seção 3. Foi corrigido depois da decisão do limite de valor (OPEN-24).
 

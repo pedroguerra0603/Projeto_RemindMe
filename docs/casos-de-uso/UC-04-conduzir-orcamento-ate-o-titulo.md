@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-01, RB-05, RB-15, RB-24 |
 | **Requisitos** | RF-06 a RF-13, RF-15, RF-18, RF-19, RNF-09 |
 
+## Situação da implementação
+
+**Implementado.** Specs 004 e 005: do Rascunho à conversão em título, com o canal de notificação simulado (ADR-002, OPEN-62).
+
 ## Pré-condições
 
 - O Operador Financeiro está autenticado.
@@ -47,6 +51,7 @@
 
 ## Diagramas
 
+- Atividades do fluxo principal e dos alternativos, com o participante de cada ação: [`atividades-UC-04.png`](../uml/atividades-UC-04.png), fonte em [`atividades-UC-04.mmd`](../uml/atividades-UC-04.mmd).
 - Sequência do fluxo principal: [`seq-UC-04.png`](../uml/seq-UC-04.png), fonte em [`seq-UC-04.mmd`](../uml/seq-UC-04.mmd).
 - Estados do orçamento: [estados](../uml/estados.md#orçamento).
 

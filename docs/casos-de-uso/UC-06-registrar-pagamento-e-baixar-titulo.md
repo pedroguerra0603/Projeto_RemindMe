@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-01, RB-02, RB-06, RB-21, RB-22, RB-23 |
 | **Requisitos** | RF-20 a RF-27, RF-30, RF-31, RF-37, RF-51, RF-68, RNF-09 |
 
+## Situação da implementação
+
+**Implementado, exceto os passos 6 e 7.** Spec 006. O cancelamento dos envios da régua (passo 6, A4) depende das Specs 007 e 008, e o lançamento de receita (passo 7, A3) depende da Spec 011; as duas estão planejadas.
+
 ## Pré-condições
 
 - O Operador Financeiro está autenticado.
@@ -21,8 +25,8 @@
 3. O sistema valida o valor contra o saldo do título (RB-23).
 4. O sistema registra o pagamento e reduz o saldo.
 5. O saldo chega a zero. O sistema muda o estado do título para Baixado (RB-22).
-6. O sistema cancela os envios pendentes da régua de cobrança para o título.
-7. O sistema gera o lançamento de receita, que segue para classificação (UC-10).
+6. O sistema cancela os envios pendentes da régua de cobrança para o título. *Planejado: Specs 007 e 008.*
+7. O sistema gera o lançamento de receita, que segue para classificação (UC-10). *Planejado: Spec 011.*
 8. O sistema registra a operação na auditoria.
 
 ## Fluxos alternativos
@@ -54,33 +58,46 @@
 sequenceDiagram
     autonumber
     actor Operador as Operador Financeiro
-    participant UI as Interface
-    participant App as Serviço de Títulos
+    participant UI as Interface web
+    participant App as ServicoTitulos
+    participant Exec as Execucao (transação e autorização)
     participant Tit as Titulo
-    participant Lanc as LancamentoFinanceiro
-    participant Regua as Régua de cobrança
-    participant Aud as Auditoria
+    participant Aud as OperacaoAuditada
+    participant Repo as Repositório (SQLite)
+    participant Lanc as LancamentoFinanceiro «planejado»
+    participant Regua as Régua de cobrança «planejado»
 
     Operador->>UI: registra pagamento do título (RF-25)
-    UI->>App: registrarPagamento(titulo, valor, data)
-    App->>Tit: registrarPagamento(valor)
-
-    alt valor menor ou igual a zero, ou maior que o saldo
-        Tit-->>App: recusa (RB-23, RF-68)
-        App-->>UI: informa o motivo, nada é gravado
-    else título Baixado ou Cancelado
-        Tit-->>App: recusa (RB-21)
-        App-->>UI: informa o estado do título
-    else pagamento válido
-        Tit->>Tit: reduz o saldo e, com saldo zero, passa a Baixado (RF-26, RB-22)
-        Tit-->>App: pagamento registrado, com saldo e estado
-        App->>Lanc: gera lançamento de receita Pendente de Classificação (RF-51)
-        alt título Baixado
-            App->>Regua: cancela envios pendentes (RF-37)
-        else saldo maior que zero
-            App-->>UI: saldo restante (RF-27)
+    UI->>App: registrarPagamento(sessão, título, valor, data)
+    App->>Exec: abre a operação "registrar pagamento"
+    Exec->>Exec: confere a sessão e a permissão do perfil (RNF-01, RNF-03)
+    alt sem sessão ou sem permissão
+        Exec-->>UI: nega (RF-67), nada é gravado
+    else autorizado
+        App->>Repo: obtém o título
+        App->>Tit: registrarPagamento(valor, data)
+        alt valor menor ou igual a zero, ou maior que o saldo
+            Tit-->>App: recusa (RB-23, RF-68)
+            Exec->>Exec: desfaz a transação
+            App-->>UI: informa o motivo, nada é gravado
+        else título Baixado ou Cancelado
+            Tit-->>App: recusa (RB-21)
+            Exec->>Exec: desfaz a transação
+            App-->>UI: informa o estado do título
+        else pagamento válido
+            Tit->>Tit: reduz o saldo e, com saldo zero, passa a Baixado (RF-26, RB-22)
+            Tit-->>App: pagamento registrado, com saldo e estado
+            App->>Aud: registra o pagamento e a mudança de estado (RB-01)
+            App->>Repo: salva o título
+            rect rgb(240, 240, 240)
+                Note over App,Regua: Planejado (Specs 007, 008 e 011): ainda não implementado
+                App->>Lanc: gera lançamento de receita Pendente de Classificação (RF-51)
+                opt título Baixado
+                    App->>Regua: cancela envios pendentes (RF-37)
+                end
+            end
+            Exec->>Exec: confirma a transação: tudo ou nada (RNF-09)
+            App-->>UI: confirmação, com o saldo restante (RF-27)
         end
-        App->>Aud: registra pagamento e mudança de estado (RB-01)
-        App-->>UI: confirmação
     end
 ```

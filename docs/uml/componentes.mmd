@@ -1,0 +1,56 @@
+---
+title: "RemindMe — Componentes: pacotes reais de src/remindme. Seta tracejada «realiza»: implementa a interface. Caixa cinza: «planejado»"
+---
+flowchart LR
+    subgraph Apresentacao["«component» apresentacao.web"]
+        Rotas["AplicacaoWeb (WSGI)<br/>rotas_*.py"]
+        Paginas["paginas_*.py<br/>HTML escapado"]
+    end
+
+    subgraph Entradas["«component» entradas"]
+        Agendador["AgendadorDeVencimentos<br/>(na inicialização e a cada hora)"]
+        Recepcao["Recepção de mensagens<br/>do cliente"]
+    end
+
+    subgraph Aplicacao["«component» aplicacao"]
+        Servicos["Serviços de caso de uso<br/>ServicoTitulos, ServicoOrcamentos,<br/>ServicoObrigacoes, ServicoContasPagar..."]
+        Execucao["Execucao<br/>transação + autorização"]
+        Auditada["OperacaoAuditada<br/>(RB-01)"]
+        Portas(("portas.py<br/>interfaces"))
+    end
+
+    subgraph Dominio["«component» dominio"]
+        Entidades["Orcamento, Titulo, ContaPagar,<br/>Obrigacao, Cliente, Usuario..."]
+        Regras["Estados, regras RB,<br/>matriz de permissões"]
+    end
+
+    subgraph Infra["«component» infraestrutura"]
+        SQLite["Repositórios e unidade de trabalho<br/>SQLite (ADR-007)"]
+        Canal["CanalSimulado<br/>caixa de saída (ADR-002)"]
+        Relogio["RelogioDoSistema"]
+        Memoria["Dublês em memória<br/>(testes)"]
+        IA["Serviço de IA simulado<br/>(ADR-003)"]
+    end
+
+    Composicao["«component» inicializacao<br/>monta as camadas"]
+
+    Rotas --> Servicos
+    Rotas --> Paginas
+    Agendador --> Servicos
+    Recepcao --> Servicos
+    Servicos --> Execucao
+    Execucao --> Auditada
+    Servicos --> Entidades
+    Entidades --> Regras
+    Servicos --> Portas
+    SQLite -. "«realiza»" .-> Portas
+    Canal -. "«realiza»" .-> Portas
+    Relogio -. "«realiza»" .-> Portas
+    Memoria -. "«realiza»" .-> Portas
+    IA -. "«realiza»" .-> Portas
+    Composicao --> Rotas
+    Composicao --> Agendador
+    Composicao --> SQLite
+
+    classDef planejado fill:#f4f4f4,stroke:#8a8a8a,stroke-dasharray:6 4,color:#666
+    class Recepcao,IA planejado

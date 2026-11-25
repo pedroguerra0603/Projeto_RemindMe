@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-10, RB-11, RB-18, RB-21 |
 | **Requisitos** | RF-23, RF-24, RF-32 a RF-39, RF-70, RNF-12, RNF-13 |
 
+## Situação da implementação
+
+**Planejado.** Specs 007 e 008, ainda não escritas. O agendador que este caso usa já existe (Spec 017) e verifica vencimentos e obrigações.
+
 ## Pré-condições
 
 - Existe uma régua de cobrança com ao menos uma etapa (UC-13).

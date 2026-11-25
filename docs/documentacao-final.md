@@ -53,7 +53,7 @@ Vocabulário obrigatório: [glossário](glossario.md). Termos como "fatura", "bo
 
 ### Domínio
 
-Fonte: [modelo de domínio](modelo-dominio.md) e [diagrama de classes](uml/dominio-v2.png).
+Fonte: [modelo de domínio](modelo-dominio.md) e [diagrama de classes](uml/dominio-v2.png). Os atributos têm tipo e visibilidade, os estados são enumerações, e as classes ainda não implementadas levam o estereótipo `«planejado»`.
 
 | Módulo | Classes | Regras principais |
 |---|---|---|
@@ -81,13 +81,13 @@ Fonte: [`uml/estados.md`](uml/estados.md). Transição fora da tabela é inváli
 
 ### Casos de uso
 
-Fonte: [`casos-de-uso/`](casos-de-uso/README.md). São 16 casos de uso, UC-01 a UC-16. O fluxo principal é UC-04 → UC-08 → UC-06: o orçamento vira título, o título é cobrado e o pagamento o baixa. Há diagramas de sequência para o [UC-04](uml/seq-UC-04.png) e o [UC-06](uml/seq-UC-06.png).
+Fonte: [`casos-de-uso/`](casos-de-uso/README.md). São 16 casos de uso, UC-01 a UC-16. O fluxo principal é UC-04 → UC-08 → UC-06: o orçamento vira título, o título é cobrado e o pagamento o baixa. Há diagramas de sequência para o [UC-04](uml/seq-UC-04.png) e o [UC-06](uml/seq-UC-06.png) e o diagrama de atividades do [UC-04](uml/atividades-UC-04.png). Dos 16 casos de uso, 10 estão implementados (3 deles com um fluxo alternativo planejado) e 6 estão planejados; a situação de cada um está na [lista de casos de uso](casos-de-uso/README.md#lista).
 
 ## 4. Arquitetura
 
 Fonte: [`arquitetura.md`](arquitetura.md).
 
-Monólito web em camadas, com o domínio isolado de framework, banco e serviços externos. Canal de notificação e serviço de IA ficam atrás de interfaces, com implementação simulada como padrão.
+Monólito web em camadas, com o domínio isolado de framework, banco e serviços externos. Vistas UML: [componentes](uml/componentes.png) e [implantação](uml/implantacao.png). Canal de notificação e serviço de IA ficam atrás de interfaces, com implementação simulada como padrão.
 
 | Camada | Responsabilidade | Pacote |
 |---|---|---|
@@ -124,7 +124,7 @@ Fonte: [mapa de specs](../.specify/specs/mapa-de-specs.md), aprovado em 2026-11-
 | Aprovada, a implementar | [020](../.specify/specs/020-redefinicao-e-troca-obrigatoria-de-senha.md) redefinição de senha pelo Administrador e troca obrigatória da senha provisória |
 | A escrever | 007 e 008 régua de cobrança; 009 renegociação; 011 lançamentos e IA; 012 apuração; 014 configuração de regras; 015 CSV; 016 painel por perfil |
 
-Tecnologia adotada (OPEN-01): Python 3.11 ou mais recente, somente a biblioteca padrão, com interface web sobre WSGI (ADR-006), banco SQLite (ADR-007) e testes com `unittest`. A suíte tem 649 testes, todos passando, com 7 pulados: 4 de navegador, que dependem do Playwright, opcional (OPEN-29), e 3 marcadores de testes ainda não escritos. Para ver a aplicação: `python3 iniciar.py demonstracao`. Como executar: [`execucao.md`](execucao.md). Estratégia de testes: [`testes.md`](testes.md). Avaliação de qualidade: [`qualidade/`](qualidade/README.md).
+Tecnologia adotada (OPEN-01): Python 3.11 ou mais recente, somente a biblioteca padrão, com interface web sobre WSGI (ADR-006), banco SQLite (ADR-007) e testes com `unittest`. A suíte tem 650 testes, todos passando, com 7 pulados: 4 de navegador, que dependem do Playwright, opcional (OPEN-29), e 3 marcadores de testes ainda não escritos. Para ver a aplicação: `python3 iniciar.py demonstracao`. Como executar: [`execucao.md`](execucao.md). Estratégia de testes: [`testes.md`](testes.md). Avaliação de qualidade: [`qualidade/`](qualidade/README.md).
 
 ## 6. Decisões em aberto
 

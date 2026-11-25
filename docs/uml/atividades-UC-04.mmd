@@ -1,0 +1,46 @@
+---
+title: "RemindMe — Atividades do UC-04: do orçamento ao título. (Partição) em cada ação, como na UML 2"
+---
+flowchart TB
+    inicio((" ")):::no_inicial
+    A1["(Operador Financeiro)<br/>Criar orçamento para o cliente"]:::operador
+    A2["(Operador Financeiro)<br/>Incluir itens, condição, prazo e desconto"]:::operador
+    S1["(Sistema)<br/>Calcular valor bruto, desconto e valor líquido"]:::sistema
+    G1{"Desconto acima da<br/>alçada do perfil?"}
+    S2["(Sistema)<br/>Orçamento passa a Pendente de Alçada"]:::sistema
+    D1["(Dono ou Administrador)<br/>Aprovar, aprovar menor ou rejeitar o desconto"]:::dono
+    S3["(Sistema)<br/>Volta a Rascunho com o desconto decidido"]:::sistema
+    M1{" "}
+    A3["(Operador Financeiro)<br/>Solicitar o envio"]:::operador
+    G2{"Ao menos um item, prazo<br/>informado e líquido > 0?"}
+    S4["(Sistema)<br/>Entregar pelo canal de notificação<br/>e gravar na caixa de saída"]:::sistema
+    G3{"Canal entregou?"}
+    S6["(Sistema)<br/>Continua em Rascunho e informa a falha"]:::sistema
+    S5["(Sistema)<br/>Orçamento passa a Enviado"]:::sistema
+    C1["(Cliente, pelo canal)<br/>Recebe o orçamento e responde"]:::cliente
+    A7["(Operador Financeiro)<br/>Registrar a decisão do cliente, com a data"]:::operador
+    G4{"Cliente aprovou?"}
+    S7["(Sistema)<br/>Gerar o título e converter o orçamento,<br/>numa só transação (RB-05, RNF-09)"]:::sistema
+    S8["(Sistema)<br/>Orçamento passa a Rejeitado"]:::sistema
+    M2{" "}
+    S9["(Sistema)<br/>Registrar cada mudança na auditoria (RB-01)"]:::sistema
+    fim(("●")):::no_final
+
+    inicio --> A1 --> A2 --> S1 --> G1
+    G1 -- "[sim]" --> S2 --> D1 --> S3 --> M1
+    G1 -- "[não]" --> M1
+    M1 --> A3 --> G2
+    G2 -- "[não]: corrigir" --> A2
+    G2 -- "[sim]" --> S4 --> G3
+    G3 -- "[não]" --> S6 --> A3
+    G3 -- "[sim]" --> S5 --> C1 --> A7 --> G4
+    G4 -- "[sim]" --> S7 --> M2
+    G4 -- "[não]" --> S8 --> M2
+    M2 --> S9 --> fim
+
+    classDef operador fill:#e8f0fe,stroke:#3b6fd6,color:#111
+    classDef sistema fill:#eef7ee,stroke:#3a8a3a,color:#111
+    classDef dono fill:#fff4e0,stroke:#c98a00,color:#111
+    classDef cliente fill:#f6ecfa,stroke:#8a4fb0,color:#111
+    classDef no_inicial fill:#222,stroke:#222,color:#222
+    classDef no_final fill:#fff,stroke:#222,stroke-width:3px,color:#222

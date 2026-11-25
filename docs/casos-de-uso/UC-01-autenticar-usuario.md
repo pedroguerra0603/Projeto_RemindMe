@@ -9,6 +9,10 @@
 | **Regras de negócio** | RB-03 |
 | **Requisitos** | RF-65, RF-66, RF-67, RNF-01, RNF-02, RNF-04, RNF-05, RNF-17, RNF-25 |
 
+## Situação da implementação
+
+**Implementado.** Specs 002 e 017. O painel mostra as pendências gerais e a régua do caixa; o painel completo por perfil é da Spec 016, planejada.
+
 ## Pré-condições
 
 - O usuário está cadastrado, ativo e associado a um perfil.
